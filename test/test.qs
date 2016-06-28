@@ -270,6 +270,7 @@
    $error_test (= ($string[0], 0));
    $error_test (= ($string[0], 256));
    $error_test (= ([a, b, c][0], "derp"));
+   $error_test (< ([a, b, c], [x, y, z]));
    echo ("   Error test concluded.");
    echo ();
 }

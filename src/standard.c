@@ -106,7 +106,7 @@ QS_FUNC (qsf_print)
 
 QS_FUNC (qsf_math)
 {
-   qs_value_t *val, *lval, *rval;
+   qs_value_t *val, *lval = NULL, *rval;
    int i, start, math_func;
 
    /* are we setting a value...? */
@@ -251,7 +251,7 @@ QS_FUNC (qsf_math)
    }
 
    /* set variables. */
-   if (sub_func >= 20) {
+   if (lval) {
       /* setting characters is complicated because they can belong to
        * a string... */
       if (val->type_id == QSCRIPT_CHAR && val->val_p) {
@@ -288,16 +288,19 @@ QS_FUNC (qsf_if)
 
 QS_FUNC (qsf_compare)
 {
-   int rvalue, i, type_id;
-   qs_value_t *val1 = QS_ARGV (0), *val2;
+   int rvalue, i;
+   qs_value_t *first_val, *val1, *val2;
 
-   /* compare all arguments in a chain, using type indicated by arg(0). */
-   type_id = val1->type_id;
+   /* get our first value.  all comparisons will be determined by its type. */
+   first_val = QS_ARGV (0);
+   val1 = first_val;
+
+   /* compare all arguments in a chain. */
    for (i = 1; i < args; i++, val1 = val2) {
       val2 = QS_ARGV (i);
 
       /* check for equality based on type. */
-      switch (type_id) {
+      switch (first_val->type_id) {
          case QSCRIPT_CHAR: {
             char *lch, rch;
             if ((lch = qs_value_char_pointer (val1)) == NULL)
@@ -311,6 +314,7 @@ QS_FUNC (qsf_compare)
                case 3: rvalue = (*lch >= rch) ? 1 : 0; break;
                case 4: rvalue = (*lch <  rch) ? 1 : 0; break;
                case 5: rvalue = (*lch <= rch) ? 1 : 0; break;
+               default: return QSV_INVALID_OPER;
             }
             break;
          }
@@ -324,6 +328,7 @@ QS_FUNC (qsf_compare)
                case 3: rvalue = (rvalue >= 0 ? 1 : 0); break;
                case 4: rvalue = (rvalue <  0 ? 1 : 0); break;
                case 5: rvalue = (rvalue <= 0 ? 1 : 0); break;
+               default: return QSV_INVALID_OPER;
             }
             break;
          case QSCRIPT_INT:
@@ -334,6 +339,7 @@ QS_FUNC (qsf_compare)
                case 3: rvalue = (val1->val_i >= val2->val_i) ? 1 : 0; break;
                case 4: rvalue = (val1->val_i <  val2->val_i) ? 1 : 0; break;
                case 5: rvalue = (val1->val_i <= val2->val_i) ? 1 : 0; break;
+               default: return QSV_INVALID_OPER;
             }
             break;
          case QSCRIPT_FLOAT:
@@ -344,8 +350,14 @@ QS_FUNC (qsf_compare)
                case 3: rvalue = (val1->val_f >= val2->val_f) ? 1 : 0; break;
                case 4: rvalue = (val1->val_f <  val2->val_f) ? 1 : 0; break;
                case 5: rvalue = (val1->val_f <= val2->val_f) ? 1 : 0; break;
+               default: return QSV_INVALID_OPER;
             }
             break;
+
+         default:
+            QS_ARG_ERROR (0, "cannot compare type '%s'.\n",
+               qs_value_type (first_val));
+            return QSV_INVALID_TYPE;
       }
 
       /* stop immediately as soon as something fails and return 0 (false). */
@@ -724,7 +736,7 @@ QS_FUNC (qsf_print_v)
 
 QS_FUNC (qsf_eval)
 {
-   qs_value_t *r;
+   qs_value_t *r = QSV_UNDEFINED;
    int i;
    for (i = 0; i < args; i++)
       r = QS_ARGV (i);
