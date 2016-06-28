@@ -36,9 +36,7 @@ qs_resource_t *qs_resource_new (qs_scheme_t *scheme, char *name,
 }
 
 qs_object_t *qs_resource_get_auto_instance (qs_resource_t *rsrc)
-{
-   return qs_object_get_by_id (rsrc->scheme, rsrc->auto_id);
-}
+   { return qs_object_get_by_id (rsrc->scheme, rsrc->auto_id); }
 
 qs_object_t *qs_resource_auto_instance (qs_resource_t *rsrc)
 {
@@ -53,7 +51,6 @@ qs_object_t *qs_resource_auto_instance (qs_resource_t *rsrc)
 
 qs_resource_t *qs_resource_get_by_id (qs_scheme_t *scheme, qs_id_t id)
    { return qs_id_get (&(scheme->resource_ids), id); }
-
 qs_resource_t *qs_resource_get (qs_scheme_t *scheme, char *name)
 {
    qs_resource_t *r;

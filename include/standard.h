@@ -27,7 +27,7 @@ QS_FUNC (qsf_lambda);
 QS_FUNC (qsf_arg);
 QS_FUNC (qsf_args);
 QS_FUNC (qsf_variable);
-QS_FUNC (qsf_not);
+QS_FUNC (qsf_truth);
 QS_FUNC (qsf_vars);
 QS_FUNC (qsf_run);
 QS_FUNC (qsf_boolean);
@@ -39,6 +39,8 @@ QS_FUNC (qsf_eval);
 QS_FUNC (qsf_switch);
 QS_FUNC (qsf_length);
 QS_FUNC (qsf_print_v);
+QS_FUNC (qsf_this);
 QS_FUNC (qsf_cast);
+QS_FUNC (qsf_id);
 
 #endif

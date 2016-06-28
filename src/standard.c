@@ -10,6 +10,7 @@
 #include "funcs.h"
 #include "language.h"
 #include "lists.h"
+#include "objects.h"
 #include "print.h"
 #include "resources.h"
 #include "rlinks.h"
@@ -52,7 +53,8 @@ qs_func_t qs_func_list_standard[] = {
    { "!||",     "<left> <right> [...]",    2, qsf_boolean, 3 },
    { "!&&",     "<left> <right> [...]",    2, qsf_boolean, 4 },
    { "!^^",     "<left> <right> [...]",    2, qsf_boolean, 5 },
-   { "!",       "<value>",                 1, qsf_not,     0 },
+   { "?",       "<value>",                 1, qsf_truth,   0 },
+   { "!",       "<value>",                 1, qsf_truth,   1 },
    { "inv",     "<value>",                 1, qsf_inv,     0 },
    { "return",  "[<value>]",               0, qsf_return,  0 },
    { "break",   "[<value>]",               0, qsf_return,  1 },
@@ -79,6 +81,9 @@ qs_func_t qs_func_list_standard[] = {
    { "int",     "<value>",                 1, qsf_cast,    QSCRIPT_INT },
    { "float",   "<value>",                 1, qsf_cast,    QSCRIPT_FLOAT },
    { "char",    "<value>",                 1, qsf_cast,    QSCRIPT_CHAR },
+   { "object",  "<value>",                 1, qsf_cast,    QSCRIPT_OBJECT },
+   { "this",    "",                        0, qsf_this,    0 },
+   { "id",      "[<object>]",              1, qsf_id,      0 },
    { NULL },
 };
 
@@ -278,7 +283,7 @@ QS_FUNC (qsf_math)
 QS_FUNC (qsf_if)
 {
    qs_value_t *val = QS_ARGV (0);
-   if (qs_value_truth (val))
+   if (qs_value_truth (exe, val))
       return QS_ARGV (1);
    else if (args >= 3)
       return QS_ARGV (2);
@@ -301,12 +306,18 @@ QS_FUNC (qsf_compare)
 
       /* check for equality based on type. */
       switch (first_val->type_id) {
+         /* char: ==, !=, >, >=, <, <= */
          case QSCRIPT_CHAR: {
             char *lch, rch;
-            if ((lch = qs_value_char_pointer (val1)) == NULL)
-               return QSV_ZERO;
-            if (!qs_value_as_char (val2, &rch))
-               return QSV_ZERO;
+            if ((lch = qs_value_char_pointer (val1)) == NULL) {
+               QS_ARG_ERROR (i - 1, "couldn't get char for modification.\n");
+               return QSV_INVALID_INDEX;
+            }
+            if (!qs_value_as_char (val2, &rch)) {
+               QS_ARG_ERROR (i, "cannot cast rvalue '%s' of type '%s' "
+                  "as a char.\n", val2->val_s, qs_value_type (val2));
+               return QSV_INVALID_OPER;
+            }
             switch (sub_func) {
                case 0: rvalue = (*lch == rch) ? 1 : 0; break;
                case 1: rvalue = (*lch != rch) ? 1 : 0; break;
@@ -314,11 +325,14 @@ QS_FUNC (qsf_compare)
                case 3: rvalue = (*lch >= rch) ? 1 : 0; break;
                case 4: rvalue = (*lch <  rch) ? 1 : 0; break;
                case 5: rvalue = (*lch <= rch) ? 1 : 0; break;
-               default: return QSV_INVALID_OPER;
+               default:
+                  QS_ARG_ERROR (i, "invalid operation.\n");
+                  return QSV_INVALID_OPER;
             }
             break;
          }
 
+         /* string: ==, !=, >, >=, <, <= */
          case QSCRIPT_STRING:
             rvalue = strcmp (val1->val_s, val2->val_s);
             switch (sub_func) {
@@ -328,9 +342,13 @@ QS_FUNC (qsf_compare)
                case 3: rvalue = (rvalue >= 0 ? 1 : 0); break;
                case 4: rvalue = (rvalue <  0 ? 1 : 0); break;
                case 5: rvalue = (rvalue <= 0 ? 1 : 0); break;
-               default: return QSV_INVALID_OPER;
+               default:
+                  QS_ARG_ERROR (i, "invalid operation.\n");
+                  return QSV_INVALID_OPER;
             }
             break;
+
+         /* int: ==, !=, >, >=, <, <= */
          case QSCRIPT_INT:
             switch (sub_func) {
                case 0: rvalue = (val1->val_i == val2->val_i) ? 1 : 0; break;
@@ -339,9 +357,13 @@ QS_FUNC (qsf_compare)
                case 3: rvalue = (val1->val_i >= val2->val_i) ? 1 : 0; break;
                case 4: rvalue = (val1->val_i <  val2->val_i) ? 1 : 0; break;
                case 5: rvalue = (val1->val_i <= val2->val_i) ? 1 : 0; break;
-               default: return QSV_INVALID_OPER;
+               default:
+                  QS_ARG_ERROR (i, "invalid operation.\n");
+                  return QSV_INVALID_OPER;
             }
             break;
+
+         /* floats: ==, !=, >, >=, <, <= */
          case QSCRIPT_FLOAT:
             switch (sub_func) {
                case 0: rvalue = (val1->val_f == val2->val_f) ? 1 : 0; break;
@@ -350,9 +372,42 @@ QS_FUNC (qsf_compare)
                case 3: rvalue = (val1->val_f >= val2->val_f) ? 1 : 0; break;
                case 4: rvalue = (val1->val_f <  val2->val_f) ? 1 : 0; break;
                case 5: rvalue = (val1->val_f <= val2->val_f) ? 1 : 0; break;
-               default: return QSV_INVALID_OPER;
+               default:
+                  QS_ARG_ERROR (i, "invalid operation.\n");
+                  return QSV_INVALID_OPER;
             }
             break;
+
+         /* objects: ==, != (only with other objects) */
+         case QSCRIPT_OBJECT: {
+            /* filter out bad comparisons early. */
+            if (sub_func != 0 && sub_func != 1) {
+               QS_ARG_ERROR (i, "invalid operation.\n");
+               return QSV_INVALID_OPER;
+            }
+
+            /* forbid comparison of objects to non-objects. */
+            if (val2->type_id != QSCRIPT_OBJECT) {
+               QS_ARG_ERROR (i, "cannot compare object to type '%s'.\n",
+                  qs_value_type (val2));
+               return QSV_INVALID_TYPE;
+            }
+
+            /* update our object references. */
+            qs_value_object (exe, val1);
+            qs_value_object (exe, val2);
+
+            /* if both ids are zero, compare the string. */
+            if (val1->val_i == 0 && val2->val_i == 0)
+               rvalue = (strcmp (val1->val_s, val2->val_s) == 0) ? 1 : 0;
+            /* otherwise, compare ids. */
+            else
+               rvalue = (val1->val_i == val2->val_i) ? 1 : 0;
+            /* flip the return value for != function. */
+            if (sub_func == 1)
+               rvalue ^= 1;
+            break;
+         }
 
          default:
             QS_ARG_ERROR (0, "cannot compare type '%s'.\n",
@@ -402,7 +457,7 @@ QS_FUNC (qsf_let)
             case QSCRIPT_CHAR: {
                char *lch, rch;
                if ((lch = qs_value_char_pointer (lval)) == NULL) {
-                  QS_ARG_ERROR (0, "couldn't get index for modification.\n");
+                  QS_ARG_ERROR (0, "couldn't get char for modification.\n");
                   return QSV_INVALID_INDEX;
                }
                if (!qs_value_as_char (rval, &rch)) {
@@ -437,7 +492,7 @@ QS_FUNC (qsf_let)
                char *lch;
                int rch;
                if ((lch = qs_value_char_pointer (lval)) == NULL) {
-                  QS_ARG_ERROR (0, "couldn't get index for modification.\n");
+                  QS_ARG_ERROR (0, "couldn't get char for modification.\n");
                   return QSV_INVALID_INDEX;
                }
                rch = *lch + sub_func;
@@ -508,24 +563,39 @@ QS_FUNC (qsf_scope)
 
 QS_FUNC (qsf_while)
 {
-   qs_value_t *r = NULL;
-   while (!(exe->flags & QS_EXE_BREAK) && qs_value_truth (QS_ARGV (0)))
-      r = QS_ARGV (1);
-   if (r == NULL)
-      return QSV_ZERO;
+   qs_value_t *r = QSV_UNDEFINED;
+   qs_execute_t *e = qs_execute_push (QS_EXE_LOOP, exe->rlink, exe, action,
+      func->name, 0, NULL);
+
+   /* execute argument 1 until we can't anymore. */
+   while (qs_value_truth (e, qs_arg_value (e, arg[0])) &&
+          !(e->flags & QS_EXE_BREAK))
+      r = qs_arg_value (e, arg[1]);
+   qs_execute_pop (e);
+
+   /* return our last return value (or QSV_UNDEFINED for none). */
    return r;
 }
 
 QS_FUNC (qsf_for)
 {
-   qs_value_t *r = NULL;
-   QS_ARGV (0);
-   while (!(exe->flags & QS_EXE_BREAK) && qs_value_truth (QS_ARGV (1))) {
-      r = QS_ARGV (3);
-      QS_ARGV (2);
+   qs_value_t *r = QSV_UNDEFINED;
+   qs_execute_t *e = qs_execute_push (QS_EXE_LOOP, exe->rlink, exe, action,
+      func->name, 0, NULL);
+
+   /* c-style for() loop wrapped around a single execution state (exited
+    * by break(). */
+   qs_arg_value (e, arg[0]);
+   while (qs_value_truth (e, qs_arg_value (e, arg[1])) &&
+          !(e->flags & QS_EXE_BREAK)) {
+      qs_arg_value (e, arg[3]);
+      if (e->flags & QS_EXE_BREAK)
+         break;
+      qs_arg_value (e, arg[2]);
    }
-   if (r == NULL)
-      return QSV_ZERO;
+   qs_execute_pop (e);
+
+   /* return our last return value (or QSV_UNDEFINED for none). */
    return r;
 }
 
@@ -568,7 +638,7 @@ QS_FUNC (qsf_args)
          QS_RETURN ();
          return QSV_CANNOT_MODIFY;
       }
-      qs_value_copy (val, qs_arg_value (e->parent, action, list->values[i]));
+      qs_value_copy (val, qs_arg_value (e->parent, list->values[i]));
       count++;
    }
 
@@ -605,7 +675,7 @@ QS_FUNC (qsf_arg)
    }
 
    /* execute our argument in our current scope. */
-   return qs_arg_value (e->parent, action, list->values[i]);
+   return qs_arg_value (e->parent, list->values[i]);
 }
 
 QS_FUNC (qsf_variable)
@@ -632,9 +702,13 @@ QS_FUNC (qsf_variable)
    }
 }
 
-QS_FUNC (qsf_not)
+QS_FUNC (qsf_truth)
 {
-   return qs_value_truth (QS_ARGV (0)) ? QSV_ZERO : QSV_ONE;
+   switch (sub_func) {
+      case 0:  return qs_value_truth (exe, QS_ARGV (0)) ? QSV_ONE :  QSV_ZERO;
+      case 1:  return qs_value_truth (exe, QS_ARGV (0)) ? QSV_ZERO : QSV_ONE;
+      default: return QSV_INVALID_SUB_FUNC;
+   }
 }
 
 QS_FUNC (qsf_inv)
@@ -685,13 +759,13 @@ QS_FUNC (qsf_boolean)
 {
    int val1, val2, i, res = 0;
 
-   val1 = qs_value_truth (QS_ARGV (0));
+   val1 = qs_value_truth (exe, QS_ARGV (0));
    for (i = 1; i < args; i++, val1 = res) {
       if (!val1 && sub_func == 1)
          return QS_RETI (0);
       else if (val1 && sub_func == 0)
          return QS_RETI (1);
-      val2 = qs_value_truth (QS_ARGV (i));
+      val2 = qs_value_truth (exe, QS_ARGV (i));
       switch (sub_func) {
          case 0: res =  (val1 || val2); break;
          case 1: res =  (val1 && val2); break;
@@ -806,11 +880,27 @@ QS_FUNC (qsf_length)
    return QS_RETI (length);
 }
 
+QS_FUNC (qsf_this)
+{
+   /* create an object type to return. */
+   qs_value_t *rval = qs_scheme_heap_value (exe->scheme);
+   rval->type_id = QSCRIPT_OBJECT;
+
+   /* set primitive values. */
+   char buf[256];
+   snprintf (buf, sizeof (buf), "@%s", object->name);
+   qs_value_restring (rval, buf);
+   rval->val_i = object->id;
+
+   /* return it. */
+   return rval;
+}
+
 QS_FUNC (qsf_cast)
 {
+   /* get value to cast.  if the type is already what we want,
+    * don't bother casting. */
    qs_value_t *val = QS_ARGV (0);
-
-   /* if the type is already what we want, don't bother casting. */
    if (val->type_id == sub_func)
       return val;
 
@@ -821,10 +911,9 @@ QS_FUNC (qsf_cast)
       case QSCRIPT_INT:    return QS_RETI (val->val_i);
       case QSCRIPT_FLOAT:  return QS_RETF (val->val_f);
 
-      /* complex primitives. */
+      /* complex primitives.  start with 'char'. */
       case QSCRIPT_CHAR: {
-         /* we'll need to do most of this ourselves.
-          * add a value to the heap. */
+         /* create a char value. */
          qs_value_t *rval = qs_scheme_heap_value (exe->scheme);
          rval->type_id = QSCRIPT_CHAR;
 
@@ -852,8 +941,84 @@ QS_FUNC (qsf_cast)
          return rval;
       }
 
-      /* dunno! */
+      /* objects. */
+      case QSCRIPT_OBJECT: {
+         /* create an object value. */
+         qs_value_t *rval = qs_scheme_heap_value (exe->scheme);
+         rval->type_id = QSCRIPT_OBJECT;
+
+         /* default values. */
+         char *name = "<no object>";
+         int id = 0l;
+
+         /* should we return our own object? */
+         qs_object_t *obj = NULL;
+         if (val == NULL)
+            obj = object;
+         /* nope - attempt to get an object by type. */
+         else {
+            switch (val->type_id) {
+               /* strings must start with '@'. */
+               case QSCRIPT_STRING:
+                  if (val->val_s[0] != '@')
+                     obj = NULL;
+                  else {
+                     name = val->val_s + 1;
+                     obj = qs_object_get (exe->scheme, val->val_s + 1);
+                  }
+                  break;
+
+               /* integers perform an id lookup. */
+               case QSCRIPT_INT:
+                  id = val->val_i;
+                  obj = qs_object_get_by_id (exe->scheme, val->val_i);
+                  break;
+
+               /* otherwise, this is bogus. */
+               case QSCRIPT_OBJECT:
+                  obj = NULL;
+                  break;
+            }
+         }
+
+         /* if we found an object, use its values. */
+         if (obj) {
+            char buf[256];
+            snprintf (buf, sizeof (buf), "@%s", obj->name);
+            name = buf;
+            id = obj->id;
+         }
+
+         /* set properties and return our object. */
+         qs_value_restring (rval, name);
+         rval->val_i = id;
+         return rval;
+      }
+
+      /* dunno what to cast! */
       default:
+         qs_func_error (exe, func->name, action->value->node,
+            "unknown function '%s'.\n", func->name);
          return QSV_INVALID_SUB_FUNC;
    }
+}
+
+QS_FUNC (qsf_id)
+{
+   /* make sure are argument is type 'object'. */
+   qs_value_t *val = QS_ARGV(0);
+   if (val->type_id != QSCRIPT_OBJECT) {
+      QS_ARG_ERROR (0, "value is type '%s' instead of 'object'.\n",
+         qs_value_type (val));
+      return QSV_INVALID_TYPE;
+   }
+
+   /* get our object.  if we couldn't find it, return zero to indicate
+    * 'no object'. */
+   qs_object_t *obj = qs_value_object (exe, val);
+   if (obj == NULL)
+      return QSV_ZERO;
+
+   /* return our object's id. */
+   return QS_RETI (obj->id);
 }

@@ -24,6 +24,7 @@ enum qscript_execute_type_e {
    QS_EXE_FUNC,
    QS_EXE_RESOURCE,
    QS_EXE_BLOCK,
+   QS_EXE_LOOP,
    QS_EXE_LAST
 };
 
@@ -70,6 +71,7 @@ enum qscript_tag_e {
    QSCRIPT_UNWRAP,
    QSCRIPT_INDEX,
    QSCRIPT_CHAR,
+   QSCRIPT_OBJECT,
    QSCRIPT_LAST,
 };
 
@@ -92,6 +94,9 @@ enum qscript_tag_e {
 #define QS_VALUE_UNWRAP    0x01
 #define QS_VALUE_MUTABLE   0x02
 
+/* flags for objects. */
+#define QS_OBJECT_GLOBAL   0x01
+
 /* id limits. */
 #define QS_ID_MAX    65536
 
@@ -113,7 +118,7 @@ typedef struct _qs_action_t    qs_action_t;
 typedef struct _qs_stack_t     qs_stack_t;
 
 /* function types. */
-#define QS_FUNC(x) qs_value_t *x (qs_object_t *obj, qs_rlink_t *rlink, \
+#define QS_FUNC(x) qs_value_t *x (qs_object_t *object, qs_rlink_t *rlink, \
    qs_execute_t *exe, qs_action_t *action, qs_func_t *func, int sub_func, \
    int args, qs_value_t **arg)
 typedef QS_FUNC(qs_func);
@@ -121,10 +126,10 @@ typedef QS_FUNC(qs_func);
 #define QS_STACK_FUNC(x) void x (void *data)
 typedef QS_STACK_FUNC(qs_stack_func);
 
-#define QS_ARGV(x) (qs_arg_value    (exe, action, arg[x]))
-#define QS_ARGS(x) (qs_arg_string   (exe, action, arg[x]))
-#define QS_ARGF(x) (qs_arg_float    (exe, action, arg[x]))
-#define QS_ARGI(x) (qs_arg_int      (exe, action, arg[x]))
+#define QS_ARGV(x) (qs_arg_value    (exe, arg[x]))
+#define QS_ARGS(x) (qs_arg_string   (exe, arg[x]))
+#define QS_ARGF(x) (qs_arg_float    (exe, arg[x]))
+#define QS_ARGI(x) (qs_arg_int      (exe, arg[x]))
 #define QS_ARG_ERROR(x,...) \
    (qs_func_error (exe, func->name, arg[x]->node, __VA_ARGS__))
 

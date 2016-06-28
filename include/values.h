@@ -36,7 +36,7 @@ char *qs_value_type (qs_value_t *val);
 qs_variable_t *qs_value_get_variable (qs_rlink_t *rlink, qs_value_t *v);
 int qs_value_cleanup (qs_value_t *value);
 int qs_value_free (qs_value_t *value);
-int qs_value_truth (qs_value_t *val);
+int qs_value_truth (qs_execute_t *exe, qs_value_t *val);
 int qs_value_length (qs_value_t *v);
 qs_value_t *qs_value_evaluate_block (qs_execute_t *exe, qs_value_t *val);
 qs_value_t *qs_value_read (qs_execute_t *exe, qs_value_t *val);
@@ -46,6 +46,7 @@ int qs_value_can_modify (qs_value_t *val);
 char *qs_value_char_pointer (qs_value_t *val);
 int qs_value_as_char (qs_value_t *rval, char *out);
 int qs_value_update_from_string (qs_value_t *val);
+qs_object_t *qs_value_object (qs_execute_t *exe, qs_value_t *val);
 
 /* internal, constant return values. */
 extern qs_value_t *QSV_ZERO;

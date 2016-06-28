@@ -6,6 +6,7 @@
 #include "execute.h"
 #include "language.h"
 #include "lists.h"
+#include "objects.h"
 #include "rlinks.h"
 #include "schemes.h"
 #include "variables.h"
@@ -103,6 +104,7 @@ char *qs_value_type (qs_value_t *val)
       case QSCRIPT_INDEX:     return "index";
       case QSCRIPT_CHAR:      return "char";
       case QSCRIPT_ACTION:    return "action";
+      case QSCRIPT_OBJECT:    return "object";
       default:                return "unknown";
    }
 }
@@ -186,7 +188,7 @@ int qs_value_free (qs_value_t *value)
    return 1;
 }
 
-int qs_value_truth (qs_value_t *val)
+int qs_value_truth (qs_execute_t *exe, qs_value_t *val)
 {
    if (val->val_f != 0.00f && 
       (val->type_id == QSCRIPT_INT ||
@@ -209,6 +211,12 @@ int qs_value_truth (qs_value_t *val)
       if (strcasecmp (val->val_s, "on")   == 0) return 1;
       return 0;
    }
+   else if (val->type_id == QSCRIPT_OBJECT) {
+      if (qs_value_object (exe, val))
+         return 1;
+      else
+         return 0;
+   }
    else
       return 0;
 }
@@ -218,15 +226,16 @@ qs_value_t *qs_value_evaluate_block (qs_execute_t *exe, qs_value_t *val)
    qs_variable_t *last_var;
    qs_list_t *list = val->val_p;
    qs_value_t *rval = QSV_UNDEFINED;
-   qs_execute_t *e = exe;
+   qs_execute_t *new_exe = NULL;
    int i;
 
    /* remember where to pop variables after we're done executing this block. */
    /* evaluate all parameters and return the result of the final one. */
    if (list->type_id == QSCRIPT_BLOCK) {
       last_var = exe->rlink->variable_list_back;
-      e = qs_execute_push (QS_EXE_BLOCK, exe->rlink, exe, exe->action,
+      new_exe = qs_execute_push (QS_EXE_BLOCK, exe->rlink, exe, exe->action,
          exe->name, 0, NULL);
+      exe = new_exe;
    }
 
    /* execute everything in our block. */
@@ -234,12 +243,12 @@ qs_value_t *qs_value_evaluate_block (qs_execute_t *exe, qs_value_t *val)
       rval = qs_value_read (exe, list->values[i]);
 
    /* for blocks, get all of all variables declared in this scope. */
-   if (list->type_id == QSCRIPT_BLOCK) {
-      qs_variable_free_after (e->rlink, last_var, &rval);
-      qs_execute_pop (e);
+   if (new_exe) {
+      qs_variable_free_after (new_exe->rlink, last_var, &rval);
+      qs_execute_pop (new_exe);
    }
 
-   /* TODO: pop local variables. */
+   /* return our return value. */
    return rval;
 }
 
@@ -253,6 +262,7 @@ qs_value_t *qs_value_read (qs_execute_t *exe, qs_value_t *val)
          case QSCRIPT_FLOAT:
          case QSCRIPT_CHAR:
          case QSCRIPT_LIST:
+         case QSCRIPT_OBJECT:
          case QSCRIPT_UNDEFINED:
             rval = val;
             break;
@@ -376,4 +386,30 @@ int qs_value_update_from_string (qs_value_t *val)
    val->val_i = atoi (val->val_s);
    val->val_f = atof (val->val_s);
    return 1;
+}
+
+qs_object_t *qs_value_object (qs_execute_t *exe, qs_value_t *val)
+{
+   qs_object_t *obj;
+
+   /* first, look for an object by id.  this will be ultra-quick. */
+   if ((obj = qs_object_get_by_id (exe->scheme, val->val_i)) != NULL) {
+      /* update the string if necessary. */
+      if (val->val_s[0] != '@' || strcmp (val->val_s + 1, obj->name) != 0) {
+         char buf[256];
+         snprintf (buf, sizeof (buf), "@%s", obj->name);
+         qs_value_restring (val, buf);
+      }
+      return obj;
+   }
+
+   /* is there an object by name? */
+   if (val->val_s[0] != '@')
+      return NULL;
+   if ((obj = qs_object_get (exe->scheme, val->val_s + 1)) == NULL)
+      return NULL;
+
+   /* we found an object! update our id reference and return it. */
+   val->val_i = obj->id;
+   return obj;
 }

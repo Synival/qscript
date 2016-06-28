@@ -24,7 +24,7 @@ static p_symbol_t static_qs_symbols[] = {
    {QSCRIPT_COMMENT,    "comment",  "'#' /[^\\n]*/"},
    {QSCRIPT_RESOURCE,   "resource", "(<rtype> <rname>) <outer_block>",
       qs_func_resource, qs_func_resource_f},
-   {QSCRIPT_RTYPE,      "rtype",    "/[*]*/", NULL},
+   {QSCRIPT_RTYPE,      "rtype",    "/[@]*/", NULL},
    {QSCRIPT_RNAME,      "rname",    "<qstring>", NULL},
    {QSCRIPT_BLOCK,      "block",    "((<value> ';')* | \"\")",
       qs_func_list, qs_func_list_f},
@@ -34,7 +34,7 @@ static p_symbol_t static_qs_symbols[] = {
       qs_func_outer_list, qs_func_outer_list_f},
    {QSCRIPT_VALUE,      "value",
       "<comment>* <unwrap> (<number> | <variable> | <outer_list> | "
-      "<outer_block> | <char> | <qstring>) <action>*",
+      "<outer_block> | <char> | <object> | <qstring>) <action>*",
       qs_func_value, qs_func_value_f},
    {QSCRIPT_OUTER_BLOCK,"outer_block", "'{' <block> '}'",
       qs_func_outer_list, qs_func_outer_list_f},
@@ -50,7 +50,10 @@ static p_symbol_t static_qs_symbols[] = {
    {QSCRIPT_INT,        "int",      "/[-+]?[0-9]+/"},
    {QSCRIPT_VARIABLE,   "variable",
       "/\\$" QSCRIPT_SIMPLE_STRING_PATTERN "/",
-      qs_func_variable},
+      qs_func_copy_contents},
+   {QSCRIPT_OBJECT,     "object",
+      "/\\@" QSCRIPT_SIMPLE_STRING_PATTERN "/",
+      qs_func_copy_contents},
    {QSCRIPT_ACTION,     "action",   "(<call> | <index>)",
       qs_func_action, qs_func_action_f},
    {QSCRIPT_CALL,       "call",     "'(' <list> ')'"},
@@ -141,6 +144,10 @@ P_FUNC (qs_func_value)
                   v->val_s = strdup (buf);
                   break;
             }
+            break;
+         case QSCRIPT_OBJECT:
+            v->type_id = QSCRIPT_OBJECT;
+            v->val_s = strdup (n->contents);
             break;
          case QSCRIPT_VARIABLE:
             v->type_id = QSCRIPT_VARIABLE;
@@ -300,7 +307,7 @@ P_FUNC (qs_func_resource)
          case QSCRIPT_RTYPE:
             for (ch = n->first_child->contents; *ch != '\0'; ch++) {
                switch (*ch) {
-                  case '*': flags |= QS_RSRC_AUTO_INSTANTIATE; break;
+                  case '@': flags |= QS_RSRC_AUTO_INSTANTIATE; break;
                }
             }
             break;
@@ -327,7 +334,7 @@ P_FUNC (qs_func_resource)
 P_FUNC (qs_func_resource_f)
    { if (node->data) qs_resource_free (node->data); }
 
-P_FUNC (qs_func_variable)
+P_FUNC (qs_func_copy_contents)
 {
    if (node->contents)
       free (node->contents);

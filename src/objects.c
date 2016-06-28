@@ -33,7 +33,7 @@ qs_object_t *qs_object_new_auto (qs_resource_t *rsrc)
    qs_object_t *new;
 
    /* create a resource with a matching name, prefixed by '*'. */
-   snprintf (buf, sizeof (buf), "*%s", rsrc->name);
+   snprintf (buf, sizeof (buf), "@%s", rsrc->name);
    new = qs_object_new_base (rsrc->scheme, buf);
 
    /* keep an id reference to our resource. */
@@ -54,6 +54,7 @@ qs_object_t *qs_object_new_base (qs_scheme_t *scheme, char *name)
    memset (new, 0, sizeof (qs_object_t));
    new->name = strdup (name);
    new->scheme = scheme;
+   new->flags |= QS_OBJECT_GLOBAL;
 
    /* link to object list and assign id. */
    QS_LINK_BACK (scheme, new, object);
@@ -78,6 +79,17 @@ int qs_object_new_finish (qs_object_t *obj, qs_resource_t *rsrc)
 
 qs_object_t *qs_object_get_by_id (qs_scheme_t *scheme, qs_id_t id)
    { return qs_id_get (&(scheme->object_ids), id); }
+qs_object_t *qs_object_get (qs_scheme_t *scheme, char *name)
+{
+   qs_object_t *o;
+   if (*name >= '0' && *name <= '9')
+      return qs_object_get_by_id (scheme, atoi (name + 1));
+   for (o = scheme->object_list_front; o != NULL; o = o->next)
+      if (o->scheme == scheme)
+         if (strcmp (o->name, name) == 0)
+            return o;
+   return NULL;
+}
 
 int qs_object_free (qs_object_t *object)
 {

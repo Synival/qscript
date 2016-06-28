@@ -20,13 +20,13 @@
    if ((v = qs_value_read (exe, val)) == NULL) \
       return x;
 
-qs_value_t *qs_arg_value (qs_execute_t *exe, qs_action_t *a, qs_value_t *val)
+qs_value_t *qs_arg_value (qs_execute_t *exe, qs_value_t *val)
    { return qs_value_read (exe, val); }
-char *qs_arg_string (qs_execute_t *exe, qs_action_t *a, qs_value_t *val)
+char *qs_arg_string (qs_execute_t *exe, qs_value_t *val)
    { qs_arg_start ("<error>"); return v->val_s; }
-float qs_arg_float  (qs_execute_t *exe, qs_action_t *a, qs_value_t *val)
+float qs_arg_float  (qs_execute_t *exe, qs_value_t *val)
    { qs_arg_start (0); return v->val_f; }
-int   qs_arg_int    (qs_execute_t *exe, qs_action_t *a, qs_value_t *val)
+int   qs_arg_int    (qs_execute_t *exe, qs_value_t *val)
    { qs_arg_start (0); return v->val_i; }
 
 int qs_func_error (qs_execute_t *exe, char *func_name, p_node_t *node,
@@ -116,7 +116,7 @@ int qs_func_break (qs_execute_t *e)
       e->flags |= QS_EXE_BREAK;
       count++;
       if (e->type_id == QS_EXE_RESOURCE || e->type_id == QS_EXE_LAMBDA ||
-          e->type_id == QS_EXE_BLOCK)
+          e->type_id == QS_EXE_LOOP)
          break;
    }
    return count;

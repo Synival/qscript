@@ -19,14 +19,13 @@ struct _qs_func_t {
 qs_value_t *qs_func_run (qs_execute_t *exe, qs_func_t *func);
 
 /* utility functions used inside qscript functions. */
-qs_value_t *qs_arg_value (qs_execute_t *exe, qs_action_t *a,
-   qs_value_t *val);
+qs_value_t *qs_arg_value (qs_execute_t *exe, qs_value_t *val);
 
 /* arg processing functions. */
-char *qs_arg_string (qs_execute_t *exe, qs_action_t *a, qs_value_t *val);
-float qs_arg_float  (qs_execute_t *exe, qs_action_t *a, qs_value_t *val);
-int   qs_arg_int    (qs_execute_t *exe, qs_action_t *a, qs_value_t *val);
-qs_list_t *qs_arg_list (qs_execute_t *exe, qs_action_t *a, qs_value_t *val);
+char *qs_arg_string (qs_execute_t *exe, qs_value_t *val);
+float qs_arg_float  (qs_execute_t *exe, qs_value_t *val);
+int   qs_arg_int    (qs_execute_t *exe, qs_value_t *val);
+qs_list_t *qs_arg_list (qs_execute_t *exe, qs_value_t *val);
 int qs_func_error (qs_execute_t *exe, char *func_name, p_node_t *node,
    char *format, ...);
 

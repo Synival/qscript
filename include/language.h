@@ -17,7 +17,7 @@ P_FUNC (qs_func_value);
 P_FUNC (qs_func_value_f);
 P_FUNC (qs_func_qstring);
 P_FUNC (qs_func_complex_string);
-P_FUNC (qs_func_variable);
+P_FUNC (qs_func_copy_contents);
 P_FUNC (qs_func_action);
 P_FUNC (qs_func_action_f);
 

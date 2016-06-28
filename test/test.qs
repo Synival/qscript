@@ -1,8 +1,15 @@
-# Test a lot of stuff!
+# FIXME: Unfortunately, this reference needs to be declaredfirst
+#        so it gets instantiated for access in @main.
 
-*my_object {
+@my_object {
+   # Eventually do something, like have properties!
+   derp;
+}
+
+# Test a lot of stuff!
+@main {
    # Proper echo() behavior with some strings, numbers, and statements.
-   echo ("Numbers and addition vs. concatenation test:");
+   echo ("Numbers and addition vs. concatenation tests:");
    echo ("   nums: ", 1, ", ", 2.00, ", ", -3.250);
    echo ("   add:  ", + (1, 2, 3));
    echo ("   cat:  ", + ("", 1, 2, 3));
@@ -10,7 +17,7 @@
    echo ();
 
    # Math evaluation demonstration for integers vs. floating points.
-   echo ("Integer vs. floating point math test:");
+   echo ("Integer vs. floating point math tests:");
    echo ("   7    * 11   = ",  * (  7, 11));
    echo ("   7    * 11.5 = ",  * (  7, 11.5));
    echo ("   7.1  * 11   = ",  * (7.1, 11));
@@ -33,7 +40,8 @@
 
    # Test and demonstrate logical operators.
    echo ("Logical operators:");
-   echo ("   !0 = ", !(0), ", !1 = ", !(1));
+   echo ("   ?(0) = ", ?(0), ", ?(5) = ", ?(5));
+   echo ("   !(0) = ", !(0), ", !(5) = ", !(5));
    echo ("   ----------------------------");
    echo ("    ||: (0,0)=",  || (0,0)," (0,1)=", || (0,1)," (1,1)=", || (1,1));
    echo ("    &&: (0,0)=",  && (0,0)," (0,1)=", && (0,1)," (1,1)=", && (1,1));
@@ -47,7 +55,7 @@
    echo ("     7 & ~12 = ", & (7, inv(12)));
    echo ();
 
-   echo ("Logic / math test:");
+   echo ("Logic / math tests:");
    = ($logic_func, [{
       args ($expr);
       if ($expr, "true", "false");
@@ -61,7 +69,7 @@
    echo ();
 
    # Test all variable types, including 'undefined'.
-   echo ("Variable types and scopes test:");
+   echo ("Variable types and scopes tests:");
    = ($a, 150);
    = ($b, "i am a single string");
    = ($c,
@@ -86,12 +94,12 @@
    echo ();
 
    # func1() runs func2() and func3() in a funky order.
-   echo ("Nested function test: ");
+   echo ("Nested function tests: ");
    func1 ();
    echo ();
 
    # return values in multiple scopes that set variables.
-   echo ("Variable scope and return values test: ");
+   echo ("Variable scope and return values tests: ");
    echo ({
       = ($$global, echo ("   ", {
          = ($test, + ("We ", {
@@ -104,19 +112,24 @@
    echo ("   ...did you see it three times?  Plus one <undefined>?");
    echo ();
 
-   echo ("Type test:");
-   echo ("   string   | ", type (string));
-   echo ("   0        | ", type (0));
-   echo ("   1.00     | ", type (1.00));
-   echo ("   [string] | ", type ([string]));
-   echo ("  ~[string] | ", type (~[string]));
-   echo ("   ---------|---------------");
-   echo ("     x:     | ", type (  a), " (", scope (  a), ")");
-   echo ("    $x:     | ", type ( $a), " (", scope ( $a), ")");
-   echo ("   $$x:     | ", type ($$a), " (", scope ($$a), ")");
+   # Show off our language types and variable scoping.
+   echo ("Type tests:");
+   echo ("   string    | ", type (string));
+   echo ("   'a'       | ", type ('a'));
+   echo ("   string[0] | ", type (string[0]));
+   echo ("   0         | ", type (0));
+   echo ("   1.00      | ", type (1.00));
+   echo ("   [string]  | ", type ([string]));
+   echo ("   @@object  | ", type (@@object));
+   echo ("   ~[string] | ", type (~[string]));
+   echo ("   ----------|---------------");
+   echo ("     x:      | ", type (  a), " (", scope (  a), ")");
+   echo ("    $x:      | ", type ( $a), " (", scope ( $a), ")");
+   echo ("   $$x:      | ", type ($$a), " (", scope ($$a), ")");
    echo ();
 
-   echo ("Reference test:");
+   # Complex variable assignments with unwrap (~) tokens and pointer functions.
+   echo ("Unwrap tests:");
    = (~[$$global], "Test 1");
    echo ("   $$global = ", $$global);
    = (~ptr_func1 (), "Test 2");
@@ -128,8 +141,10 @@
    echo ("   variable ('$a'): ", variable ("$a"));
    echo ();
 
+   # This function should add arg(0) to $$counter, store into $$counter,
+   # and return the result.
    = ($$counter, 1);
-   echo ("Global + lambda test:");
+   echo ("Global + lambda tests:");
    = ($func, [{
       += ($$counter, arg (0));
       return ($$counter);
@@ -143,7 +158,7 @@
    echo ();
 
    # Short-circuit logic gates && and ||.
-   echo ("Short-circuit logic test:");
+   echo ("Short-circuit logic tests:");
    print ("   && (1,1,0,1): "); && (print(1), print(1), print(0), print(1));
       echo ();
    print ("   || (0,0,1,0): "); || (print(0), print(0), print(1), print(0));
@@ -190,7 +205,8 @@
    echo ();
    echo ();
 
-   echo ("Lambda test:");
+   # Make sure variables in lambda function blocks get tossed out.
+   echo ("Lambda variable scope tests:");
    = ($test_var, "value outside block");
    echo ("   $test_var: ", $test_var);
    [{
@@ -205,6 +221,7 @@
    echo ("   ", $l ("argument read inside lambda"));
    echo ();
 
+   # Make sure run() can be used in the most extreme cases.
    echo ("Run() tests: ");
    echo ("   ", fancy_string ("Test 1"));
    echo ("   ", run (fancy_string, "Test 2"));
@@ -227,6 +244,7 @@
    echo ($$rval);
    echo ();
 
+   # String indexing w/ modification.
    echo ("String modification tests:");
    echo ("   $string = ", = ($string, "derp"));
    echo ("   $string[0] = ", = ($string[0], 'h'));
@@ -241,7 +259,38 @@
    echo ("   $string = ", $string);
    echo ();
 
-   echo ("Error test: ");
+   # Make sure object references do what they're supposed to.
+   = ($self, this ());
+   = ($obj1, @@main);
+   = ($obj2, @@my_object);
+   = ($obj3, @@bad_object);
+   echo ("Object reference tests:");
+   echo ("   $self = ", $self, "       (id = ", id ($self), ")");
+   echo ("   $obj1 = ", $obj1, "       (id = ", id ($obj1), ")");
+   echo ("   $obj2 = ", $obj2,      "  (id = ", id ($obj2), ")");
+   echo ("   $obj3 = ", $obj3,       " (id = ", id ($obj3), ")");
+   echo ("   ----------------------------------");
+   echo ("   $self == $obj1 : ", == ($self, $obj1), " <-- should pass");
+   echo ("   $obj1 == $obj2 : ", == ($obj1, $obj2));
+   echo ("   $obj2 == $obj3 : ", == ($obj2, $obj3));
+   echo ("   $obj3 == @fail : ", == ($obj3, @fail));
+   echo ("   $obj3 == $obj3 : ", == ($obj3, $obj3), " <-- should pass");
+   echo ("   ----------------------------------");
+   echo ("   $self != $obj1 : ", != ($self, $obj1));
+   echo ("   $obj1 != $obj2 : ", != ($obj1, $obj2), " <-- should pass");
+   echo ("   $obj2 != $obj3 : ", != ($obj2, $obj3), " <-- should pass");
+   echo ("   $obj3 != @@bad : ", != ($obj3, @@bad), " <-- should pass");
+   echo ("   $obj3 != $obj3 : ", != ($obj3, $obj3));
+   echo ("   ----------------------------------");
+   echo ("   ? ($obj1)  : ", ? ($obj1), " <-- should pass");
+   echo ("   ! ($obj1)  : ", ! ($obj1));
+   echo ("   ? (@@bad)  : ", ? (@@bad));
+   echo ("   ! (@@bad)  : ", ! (@@bad), " <-- should pass");
+   echo ();
+   return ();
+
+   # Everything here should call an error!  Use lambda for convenience.
+   echo ("Error tests: ");
    = ($error_test, [{
          print ("   ");
          args ($check);
@@ -271,6 +320,9 @@
    $error_test (= ($string[0], 256));
    $error_test (= ([a, b, c][0], "derp"));
    $error_test (< ([a, b, c], [x, y, z]));
+   $error_test (+ (@@main, @@my_object));
+   $error_test (< (@@main, @@my_object));
+   $error_test (== (@@main, "@@my_object"));
    echo ("   Error test concluded.");
    echo ();
 }

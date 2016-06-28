@@ -33,5 +33,6 @@ qs_object_t *qs_object_get_by_id (qs_scheme_t *scheme, qs_id_t id);
 int qs_object_new_finish (qs_object_t *obj, qs_resource_t *rsrc);
 qs_object_t *qs_object_new_base (qs_scheme_t *scheme, char *name);
 int qs_object_free (qs_object_t *object);
+qs_object_t *qs_object_get (qs_scheme_t *scheme, char *name);
 
 #endif
