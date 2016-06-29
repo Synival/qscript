@@ -33,6 +33,10 @@ qs_execute_t *qs_execute_push (int type, qs_rlink_t *rlink, qs_execute_t *exe,
    /* link to parent. */
    new->parent = exe;
 
+   /* copy certain flags over. */
+   if (exe)
+      new->flags |= (exe->flags & QS_EXE_READ_ONLY);
+
    /* link to our scheme. */
    QS_LINK_BACK (new->scheme, new, exe);
 

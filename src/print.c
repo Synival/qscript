@@ -16,6 +16,9 @@ int qs_print_value (qs_value_t *v, int indent)
       return 0;
    int count = 1;
    switch (v->type_id) {
+      case QSCRIPT_CHAR:
+         printf ("'\x1b[0;37;1m%s\x1b[0m'", v->val_s);
+         break;
       case QSCRIPT_STRING:
          if (v->child && v->child->type_id == QSCRIPT_ACTION &&
              ((qs_action_t *) v->child->val_p)->type_id == QS_ACTION_CALL)
@@ -83,6 +86,11 @@ int qs_print_action (qs_action_t *a, int indent)
          printf ("[");
          qs_print_value (a->data_p, indent + 3);
          printf ("]");
+         break;
+      case QS_ACTION_MEMBER:
+         printf (" <");
+         qs_print_value (a->data_p, indent + 3);
+         printf (">");
          break;
    }
    return 1;

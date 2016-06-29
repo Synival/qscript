@@ -12,6 +12,7 @@
 #include "lists.h"
 #include "objects.h"
 #include "print.h"
+#include "properties.h"
 #include "resources.h"
 #include "rlinks.h"
 #include "schemes.h"
@@ -71,7 +72,8 @@ qs_func_t qs_func_list_standard[] = {
                 "[<default action>]",      1, qsf_switch,  0 },
    { "args",    "[<ref1> ... <ref2>]",     0, qsf_args,    0 },
    { "arg",     "<index>",                 1, qsf_arg,     0 },
-   { "variable","<string>",                1, qsf_variable,0 },
+   { "variable","<value>",                 1, qsf_variable,0 },
+   { "property","<value>",                 1, qsf_property,1 },
    { "vars",    "<var1> [... <varn>]",     1, qsf_vars,    0 },
    { "run",     "<func> [<arg1> ... <argn>]",1,qsf_run,    0 },
    { "print_resource", "[<resource>]",     0, qsf_print_r, 0 },
@@ -275,7 +277,7 @@ QS_FUNC (qsf_math)
       }
       /* for more cases, just copy the value over. */
       else
-         qs_value_copy (lval, rval);
+         qs_value_copy (exe, lval, rval);
    }
 
    /* herp derp */
@@ -480,7 +482,7 @@ QS_FUNC (qsf_let)
 
             /* otherwise, lvalue <= rvalue */
             default:
-               qs_value_copy (lval, rval);
+               qs_value_copy (exe, lval, rval);
          }
          break;
       }
@@ -620,10 +622,17 @@ QS_FUNC (qsf_args)
     * of arguments passed to this function call. */
    if ((e = qs_execute_get_call (exe)) == NULL ||
        (list = e->list) == NULL) {
-      qs_func_error (exe, func->name, action->value->node,
-                     "not a function call.\n");
-      QS_RETURN ();
-      return QSV_NOT_FUNC_CALL;
+      /* if we're calling args(), we can safely return zero to indicate
+       * that we're not a function. */
+      if (args == 0)
+         return QSV_ZERO;
+      /* otherwise, toss an error. */
+      else {
+         qs_func_error (exe, func->name, action->value->node,
+                        "not a function call.\n");
+         QS_RETURN ();
+         return QSV_NOT_FUNC_CALL;
+      }
    }
 
    /* if calling with zero arguments, return the size of the list. */
@@ -649,7 +658,7 @@ QS_FUNC (qsf_args)
          QS_RETURN ();
          return QSV_CANNOT_MODIFY;
       }
-      qs_value_copy (lval, qs_arg_value (e->parent, list->values[i]));
+      qs_value_copy (e, lval, qs_arg_value (e->parent, list->values[i]));
       count++;
    }
 
@@ -708,6 +717,29 @@ QS_FUNC (qsf_variable)
       }
       default:
          QS_ARG_ERROR (0, "can't lookup variable from type '%s'.\n",
+                       qs_value_type (val));
+         return QSV_INVALID_TYPE;
+   }
+}
+
+QS_FUNC (qsf_property)
+{
+   qs_value_t *val = QS_ARGV (0);
+   if (val->link_id == QS_LINK_PROPERTY)
+      return qs_property_value (val->link);
+
+   /* make sure the value is the right type. */
+   switch (val->type_id) {
+      case QSCRIPT_STRING: {
+         qs_property_t *p;
+         if ((p = qs_value_get_property (rlink, val)) == NULL) {
+            QS_ARG_ERROR (0, "invalid property from '%s'.\n", val->val_s);
+            return QSV_NOT_PROPERTY;
+         }
+         return qs_property_value (p);
+      }
+      default:
+         QS_ARG_ERROR (0, "can't lookup property from type '%s'.\n",
                        qs_value_type (val));
          return QSV_INVALID_TYPE;
    }

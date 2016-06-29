@@ -61,7 +61,7 @@ qs_list_t *qs_list_copy (qs_scheme_t *scheme, qs_list_t *list)
       /* initialize. */
       new->values[i]->list = list;
       new->values[i]->flags |= QS_VALUE_MUTABLE;
-      qs_value_copy (new->values[i], list->values[i]);
+      qs_value_copy (NULL, new->values[i], list->values[i]);
    }
 
    /* return our new list. */

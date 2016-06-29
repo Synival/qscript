@@ -24,7 +24,7 @@ qs_property_t *qs_property_new (qs_object_t *obj, char *name)
    new->value_default.link_id = QS_LINK_PROPERTY;
    new->value_default.link    = new;
    new->value_default.flags  |= QS_VALUE_MUTABLE;
-   qs_value_copy (&(new->value_default), QSV_UNDEFINED);
+   qs_value_copy (NULL, &(new->value_default), QSV_UNDEFINED);
    new->value = &(new->value_default);
 
    /* link to the object. */
@@ -98,7 +98,7 @@ qs_modify_t *qs_property_push (qs_property_t *p, qs_rlink_t *rlink)
    new->value.link_id = QS_LINK_PROPERTY;
    new->value.link    = p;
    new->value.flags  |= QS_VALUE_MUTABLE;
-   qs_value_copy (&(new->value), p->value);
+   qs_value_copy (NULL, &(new->value), p->value);
 
    /* make sure our property is using this new value. */
    p->value = &(new->value);

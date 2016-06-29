@@ -33,5 +33,6 @@ int qs_stack_pop (qs_stack_t *stack);
 int qs_stack_empty (qs_stack_t *stack);
 int qs_stack_free (qs_stack_t *stack);
 int qs_stack_data (qs_stack_t *stack, void *data, qs_stack_func *free_func);
+int qs_stack_pop_get (qs_stack_t *stack, void **data, qs_stack_func **func);
 
 #endif

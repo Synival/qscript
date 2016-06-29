@@ -41,16 +41,23 @@ QSV_DEFINE (QSV_SCOPE_PROPERTY,     QSV_ERR, "property",            0, 0.00f);
 QSV_DEFINE (QSV_SCOPE_UNKNOWN,      QSV_ERR, "unknown",             0, 0.00f);
 QSV_DEFINE (QSV_UNDEFINED,QSCRIPT_UNDEFINED, "<undefined>",         0, 0.00f);
 QSV_DEFINE (QSV_INVALID_VALUE,      QSV_ERR, "<invalid value>",     0, 0.00f);
+QSV_DEFINE (QSV_NO_OBJECT,          QSV_ERR, "<no object>",         0, 0.00f);
 QSV_DEFINE (QSV_ALREADY_WOUND,      QSV_ERR, "<already wound>",     0, 0.00f);
 
-int qs_value_copy (qs_value_t *dest, qs_value_t *src)
+int qs_value_copy (qs_execute_t *exe, qs_value_t *dest, qs_value_t *src)
+   { return qs_value_copy_real (exe, dest, src, 0); }
+int qs_value_copy_const (qs_execute_t *exe, qs_value_t *dest, qs_value_t *src)
+   { return qs_value_copy_real (exe, dest, src, 1); }
+
+int qs_value_copy_real (qs_execute_t *exe, qs_value_t *dest, qs_value_t *src,
+   int force)
 {
    /* don't copy anything into itself. */
    if (dest == src)
       return 0;
 
    /* make sure it's modifiable. */
-   if (!qs_value_can_modify (dest)) {
+   if (!force && !qs_value_can_modify (exe, dest)) {
       p_error (NULL, "attempted to modify immutable value.\n");
       return 0;
    }
@@ -89,7 +96,7 @@ int qs_value_copy (qs_value_t *dest, qs_value_t *src)
       memset (dest->child, 0, sizeof (qs_value_t));
       dest->child->parent = dest;
       dest->child->flags = QS_VALUE_MUTABLE;
-      qs_value_copy (dest->child, src->child);
+      qs_value_copy (exe, dest->child, src->child);
    }
 
    /* return success. */
@@ -349,14 +356,18 @@ int qs_value_restring (qs_value_t *v, char *str)
    return 1;
 }
 
-int qs_value_can_modify (qs_value_t *val)
-   { return (qs_value_modify_value_real (NULL, val, 0)) ? 1 : 0; }
+int qs_value_can_modify (qs_execute_t *exe, qs_value_t *val)
+   { return (qs_value_modify_value_real (exe, val, 0)) ? 1 : 0; }
 qs_value_t *qs_value_modify_value (qs_execute_t *exe, qs_value_t *val)
    { return qs_value_modify_value_real (exe, val, 1); }
 
 qs_value_t *qs_value_modify_value_real (qs_execute_t *exe,
    qs_value_t *val, int push)
 {
+   /* read-only execution states vorbid this. */
+   if (exe && exe->flags & QS_EXE_READ_ONLY)
+      return NULL;
+
    /* immutable values will always fail.  literals, for example,
     * don't have this flag. */
    if (!(val->flags & QS_VALUE_MUTABLE))
@@ -364,7 +375,8 @@ qs_value_t *qs_value_modify_value_real (qs_execute_t *exe,
 
    /* the 'index' and 'char' types makes sure its reference is modifiable. */
    if (val->type_id == QSCRIPT_INDEX || val->type_id == QSCRIPT_CHAR)
-      return qs_value_modify_value_real (exe, val->val_p, push);
+      if (val->val_p && !qs_value_can_modify (exe, val->val_p))
+         return NULL;
 
    /* for properties, push a modification. */
    if (push && val->link_id == QS_LINK_PROPERTY) {

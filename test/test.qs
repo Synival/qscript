@@ -2,26 +2,19 @@
 #        so it gets instantiated for access in @main.
 
 # @my_object {
-my_object {
+@my_object {
    # Eventually do something, like have properties!
-   = (%property, "my value");
+   = (%property, if (args (), arg(0), "my value"));
 }
 
 property_test {
-   echo ("1. ", %max_hp);
-   = (%max_hp, 100);
-   my_object ();
-   echo ("2. ", %max_hp);
-   = (%max_hp, 200);
-   echo ("3. ", %max_hp);
-   my_object ();
-   print_resource ();
+   @@my_object <{ = (%property, "herp derp"); }>;
+   echo (@@my_object <property (+ ("%prop", "erty"))>);
 }
 
 # Test a lot of stuff!
 @main {
-   property_test ();
-   return ();
+   print_resource ();
 
    # Proper echo() behavior with some strings, numbers, and statements.
    echo ("Numbers and addition vs. concatenation tests:");

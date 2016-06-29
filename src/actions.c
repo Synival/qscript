@@ -6,6 +6,7 @@
 #include "funcs.h"
 #include "language.h"
 #include "lists.h"
+#include "objects.h"
 #include "resources.h"
 #include "rlinks.h"
 #include "schemes.h"
@@ -96,7 +97,11 @@ qs_value_t *qs_action_run (qs_execute_t *exe, qs_value_t *val,
          return qs_action_call (exe, val, action);
       case QS_ACTION_INDEX:
          return qs_action_index (exe, val, action);
+      case QS_ACTION_MEMBER:
+         return qs_action_member (exe, val, action);
       default:
+         p_error (action->value->node, "unknown action type '%d'.\n",
+                  action->type_id);
          return QSV_CANNOT_EXECUTE;
    }
 }
@@ -160,8 +165,8 @@ qs_value_t *qs_action_index (qs_execute_t *exe, qs_value_t *val,
 
    /* complain if our value is not a valid type. */
    if ((length = qs_value_length (val)) < 0) {
-      p_error (action->value->node, "cannot index value of type '%s'.\n",
-         qs_value_type (val));
+      p_error (action->value->node, "cannot index value '%s' of type '%s'.\n",
+         val->val_s, qs_value_type (val));
       return QSV_INVALID_INDEX;
    }
    else if (length == 0) {
@@ -235,6 +240,49 @@ qs_value_t *qs_action_index (qs_execute_t *exe, qs_value_t *val,
 
    /* dereference our rval and return it. */
    return qs_value_read (exe, rval);
+}
+
+qs_value_t *qs_action_member (qs_execute_t *exe, qs_value_t *val,
+   qs_action_t *action)
+{
+   /* only objects can be dereferenced. */
+   if (val->type_id != QSCRIPT_OBJECT) {
+      p_error (action->value->node, "cannot get member value from "
+               "non-object (type is '%s'). \n", qs_value_type (val));
+      return QSV_INVALID_TYPE;
+   }
+
+   /* attempt to get the object. */
+   qs_object_t *obj;
+   if ((obj = qs_value_object (exe, val)) == NULL)
+      return QSV_NO_OBJECT;
+
+   /* TODO: unwind! */
+   /* TODO: forbid variable access and modification of the heap. */
+
+   /* FIXME: replace this method ASAP. it's super dangerous.             *
+    * ------------------------------------------------------------------ *
+    * here's a list why:                                                 *
+    *                                                                    *
+    * 1. pushing an execution state on the last rlink in the object is   *
+    *       convenient, but arbitrary and causes unpredictable behavior. *
+    * 2. the referenced object should be unwound to the same priority    *
+    *       level as our current rlink. in the likely case of equal      *
+    *       rlink priorities, a scheme-wide list of rlinks needs to      *
+    *       maintained to know which came first.                         *
+    * 3. arbitrary code execution without a hard rlink can cause state   *
+    *       corruption, also leading to unpredictable behavior. for this *
+    *       reason, actions here must be flagged as 'read only' and not  *
+    *       modify the object in any way.                                */
+
+   qs_execute_t *e = qs_execute_push (QS_EXE_MEMBER, obj->rlink_list_back,
+      exe, action, "(member)", QS_EXE_READ_ONLY, NULL);
+   qs_value_t *rval = qs_value_read (e, action->data_p);
+   qs_execute_pop (e);
+
+   /* TODO: rewind! */
+
+   return rval;
 }
 
 int qs_action_free (qs_action_t *a)

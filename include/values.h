@@ -32,7 +32,10 @@ struct _qs_value_t {
 };
 
 /* value functions. */
-int qs_value_copy (qs_value_t *dest, qs_value_t *src);
+int qs_value_copy (qs_execute_t *exe, qs_value_t *dest, qs_value_t *src);
+int qs_value_copy_const (qs_execute_t *exe, qs_value_t *dest, qs_value_t *src);
+int qs_value_copy_real (qs_execute_t *exe, qs_value_t *dest, qs_value_t *src,
+   int force);
 char *qs_value_type (qs_value_t *val);
 qs_variable_t *qs_value_get_variable (qs_rlink_t *rlink, qs_value_t *v);
 qs_property_t *qs_value_get_property (qs_rlink_t *rlink, qs_value_t *v);
@@ -44,7 +47,7 @@ qs_value_t *qs_value_evaluate_block (qs_execute_t *exe, qs_value_t *val);
 qs_value_t *qs_value_read (qs_execute_t *exe, qs_value_t *val);
 qs_variable_t *qs_value_variable (qs_execute_t *exe, qs_value_t *val);
 int qs_value_restring (qs_value_t *v, char *str);
-int qs_value_can_modify (qs_value_t *val);
+int qs_value_can_modify (qs_execute_t *exe, qs_value_t *val);
 qs_value_t *qs_value_modify_value (qs_execute_t *exe, qs_value_t *val);
 qs_value_t *qs_value_modify_value_real (qs_execute_t *exe,
    qs_value_t *val, int push);
@@ -79,6 +82,7 @@ extern qs_value_t *QSV_SCOPE_PROPERTY;
 extern qs_value_t *QSV_SCOPE_UNKNOWN;
 extern qs_value_t *QSV_UNDEFINED;
 extern qs_value_t *QSV_INVALID_VALUE;
+extern qs_value_t *QSV_NO_OBJECT;
 extern qs_value_t *QSV_ALREADY_WOUND;
 
 #endif

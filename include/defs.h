@@ -25,6 +25,7 @@ enum qscript_execute_type_e {
    QS_EXE_RESOURCE,
    QS_EXE_BLOCK,
    QS_EXE_LOOP,
+   QS_EXE_MEMBER,
    QS_EXE_LAST
 };
 
@@ -42,6 +43,7 @@ enum qscript_action_type_e {
    QS_ACTION_UNDEFINED = 0,
    QS_ACTION_CALL,
    QS_ACTION_INDEX,
+   QS_ACTION_MEMBER,
    QS_ACTION_LAST
 };
 
@@ -73,6 +75,7 @@ enum qscript_tag_e {
    QSCRIPT_CHAR,
    QSCRIPT_OBJECT,
    QSCRIPT_PROPERTY,
+   QSCRIPT_MEMBER,
    QSCRIPT_LAST,
 };
 
@@ -85,6 +88,7 @@ enum qscript_tag_e {
 /* flags for execution states. */
 #define QS_EXE_BREAK             0x01
 #define QS_EXE_FREE_LIST         0x02
+#define QS_EXE_READ_ONLY         0x04
 
 /* flags for resources. */
 #define QS_RSRC_AUTO_INSTANTIATE 0x01

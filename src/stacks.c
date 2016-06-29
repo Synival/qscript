@@ -41,6 +41,17 @@ int qs_stack_push (qs_stack_t *stack, void *data, qs_stack_func *free_func)
    return 1;
 }
 
+int qs_stack_pop_get (qs_stack_t *stack, void **data, qs_stack_func **func)
+{
+   if (stack->count <= 0)
+      return 0;
+   int i = stack->count - 1;
+   *data = stack->data[i];
+   *func = stack->func[i];
+   stack->count--;
+   return 1;
+}
+
 int qs_stack_pop (qs_stack_t *stack)
 {
    if (stack->count <= 0)

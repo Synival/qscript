@@ -23,6 +23,8 @@ qs_value_t *qs_action_call (qs_execute_t *exe, qs_value_t *val,
    qs_action_t *action);
 qs_value_t *qs_action_index (qs_execute_t *exe, qs_value_t *val,
    qs_action_t *action);
+qs_value_t *qs_action_member (qs_execute_t *exe, qs_value_t *val,
+   qs_action_t *action);
 int qs_action_free (qs_action_t *a);
 
 #endif
