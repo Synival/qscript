@@ -177,9 +177,10 @@ QS_STACK_FUNC (qs_property_sf_modify)
    }
    m->flags |= QS_MODIFY_POPPING;
 
-   /* if we're not the last property on the object, it (should) mean the
-    * parent rlink did some further modifications.  to preserve the property's
-    * state, pop later modifications first. */
+   /* if we're not the last property modification, it (should) mean the
+    * parent rlink did some further modifications. because the parent is
+    * expected to be popped anway, pop its modifications now in order to
+    * preserve stack order. */
    qs_modify_t *last;
    while ((last = m->p_next) != NULL) {
       /* the unwind process should be smart enough to know what needs to
