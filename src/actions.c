@@ -133,7 +133,7 @@ qs_value_t *qs_action_call (qs_execute_t *exe, qs_value_t *val,
       e->rlink = qs_rlink_push_at (e->rlink->object, r,
          e->rlink->priority, e->rlink, e->rlink->child_back, e,
          action);
-      rval = qs_execute_rlink (e, e->rlink);
+      rval = qs_rlink_wind (e->rlink, e);
    }
    /* if there's a built-in function, run it. */
    else if ((func = qs_scheme_get_func (scheme, val->val_s)) != NULL) {

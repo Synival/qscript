@@ -8,6 +8,7 @@
 
 #include "link.h"
 #include "execute.h"
+#include "properties.h"
 #include "resources.h"
 #include "rlinks.h"
 #include "schemes.h"
@@ -71,7 +72,7 @@ int qs_object_new_finish (qs_object_t *obj, qs_resource_t *rsrc)
    /* run our rlink. */
    /* TODO: unwind! */
    rl = qs_rlink_push (obj, rsrc, 0);
-   qs_execute_rlink (NULL, rl);
+   qs_rlink_wind (rl, NULL);
    /* TODO: rewind! */
 
    return 1;
@@ -106,6 +107,10 @@ int qs_object_free (qs_object_t *object)
    /* free any remaining variables. */
    while (object->variable_list_back)
       qs_variable_free (object->variable_list_back);
+
+   /* free properties. */
+   while (object->property_list_back)
+      qs_property_free (object->property_list_back);
 
    /* unlink object from our scheme. */
    QS_UNLINK (object->scheme, object, object);

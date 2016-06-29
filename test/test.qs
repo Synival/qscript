@@ -1,13 +1,28 @@
 # FIXME: Unfortunately, this reference needs to be declaredfirst
 #        so it gets instantiated for access in @main.
 
-@my_object {
+# @my_object {
+my_object {
    # Eventually do something, like have properties!
-   derp;
+   = (%property, "my value");
+}
+
+property_test {
+   echo ("1. ", %max_hp);
+   = (%max_hp, 100);
+   my_object ();
+   echo ("2. ", %max_hp);
+   = (%max_hp, 200);
+   echo ("3. ", %max_hp);
+   my_object ();
+   print_resource ();
 }
 
 # Test a lot of stuff!
 @main {
+   property_test ();
+   return ();
+
    # Proper echo() behavior with some strings, numbers, and statements.
    echo ("Numbers and addition vs. concatenation tests:");
    echo ("   nums: ", 1, ", ", 2.00, ", ", -3.250);
@@ -287,7 +302,6 @@
    echo ("   ? (@@bad)  : ", ? (@@bad));
    echo ("   ! (@@bad)  : ", ! (@@bad), " <-- should pass");
    echo ();
-   return ();
 
    # Everything here should call an error!  Use lambda for convenience.
    echo ("Error tests: ");

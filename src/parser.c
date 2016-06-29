@@ -267,5 +267,6 @@ int p_error (p_node_t *node, char *format, ...)
       printf ("\x1b[0;37;1m%d,%d: %s\x1b[0m", node->row, node->col, buf);
    else
       printf ("\x1b[0;37;1m%s\x1b[0m", buf);
+   fflush (stdout);
    return 1;
 }

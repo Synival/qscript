@@ -120,8 +120,7 @@ QS_FUNC (qsf_math)
    /* are we setting a value...? */
    if (sub_func >= 20) {
       /* get our lvalue.  can we modify it? */
-      lval = QS_ARGV (0);
-      if (!qs_value_can_modify (lval)) {
+      if ((lval = qs_value_modify_value (exe, QS_ARGV (0))) == NULL) {
          QS_ARG_ERROR (0, "first argument cannot be modified.\n");
          return QSV_CANNOT_MODIFY;
       }
@@ -445,8 +444,7 @@ QS_FUNC (qsf_let)
    qs_value_t *lval;
 
    /* get our variable. */
-   lval = QS_ARGV (0);
-   if (!qs_value_can_modify (lval)) {
+   if ((lval = qs_value_modify_value (exe, QS_ARGV (0))) == NULL) {
       QS_ARG_ERROR (0, "first argument cannot be modified.\n");
       return QSV_CANNOT_MODIFY;
    }
@@ -556,12 +554,22 @@ QS_FUNC (qsf_scope)
 {
    /* no variable? */
    qs_value_t *val = QS_ARGV (0);
-   if (val->variable == NULL)
-      return QSV_SCOPE_LITERAL;
-   switch (val->variable->link_id) {
-      case QS_SCOPE_OBJECT:  return QSV_SCOPE_OBJECT;
-      case QS_SCOPE_BLOCK:   return QSV_SCOPE_BLOCK;
-      default:               return QSV_SCOPE_UNKNOWN;
+   switch (val->link_id) {
+      case QS_LINK_LITERAL:
+         return QSV_SCOPE_LITERAL;
+      case QS_LINK_VARIABLE: {
+         qs_variable_t *var = val->link;
+         switch (var->link_id) {
+            case QS_SCOPE_OBJECT:  return QSV_SCOPE_OBJECT;
+            case QS_SCOPE_BLOCK:   return QSV_SCOPE_BLOCK;
+            default:               return QSV_SCOPE_UNKNOWN;
+         }
+      }
+      case QS_LINK_PROPERTY:
+         return QSV_SCOPE_PROPERTY;
+      default:
+         QS_ARG_ERROR (0, "unknown scope for value.\n");
+         return QSV_INVALID_VALUE;
    }
 }
 
@@ -634,15 +642,14 @@ QS_FUNC (qsf_args)
    /* resolve all variables in the PREVIOUS execution state and store
     * them in new local variables. */
    int i, count = 0;
-   qs_value_t *val;
+   qs_value_t *lval;
    for (i = 0; i < args; i++) {
-      val = QS_ARGV (i);
-      if (!qs_value_can_modify (val)) {
+      if ((lval = qs_value_modify_value (exe, QS_ARGV (i))) == NULL) {
          QS_ARG_ERROR (i, "argument %d cannot be modified.\n", i + 1);
          QS_RETURN ();
          return QSV_CANNOT_MODIFY;
       }
-      qs_value_copy (val, qs_arg_value (e->parent, list->values[i]));
+      qs_value_copy (lval, qs_arg_value (e->parent, list->values[i]));
       count++;
    }
 
@@ -685,8 +692,8 @@ QS_FUNC (qsf_arg)
 QS_FUNC (qsf_variable)
 {
    qs_value_t *val = QS_ARGV (0);
-   if (val->variable)
-      return qs_variable_value (val->variable);
+   if (val->link_id == QS_LINK_VARIABLE)
+      return qs_variable_value (val->link);
 
    /* make sure the value is the right type. */
    switch (val->type_id) {

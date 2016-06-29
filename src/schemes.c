@@ -151,7 +151,4 @@ int qs_scheme_link (qs_scheme_t *scheme)
 }
 
 QS_STACK_FUNC (qs_scheme_sf_values)
-{
-   qs_value_t *v = data;
-   qs_value_free (v);
-}
+   { return qs_value_free (data); }

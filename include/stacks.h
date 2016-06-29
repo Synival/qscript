@@ -11,8 +11,15 @@
 
 /* types. */
 struct _qs_stack_t {
+   /* data assigned to our stack itself. */
+   void *s_data;
+   qs_stack_func *s_func;
+
+   /* globs of data. */
    void **data;
    qs_stack_func **func;
+
+   /* storage sizes. */
    size_t type_size;
    int size, count;
 };
@@ -25,5 +32,6 @@ int qs_stack_push (qs_stack_t *stack, void *data, qs_stack_func *free_func);
 int qs_stack_pop (qs_stack_t *stack);
 int qs_stack_empty (qs_stack_t *stack);
 int qs_stack_free (qs_stack_t *stack);
+int qs_stack_data (qs_stack_t *stack, void *data, qs_stack_func *free_func);
 
 #endif

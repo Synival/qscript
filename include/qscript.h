@@ -14,6 +14,7 @@
 #include "objects.h"
 #include "parser.h"
 #include "print.h"
+#include "properties.h"
 #include "resources.h"
 #include "rlinks.h"
 #include "schemes.h"

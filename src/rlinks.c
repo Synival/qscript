@@ -7,12 +7,14 @@
 #include <string.h>
 
 #include "actions.h"
+#include "execute.h"
 #include "funcs.h"
 #include "language.h"
 #include "link.h"
 #include "objects.h"
 #include "resources.h"
 #include "schemes.h"
+#include "stacks.h"
 #include "variables.h"
 
 #include "rlinks.h"
@@ -46,6 +48,10 @@ qs_rlink_t *qs_rlink_push_at (qs_object_t *obj, qs_resource_t *resource,
    new->resource = resource;
    new->object   = obj;
    new->scheme   = resource->scheme;
+
+   /* create a new stack for property modifications. */
+   new->stack_modify = qs_stack_new (sizeof (qs_modify_t *));
+   qs_stack_data (new->stack_modify, new, NULL);
 
    /* add to our parent. */
    new->parent = parent;
@@ -85,9 +91,66 @@ qs_rlink_t *qs_rlink_push_at (qs_object_t *obj, qs_resource_t *resource,
    return new;
 }
 
+qs_value_t *qs_rlink_wind (qs_rlink_t *rlink, qs_execute_t *exe)
+{
+   /* can't wind what's already wound. */
+   if (rlink->flags & QS_RLINK_ON) {
+      p_node_t *node = (exe->action) ? exe->action->value->node : NULL;
+      p_error (node, "attempted to wind already-wound resource '%s'@%d "
+         "on object '%s' (#%d).\n", rlink->resource->name, rlink->priority,
+         rlink->object->name);
+      return QSV_ALREADY_WOUND;
+   }
+   rlink->flags |= QS_RLINK_ON;
+
+   /* if there's no execution state, create one here. */
+   qs_execute_t *new_exe = NULL;
+   if (exe == NULL)
+      exe = new_exe = qs_execute_push (QS_EXE_RESOURCE, rlink, NULL, NULL,
+         rlink->resource->name, 0, NULL);
+
+   /* create a new value on the heap to return. */
+   qs_value_t *val = qs_scheme_heap_value (exe->scheme);
+
+   /* turn it into a block and get its evaluation. */
+   val->type_id = QSCRIPT_BLOCK;
+   qs_value_restring (val, "<block>");
+   val->val_p = rlink->resource->block;
+   qs_value_t *rval = qs_value_read (exe, val);
+
+   /* if we pushed a new execution state, pop it. */
+   if (new_exe)
+      qs_execute_pop (new_exe);
+
+   /* return the evaluation of the block. */
+   return rval;
+}
+
+int qs_rlink_unwind (qs_rlink_t *rlink)
+{
+   /* don't unwind if already wound. */
+   if (!(rlink->flags & QS_RLINK_ON))
+      return 0;
+   rlink->flags &= ~QS_RLINK_ON;
+
+   /* unwind children, in reverse order.  children should have the same
+    * priority, so priorty checks aren't necessary. */
+   qs_rlink_t *r;
+   for (r = rlink->child_back; r != NULL; r = r->prev)
+      qs_rlink_unwind (r);
+
+   /* pop everything in our property modify stack. */
+   qs_stack_empty (rlink->stack_modify);
+
+   /* return success. */
+   return 1;
+}
+
 int qs_rlink_pop (qs_rlink_t *rlink)
 {
-   /* TODO: unwind! */
+   /* unwind before anything else, and free modification stack. */
+   qs_rlink_unwind (rlink);
+   qs_stack_free (rlink->stack_modify);
 
    /* free children first. */
    while (rlink->child_back)
@@ -121,5 +184,16 @@ int qs_rlink_pop (qs_rlink_t *rlink)
 
    /* free our own memory and return success. */
    free (rlink);
+   return 1;
+}
+
+int qs_rlink_is_child_of (qs_rlink_t *child, qs_rlink_t *parent)
+{
+   /* check all parents of 'child' recursively until we find a match. */
+   while (child) {
+      if (child->parent == parent)
+         return 1;
+      child = child->parent;
+   }
    return 1;
 }

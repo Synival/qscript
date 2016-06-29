@@ -37,6 +37,9 @@ int qs_print_value (qs_value_t *v, int indent)
                break;
          }
          break;
+      case QSCRIPT_PROPERTY:
+         printf ("\x1b[0;34m%%\x1b[1m%s\x1b[0m", v->val_s + 1);
+         break;
       case QSCRIPT_LIST:
          putchar ('[');
          count += qs_print_list (v->val_p, indent);

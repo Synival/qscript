@@ -51,11 +51,11 @@ qs_variable_t *qs_variable_new_base (qs_scheme_t *scheme, char *name)
    qs_variable_t *new = malloc (sizeof (qs_variable_t));
    memset (new, 0, sizeof (qs_variable_t));
    new->name = strdup (name);
-   new->value.variable = new;
+   new->value.link_id  = QS_LINK_VARIABLE;
+   new->value.link     = new;
    new->value.scheme   = scheme;
-   new->value.type_id  = QSCRIPT_UNDEFINED;
-   new->value.val_s    = strdup ("<undefined>");
    new->value.flags    = QS_VALUE_MUTABLE;
+   qs_value_copy (&(new->value), QSV_UNDEFINED);
    return new;
 }
 

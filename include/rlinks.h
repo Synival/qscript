@@ -12,12 +12,15 @@ struct _qs_rlink_t {
    /* identity stuff. */
    qs_scheme_t *scheme;
    qs_resource_t *resource;
-   int state;
+   int flags;
 
    /* variables. */
    int variable_count;
    qs_variable_t *variable_list_front, *variable_list_back;
-   
+
+   /* modificiations applied to properties. */
+   qs_stack_t *stack_modify;
+
    /* link information. */
    int priority;
    qs_object_t *object;
@@ -34,6 +37,9 @@ qs_rlink_t *qs_rlink_push (qs_object_t *obj, qs_resource_t *resource,
 qs_rlink_t *qs_rlink_push_at (qs_object_t *obj, qs_resource_t *resource,
    int priority, qs_rlink_t *parent, qs_rlink_t *prev, qs_execute_t *exe,
    qs_action_t *action);
+qs_value_t *qs_rlink_wind (qs_rlink_t *rlink, qs_execute_t *exe);
+int qs_rlink_unwind (qs_rlink_t *rlink);
 int qs_rlink_pop (qs_rlink_t *rlink);
+int qs_rlink_is_child_of (qs_rlink_t *child, qs_rlink_t *parent);
 
 #endif

@@ -16,7 +16,9 @@
 #include "language.h"
 
 #define QSCRIPT_SIMPLE_STRING_PATTERN \
-   "[a-zA-Z0-9_!@#$%^&\\*_+\\-\\.=\\/<>|?]+"
+   "[a-zA-Z0-9_!@#$%^&\\*+\\-\\.=\\/<>|?]+"
+#define QSCRIPT_VARIABLE_PATTERN \
+   "[a-zA-Z0-9_]+"
 
 /* list of all symbols for qscripts. */
 static p_symbol_t static_qs_symbols[] = {
@@ -33,8 +35,9 @@ static p_symbol_t static_qs_symbols[] = {
    {QSCRIPT_OUTER_LIST, "outer_list","'[' <list> ']'",
       qs_func_outer_list, qs_func_outer_list_f},
    {QSCRIPT_VALUE,      "value",
-      "<comment>* <unwrap> (<number> | <variable> | <outer_list> | "
-      "<outer_block> | <char> | <object> | <qstring>) <action>*",
+      "<comment>* <unwrap> (<number> | <variable> | <property> | "
+      "<outer_list> | <outer_block> | <char> | <object> | <qstring>) "
+      "<action>*",
       qs_func_value, qs_func_value_f},
    {QSCRIPT_OUTER_BLOCK,"outer_block", "'{' <block> '}'",
       qs_func_outer_list, qs_func_outer_list_f},
@@ -49,10 +52,13 @@ static p_symbol_t static_qs_symbols[] = {
    {QSCRIPT_FLOAT,      "float",    "/[-+]?[0-9]+\\.[0-9]+/"},
    {QSCRIPT_INT,        "int",      "/[-+]?[0-9]+/"},
    {QSCRIPT_VARIABLE,   "variable",
-      "/\\$" QSCRIPT_SIMPLE_STRING_PATTERN "/",
+      "/[\\$]+" QSCRIPT_VARIABLE_PATTERN "/",
       qs_func_copy_contents},
    {QSCRIPT_OBJECT,     "object",
-      "/\\@" QSCRIPT_SIMPLE_STRING_PATTERN "/",
+      "/[@]+" QSCRIPT_VARIABLE_PATTERN "/",
+      qs_func_copy_contents},
+   {QSCRIPT_PROPERTY,   "property",
+      "/%" QSCRIPT_VARIABLE_PATTERN "/",
       qs_func_copy_contents},
    {QSCRIPT_ACTION,     "action",   "(<call> | <index>)",
       qs_func_action, qs_func_action_f},
@@ -161,6 +167,10 @@ P_FUNC (qs_func_value)
                v->val_i = QS_SCOPE_BLOCK;
             }
             v->val_f = 0.00f;
+            break;
+         case QSCRIPT_PROPERTY:
+            v->type_id = QSCRIPT_PROPERTY;
+            v->val_s = strdup (n->contents);
             break;
          case QSCRIPT_CHAR:
             v->type_id = QSCRIPT_CHAR;

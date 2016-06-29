@@ -7,6 +7,7 @@
 #include "language.h"
 #include "lists.h"
 #include "objects.h"
+#include "properties.h"
 #include "rlinks.h"
 #include "schemes.h"
 #include "variables.h"
@@ -14,29 +15,33 @@
 #include "values.h"
 
 /* some constant return values used all the time. */
-QSV_DEFINE (QSV_ZERO,            QSCRIPT_INT,   "0",                  0,0.00f);
-QSV_DEFINE (QSV_ONE,             QSCRIPT_INT,   "1",                  1,1.00f);
-QSV_DEFINE (QSV_INVALID_TYPE,    QSCRIPT_STRING,"<invalid type>",     0,0.00f);
-QSV_DEFINE (QSV_NOT_VARIABLE,    QSCRIPT_STRING,"<not variable>",     0,0.00f);
-QSV_DEFINE (QSV_CANNOT_MODIFY,   QSCRIPT_STRING,"<cannot modify>",    0,0.00f);
-QSV_DEFINE (QSV_NOT_FUNC_CALL,   QSCRIPT_STRING,"<not function call>",0,0.00f);
-QSV_DEFINE (QSV_INVALID_INDEX,   QSCRIPT_STRING,"<invalid index>",    0,0.00f);
-QSV_DEFINE (QSV_INVALID_SUB_FUNC,QSCRIPT_STRING,"<invalid sub_func>", 0,0.00f);
-QSV_DEFINE (QSV_NOT_ENOUGH_ARGS, QSCRIPT_STRING,"<not enough args>" , 0,0.00f);
-QSV_DEFINE (QSV_INVALID_FUNC,    QSCRIPT_STRING,"<invalid func>",     0,0.00f);
-QSV_DEFINE (QSV_INVALID_OPER,    QSCRIPT_STRING,"<invalid operation>",0,0.00f);
-QSV_DEFINE (QSV_DIVISION_BY_ZERO,QSCRIPT_STRING,"<division by zero>", 0,0.00f);
-QSV_DEFINE (QSV_INVALID_RESOURCE,QSCRIPT_STRING,"<invalid resource>", 0,0.00f);
-QSV_DEFINE (QSV_CANNOT_EXECUTE,  QSCRIPT_STRING,"<cannot execute>",   0,0.00f);
-QSV_DEFINE (QSV_CANNOT_UNWRAP,   QSCRIPT_STRING,"<cannot unwrap>",    0,0.00f);
-QSV_DEFINE (QSV_SUCCESS,         QSCRIPT_STRING,"<success>",          0,0.00f);
-QSV_DEFINE (QSV_NOT_IN_HEAP,     QSCRIPT_STRING,"<not in heap>",      0,0.00f);
-QSV_DEFINE (QSV_SCOPE_LITERAL,   QSCRIPT_STRING,"literal",            0,0.00f);
-QSV_DEFINE (QSV_SCOPE_OBJECT,    QSCRIPT_STRING,"object",             0,0.00f);
-QSV_DEFINE (QSV_SCOPE_BLOCK,     QSCRIPT_STRING,"block",              0,0.00f);
-QSV_DEFINE (QSV_SCOPE_UNKNOWN,   QSCRIPT_STRING,"unknown",            0,0.00f);
-QSV_DEFINE (QSV_UNDEFINED,    QSCRIPT_UNDEFINED,"<undefined>",        0,0.00f);
-QSV_DEFINE (QSV_INVALID_VALUE,   QSCRIPT_STRING,"<invalid value>",    0,0.00f);
+#define QSV_ERR QSCRIPT_UNDEFINED
+QSV_DEFINE (QSV_ZERO,           QSCRIPT_INT, "0",                   0, 0.00f);
+QSV_DEFINE (QSV_ONE,            QSCRIPT_INT, "1",                   1, 1.00f);
+QSV_DEFINE (QSV_INVALID_TYPE,       QSV_ERR, "<invalid type>",      0, 0.00f);
+QSV_DEFINE (QSV_NOT_VARIABLE,       QSV_ERR, "<not variable>",      0, 0.00f);
+QSV_DEFINE (QSV_NOT_PROPERTY,       QSV_ERR, "<not property>",      0, 0.00f);
+QSV_DEFINE (QSV_CANNOT_MODIFY,      QSV_ERR, "<cannot modify>",     0, 0.00f);
+QSV_DEFINE (QSV_NOT_FUNC_CALL,      QSV_ERR, "<not function call>", 0, 0.00f);
+QSV_DEFINE (QSV_INVALID_INDEX,      QSV_ERR, "<invalid index>",     0, 0.00f);
+QSV_DEFINE (QSV_INVALID_SUB_FUNC,   QSV_ERR, "<invalid sub_func>",  0, 0.00f);
+QSV_DEFINE (QSV_NOT_ENOUGH_ARGS,    QSV_ERR, "<not enough args>" ,  0, 0.00f);
+QSV_DEFINE (QSV_INVALID_FUNC,       QSV_ERR, "<invalid func>",      0, 0.00f);
+QSV_DEFINE (QSV_INVALID_OPER,       QSV_ERR, "<invalid operation>", 0, 0.00f);
+QSV_DEFINE (QSV_DIVISION_BY_ZERO,   QSV_ERR, "<division by zero>",  0, 0.00f);
+QSV_DEFINE (QSV_INVALID_RESOURCE,   QSV_ERR, "<invalid resource>",  0, 0.00f);
+QSV_DEFINE (QSV_CANNOT_EXECUTE,     QSV_ERR, "<cannot execute>",    0, 0.00f);
+QSV_DEFINE (QSV_CANNOT_UNWRAP,      QSV_ERR, "<cannot unwrap>",     0, 0.00f);
+QSV_DEFINE (QSV_SUCCESS,            QSV_ERR, "<success>",           0, 0.00f);
+QSV_DEFINE (QSV_NOT_IN_HEAP,        QSV_ERR, "<not in heap>",       0, 0.00f);
+QSV_DEFINE (QSV_SCOPE_LITERAL,      QSV_ERR, "literal",             0, 0.00f);
+QSV_DEFINE (QSV_SCOPE_OBJECT,       QSV_ERR, "object",              0, 0.00f);
+QSV_DEFINE (QSV_SCOPE_BLOCK,        QSV_ERR, "block",               0, 0.00f);
+QSV_DEFINE (QSV_SCOPE_PROPERTY,     QSV_ERR, "property",            0, 0.00f);
+QSV_DEFINE (QSV_SCOPE_UNKNOWN,      QSV_ERR, "unknown",             0, 0.00f);
+QSV_DEFINE (QSV_UNDEFINED,QSCRIPT_UNDEFINED, "<undefined>",         0, 0.00f);
+QSV_DEFINE (QSV_INVALID_VALUE,      QSV_ERR, "<invalid value>",     0, 0.00f);
+QSV_DEFINE (QSV_ALREADY_WOUND,      QSV_ERR, "<already wound>",     0, 0.00f);
 
 int qs_value_copy (qs_value_t *dest, qs_value_t *src)
 {
@@ -105,14 +110,15 @@ char *qs_value_type (qs_value_t *val)
       case QSCRIPT_CHAR:      return "char";
       case QSCRIPT_ACTION:    return "action";
       case QSCRIPT_OBJECT:    return "object";
+      case QSCRIPT_PROPERTY:  return "property";
       default:                return "unknown";
    }
 }
 
 qs_variable_t *qs_value_get_variable (qs_rlink_t *rlink, qs_value_t *v)
 {
-   if (v->variable)
-      return v->variable;
+   if (v->link_id == QS_LINK_VARIABLE)
+      return v->link;
    switch (v->type_id) {
       case QSCRIPT_VARIABLE:
          return qs_variable_get (rlink, v->val_s, v->val_i);
@@ -135,6 +141,16 @@ qs_variable_t *qs_value_get_variable (qs_rlink_t *rlink, qs_value_t *v)
       default:
          return NULL;
    }
+}
+
+qs_property_t *qs_value_get_property (qs_rlink_t *rlink, qs_value_t *v)
+{
+   if (v->link_id == QS_LINK_PROPERTY)
+      return v->link;
+   if (v->val_s[0] != '%')
+      return NULL;
+   else
+      return qs_property_get (rlink->object, v->val_s + 1);
 }
 
 int qs_value_cleanup (qs_value_t *value)
@@ -283,6 +299,17 @@ qs_value_t *qs_value_read (qs_execute_t *exe, qs_value_t *val)
                rval = qs_variable_value (var);
             break;
          }
+         case QSCRIPT_PROPERTY: {
+            qs_property_t *p = qs_value_get_property (exe->rlink, val);
+            if (p == NULL) {
+               p_error (val->node, "cannot get property for '%s'.\n",
+                  val->val_s);
+               rval = QSV_NOT_PROPERTY;
+            }
+            else
+               rval = qs_property_value (p);
+            break;
+         }
          default:
             p_error (val->node, "cannot process value of type '%s'.\n",
                qs_value_type (val));
@@ -323,21 +350,31 @@ int qs_value_restring (qs_value_t *v, char *str)
 }
 
 int qs_value_can_modify (qs_value_t *val)
+   { return (qs_value_modify_value_real (NULL, val, 0)) ? 1 : 0; }
+qs_value_t *qs_value_modify_value (qs_execute_t *exe, qs_value_t *val)
+   { return qs_value_modify_value_real (exe, val, 1); }
+
+qs_value_t *qs_value_modify_value_real (qs_execute_t *exe,
+   qs_value_t *val, int push)
 {
    /* immutable values will always fail.  literals, for example,
     * don't have this flag. */
    if (!(val->flags & QS_VALUE_MUTABLE))
-      return 0;
+      return NULL;
 
-   /* the 'index' type makes sure its reference is modifiable. */
-   if (val->type_id == QSCRIPT_INDEX && !qs_value_can_modify (val->val_p))
-      return 0;
-   if (val->type_id == QSCRIPT_CHAR && val->val_p &&
-       !qs_value_can_modify (val->val_p))
-      return 0;
+   /* the 'index' and 'char' types makes sure its reference is modifiable. */
+   if (val->type_id == QSCRIPT_INDEX || val->type_id == QSCRIPT_CHAR)
+      return qs_value_modify_value_real (exe, val->val_p, push);
+
+   /* for properties, push a modification. */
+   if (push && val->link_id == QS_LINK_PROPERTY) {
+      qs_property_t *p = val->link;
+      qs_property_push (p, exe->rlink);
+      return qs_value_modify_value_real (exe, p->value, 0);
+   }
 
    /* all tests passed! we can modify this. */
-   return 1;
+   return val;
 }
 
 char *qs_value_char_pointer (qs_value_t *val)

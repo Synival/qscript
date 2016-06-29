@@ -23,7 +23,6 @@ struct _qs_execute_t {
 qs_execute_t *qs_execute_push (int type, qs_rlink_t *rlink, qs_execute_t *exe,
    qs_action_t *action, char *name, int flags, qs_list_t *list);
 int qs_execute_pop (qs_execute_t *exe);
-qs_value_t *qs_execute_rlink (qs_execute_t *exe, qs_rlink_t *rlink);
 qs_execute_t *qs_execute_get_call (qs_execute_t *exe);
 
 #endif

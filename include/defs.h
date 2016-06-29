@@ -72,33 +72,38 @@ enum qscript_tag_e {
    QSCRIPT_INDEX,
    QSCRIPT_CHAR,
    QSCRIPT_OBJECT,
+   QSCRIPT_PROPERTY,
    QSCRIPT_LAST,
 };
 
-/* two types of reference. */
-#define QS_REFERENCE_REFER    0
-#define QS_REFERENCE_DEFER    1
-
 /* rlink states. */
-#define QS_RLINK_ON     0x01
+#define QS_RLINK_ON              0x01
 
-/* execution flags. */
-#define QS_EXE_BREAK       0x01
-#define QS_EXE_FREE_LIST   0x02
+/* flags for property modifiers. */
+#define QS_MODIFY_POPPING        0x01
+
+/* flags for execution states. */
+#define QS_EXE_BREAK             0x01
+#define QS_EXE_FREE_LIST         0x02
 
 /* flags for resources. */
 #define QS_RSRC_AUTO_INSTANTIATE 0x01
 #define QS_RSRC_LINKED           0x02
 
 /* flags for values. */
-#define QS_VALUE_UNWRAP    0x01
-#define QS_VALUE_MUTABLE   0x02
+#define QS_VALUE_UNWRAP          0x01
+#define QS_VALUE_MUTABLE         0x02
+
+/* value link types. */
+#define QS_LINK_LITERAL          0
+#define QS_LINK_VARIABLE         1
+#define QS_LINK_PROPERTY         2
 
 /* flags for objects. */
-#define QS_OBJECT_GLOBAL   0x01
+#define QS_OBJECT_GLOBAL         0x01
 
 /* id limits. */
-#define QS_ID_MAX    65536
+#define QS_ID_MAX                65536
 
 /* simple types. */
 typedef uint32_t qs_id_t;
@@ -116,6 +121,8 @@ typedef struct _qs_execute_t   qs_execute_t;
 typedef struct _qs_list_t      qs_list_t;
 typedef struct _qs_action_t    qs_action_t;
 typedef struct _qs_stack_t     qs_stack_t;
+typedef struct _qs_property_t  qs_property_t;
+typedef struct _qs_modify_t    qs_modify_t;
 
 /* function types. */
 #define QS_FUNC(x) qs_value_t *x (qs_object_t *object, qs_rlink_t *rlink, \
@@ -123,7 +130,7 @@ typedef struct _qs_stack_t     qs_stack_t;
    int args, qs_value_t **arg)
 typedef QS_FUNC(qs_func);
 
-#define QS_STACK_FUNC(x) void x (void *data)
+#define QS_STACK_FUNC(x) int x (qs_stack_t *stack, void *data)
 typedef QS_STACK_FUNC(qs_stack_func);
 
 #define QS_ARGV(x) (qs_arg_value    (exe, arg[x]))

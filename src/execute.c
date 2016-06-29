@@ -58,30 +58,6 @@ int qs_execute_pop (qs_execute_t *exe)
    return 1;
 }
 
-qs_value_t *qs_execute_rlink (qs_execute_t *exe, qs_rlink_t *rlink)
-{
-   qs_execute_t *new_exe = NULL;
-   if (exe == NULL)
-      exe = new_exe = qs_execute_push (QS_EXE_RESOURCE, rlink, NULL, NULL,
-         rlink->resource->name, 0, NULL);
-
-   /* create a new value on the heap to return. */
-   qs_value_t *val = qs_scheme_heap_value (exe->scheme);
-
-   /* turn it into a block and get its evaluation. */
-   val->type_id = QSCRIPT_BLOCK;
-   qs_value_restring (val, "<block>");
-   val->val_p = rlink->resource->block;
-   qs_value_t *rval = qs_value_read (exe, val);
-
-   /* if we pushed a new execution state, pop it. */
-   if (new_exe)
-      qs_execute_pop (new_exe);
-
-   /* return the evaluation of the block. */
-   return rval;
-}
-
 #if 0
 qs_value_t *qs_execute_parameter (qs_execute_t *exe, qs_parameter_t *p)
 {
