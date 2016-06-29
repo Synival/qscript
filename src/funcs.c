@@ -133,3 +133,17 @@ int qs_func_return (qs_execute_t *e)
    }
    return count;
 }
+
+int qs_func_continue (qs_execute_t *e)
+{
+   int count = 0;
+   for (; e != NULL; e = e->parent) {
+      if (e->type_id == QS_EXE_LOOP)
+         break;
+      e->flags |= QS_EXE_BREAK;
+      count++;
+      if (e->type_id == QS_EXE_RESOURCE || e->type_id == QS_EXE_LAMBDA)
+         break;
+   }
+   return count;
+}

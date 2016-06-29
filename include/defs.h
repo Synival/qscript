@@ -133,12 +133,13 @@ typedef QS_STACK_FUNC(qs_stack_func);
 #define QS_ARG_ERROR(x,...) \
    (qs_func_error (exe, func->name, arg[x]->node, __VA_ARGS__))
 
-#define QS_RETS(x)  qs_return_string (rlink->scheme, x)
-#define QS_RETF(x)  qs_return_float  (rlink->scheme, x)
-#define QS_RETI(x)  qs_return_int    (rlink->scheme, x)
-#define QS_RETC(x)  qs_return_char   (rlink->scheme, x)
-#define QS_RETURN() qs_func_return (exe)
-#define QS_BREAK()  qs_func_break  (exe)
+#define QS_RETS(x)    qs_return_string (rlink->scheme, x)
+#define QS_RETF(x)    qs_return_float  (rlink->scheme, x)
+#define QS_RETI(x)    qs_return_int    (rlink->scheme, x)
+#define QS_RETC(x)    qs_return_char   (rlink->scheme, x)
+#define QS_RETURN()   qs_func_return   (exe)
+#define QS_BREAK()    qs_func_break    (exe)
+#define QS_CONTINUE() qs_func_continue (exe)
 
 #define QSV_DEFINE(n,t,s,i,f) \
    qs_value_t n##_val = { t, s, i, f }; \

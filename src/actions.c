@@ -164,6 +164,17 @@ qs_value_t *qs_action_index (qs_execute_t *exe, qs_value_t *val,
          qs_value_type (val));
       return QSV_INVALID_INDEX;
    }
+   else if (length == 0) {
+      switch (val->type_id) {
+         case QSCRIPT_LIST:
+            p_error (action->value->node, "cannot index empty list.\n");
+            break;
+         case QSCRIPT_STRING:
+            p_error (action->value->node, "cannot index blank string.\n");
+            break;
+      }
+      return QSV_INVALID_INDEX;
+   }
 
    /* get the index value. */
    qs_value_t *ival = qs_value_read (exe, action->data_p);

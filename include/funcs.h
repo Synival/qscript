@@ -37,7 +37,8 @@ qs_value_t *qs_return_float (qs_scheme_t *scheme, float f);
 qs_value_t *qs_return_char (qs_scheme_t *scheme, char c);
 
 /* code flow functions. */
-int qs_func_break  (qs_execute_t *e);
-int qs_func_return (qs_execute_t *e);
+int qs_func_break    (qs_execute_t *e);
+int qs_func_return   (qs_execute_t *e);
+int qs_func_continue (qs_execute_t *e);
 
 #endif

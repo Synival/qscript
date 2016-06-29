@@ -58,6 +58,7 @@ qs_func_t qs_func_list_standard[] = {
    { "inv",     "<value>",                 1, qsf_inv,     0 },
    { "return",  "[<value>]",               0, qsf_return,  0 },
    { "break",   "[<value>]",               0, qsf_return,  1 },
+   { "continue","",                        0, qsf_return,  2 },
    { "=",       "<variable> <value>",      2, qsf_let,     0 },
    { "++",      "<variable>",              1, qsf_let,     1 },
    { "--",      "<variable>",              1, qsf_let,    -1 },
@@ -84,6 +85,8 @@ qs_func_t qs_func_list_standard[] = {
    { "object",  "<value>",                 1, qsf_cast,    QSCRIPT_OBJECT },
    { "this",    "",                        0, qsf_this,    0 },
    { "id",      "[<object>]",              1, qsf_id,      0 },
+   { "func_exists", "<value>",             1, qsf_func_exists, 0 },
+   { "tokenize","<value>",                 1, qsf_tokenize,0 },
    { NULL },
 };
 
@@ -427,8 +430,9 @@ QS_FUNC (qsf_compare)
 QS_FUNC (qsf_return)
 {
    switch (sub_func) {
-      case 0: QS_RETURN (); break;
-      case 1: QS_BREAK ();  break;
+      case 0: QS_RETURN ();   break;
+      case 1: QS_BREAK ();    break;
+      case 2: QS_CONTINUE (); break;
    }
    if (args >= 1)
       return QS_ARGV (0);
@@ -1021,4 +1025,73 @@ QS_FUNC (qsf_id)
 
    /* return our object's id. */
    return QS_RETI (obj->id);
+}
+
+QS_FUNC (qsf_func_exists)
+{
+   qs_value_t *val = QS_ARGV(0);
+   if (qs_resource_get (exe->scheme, val->val_s))
+      return QSV_ONE;
+   else if (qs_scheme_get_func (exe->scheme, val->val_s))
+      return QSV_ONE;
+   else
+      return QSV_ZERO;
+}
+
+QS_FUNC (qsf_tokenize)
+{
+   /* get the string we're going to tokenize. */
+   char *str = QS_ARGS(0);
+
+   /* get an argument count for our new list. */
+   int count, ws, i;
+   for (count = 0, ws = 1, i = 0; str[i] != '\0'; i++) {
+      if (str[i] == ' ' || str[i] == '\n')
+         ws++;
+      else if (ws) {
+         count++;
+         ws = 0;
+      }
+   }
+
+   /* allocate a new list. */
+   qs_value_t *rval = qs_scheme_heap_value (exe->scheme);
+   qs_list_t *list = qs_list_new (count);
+   rval->type_id = QSCRIPT_LIST;
+   qs_value_restring (rval, "<list>");
+   rval->val_p = list;
+
+   /* copy token values. */
+   int start = 0;
+   for (count = -1, ws = 1, i = 0; 1; i++) {
+      if (str[i] == ' ' || str[i] == '\n' || str[i] == '\0') {
+         if (ws == 0) {
+            /* add a new value to the list. */
+            qs_value_t *lval = malloc (sizeof (qs_value_t));
+            memset (lval, 0, sizeof (qs_value_t));
+            list->values[count] = lval;
+            list->values_data[count] = lval;
+            lval->type_id = QSCRIPT_STRING;
+            lval->list = list;
+            lval->flags |= QS_VALUE_MUTABLE;
+
+            /* allocate string value. */
+            lval->val_s = malloc (sizeof (char) * (i - start + 1));
+            memcpy (lval->val_s, str + start, i - start);
+            lval->val_s[i - start] = '\0';
+            qs_value_update_from_string (lval);
+         }
+         if (str[i] == '\0')
+            break;
+         ws++;
+      }
+      else if (ws) {
+         start = i;
+         count++;
+         ws = 0;
+      }
+   }
+
+   /* return the new value. */
+   return rval;
 }

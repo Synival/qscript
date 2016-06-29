@@ -10,10 +10,20 @@
 qs_list_t *qs_list_new (int size)
 {
    qs_list_t *new;
+   int mem_size = (size > 0) ? size : 1;
+
+   /* allocate our list. */
    new = malloc (sizeof (qs_list_t));
    memset (new, 0, sizeof (qs_list_t));
    new->value_count = size;
-   new->values = malloc (sizeof (qs_value_t *) * ((size > 0) ? size : 1));
+
+   /* populate it with blank values. */
+   new->values      = malloc (sizeof (qs_value_t *) * mem_size);
+   new->values_data = malloc (sizeof (qs_value_t *) * mem_size);
+   memset (new->values,      0, sizeof (qs_value_t *) * mem_size);
+   memset (new->values_data, 0, sizeof (qs_value_t *) * mem_size);
+
+   /* return the new list. */
    return new;
 }
 
@@ -39,11 +49,6 @@ qs_list_t *qs_list_copy (qs_scheme_t *scheme, qs_list_t *list)
    /* allocate a new list of equal size. */
    qs_list_t *new = qs_list_new (list->value_count);
    new->scheme = scheme;
-
-   /* create storage space for our data, indicating the values should be
-    * freed when this list is freed. */
-   new->values_data = malloc (sizeof (qs_value_t *) *
-      ((new->value_count > 0) ? new->value_count : 1));
 
    /* copy values over. */
    int i;
