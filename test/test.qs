@@ -293,12 +293,7 @@ main {
    echo ("   .+ (fun, c)       = ", @@my_object.+ (fun, c));
    echo ("   .func` (one)      = ", @@my_object.func` (one));
    echo ("   .+ (fun, c)`(two) = ", @@my_object.+ (fun, c)`(two));
-   echo ("----------------------------------------");
-   echo ("   .string = ", @@my_object.string);
-   = (@@my_object.string, "this shouldn't work");
-   echo ("   .string = ", @@my_object.string);
    echo ();
-   return ();
 
    # Everything here should call an error!  Use lambda for convenience.
    echo ("Error tests: ");
@@ -334,6 +329,7 @@ main {
    $error_test (+ (@@main, @@my_object));
    $error_test (< (@@main, @@my_object));
    $error_test (== (@@main, "@@my_object"));
+   $error_test (= (@@my_object.string, "this shouldn't work"));
    echo ("   Error test concluded.");
    echo ();
 }
