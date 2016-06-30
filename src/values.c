@@ -485,10 +485,12 @@ int qs_value_contains (qs_value_t *haystack, qs_value_t *needle)
    /* if the value IS variable, then yeah, it's definitely contained. */
    if (haystack == needle)
       return 1;
+
    /* is 'val' an indexed character reference to 'var'? */
    if (haystack->type_id == QSCRIPT_STRING && needle->type_id == QSCRIPT_CHAR
        && haystack->val_s == needle->val_s)
       return 1;
+
    /* is this a list? if so, look in the list's self-allocated data. */
    if (haystack->type_id == QSCRIPT_LIST) {
       qs_list_t *list = haystack->data;
@@ -497,7 +499,7 @@ int qs_value_contains (qs_value_t *haystack, qs_value_t *needle)
          for (i = 0; i < list->value_count; i++)
             if (list->values_data[i] && qs_value_contains (
                list->values_data[i], needle))
-               return 1;
+                  return 1;
       }
    }
 
