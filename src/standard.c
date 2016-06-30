@@ -671,7 +671,7 @@ QS_FUNC (qsf_for_each)
    /* iterate through list. */
    qs_value_t *rval = QSV_UNDEFINED;
    int i;
-   for (i = 0; i < length; i++) {
+   for (i = 0; !(e->flags & QS_EXE_BREAK) && i < length; i++) {
       qs_value_copy (e, lval, list->values[i]);
       rval = qs_arg_value (e, arg[2]);
    }
