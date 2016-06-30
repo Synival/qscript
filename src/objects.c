@@ -21,8 +21,10 @@ qs_object_t *qs_object_new (qs_resource_t *rsrc)
    qs_object_t *new;
 
    /* create an object of 'name'. */
-   if (rsrc == NULL)
+   if (rsrc == NULL) {
+      p_error (NULL, "attempted to instantiate object with no resource.\n");
       return NULL;
+   }
    if ((new = qs_object_new_base (rsrc->scheme, rsrc->name)) == NULL)
       return NULL;
 
@@ -37,8 +39,11 @@ qs_object_t *qs_object_new_auto (qs_resource_t *rsrc)
    qs_object_t *new;
 
    /* sanity checks. */
-   if (rsrc == NULL)
+   if (rsrc == NULL) {
+      p_error (NULL, "attempted to auto-instantiate object with no "
+                     "resource.\n");
       return NULL;
+   }
 
    /* create a resource with a matching name, prefixed by '*'. */
    snprintf (buf, sizeof (buf), "@%s", rsrc->name);
