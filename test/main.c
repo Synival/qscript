@@ -18,13 +18,11 @@ int main (void)
       return errno;
    }
 
-#if 0
-   p_node_print (scheme->node_list[0]);
-   qs_print_resource (scheme->resource_list_front);
-#endif
-
    /* finish linking compiled scripts. */
    qs_scheme_link (scheme);
+
+   /* instantiate main. */
+   qs_object_new (qs_resource_get (scheme, "main"));
 
    /* thorough, (hopefully) bug-free clean-up. */
    qs_scheme_free (scheme);

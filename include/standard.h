@@ -45,5 +45,7 @@ QS_FUNC (qsf_cast);
 QS_FUNC (qsf_id);
 QS_FUNC (qsf_func_exists);
 QS_FUNC (qsf_tokenize);
+QS_FUNC (qsf_multi);
+QS_FUNC (qsf_arg_list);
 
 #endif

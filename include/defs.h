@@ -25,7 +25,6 @@ enum qscript_execute_type_e {
    QS_EXE_RESOURCE,
    QS_EXE_BLOCK,
    QS_EXE_LOOP,
-   QS_EXE_MEMBER,
    QS_EXE_LAST
 };
 
@@ -43,7 +42,7 @@ enum qscript_action_type_e {
    QS_ACTION_UNDEFINED = 0,
    QS_ACTION_CALL,
    QS_ACTION_INDEX,
-   QS_ACTION_MEMBER,
+   QS_ACTION_PROPERTY,
    QS_ACTION_LAST
 };
 

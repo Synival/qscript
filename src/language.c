@@ -57,16 +57,13 @@ static p_symbol_t static_qs_symbols[] = {
    {QSCRIPT_OBJECT,     "object",
       "/[@]+" QSCRIPT_VARIABLE_PATTERN "/",
       qs_func_copy_contents},
-   {QSCRIPT_PROPERTY,   "property",
-      "/%" QSCRIPT_VARIABLE_PATTERN "/",
-      qs_func_copy_contents},
-   {QSCRIPT_ACTION,     "action",   "(<call> | <index> | <member>)",
+   {QSCRIPT_PROPERTY,   "property", "'.' <value> /[`]?/"},
+   {QSCRIPT_ACTION,     "action",   "(<call> | <index> | <property>)",
       qs_func_action, qs_func_action_f},
    {QSCRIPT_CALL,       "call",     "'(' <list> ')'"},
    {QSCRIPT_UNWRAP,     "unwrap",   "('~' | \"\")"},
    {QSCRIPT_INDEX,      "index",    "'[' <value> ']'"},
    {QSCRIPT_UNDEFINED,  "undefined","\"undefined\""},
-   {QSCRIPT_MEMBER,     "member",   "'<' <value> '>'"},
    {-1}
 };
 
@@ -155,7 +152,8 @@ P_FUNC (qs_func_value)
             break;
          case QSCRIPT_OBJECT:
             v->type_id = QSCRIPT_OBJECT;
-            v->val_s = strdup (n->contents);
+            v->val_s = strdup ("<object>");
+            v->data = strdup (n->contents + 1);
             break;
          case QSCRIPT_VARIABLE:
             v->type_id = QSCRIPT_VARIABLE;
@@ -172,7 +170,8 @@ P_FUNC (qs_func_value)
             break;
          case QSCRIPT_PROPERTY:
             v->type_id = QSCRIPT_PROPERTY;
-            v->val_s = strdup (n->contents);
+            v->val_p = n->first_child->next->data;
+            v->val_s = strdup (((qs_value_t *) v->val_p)->val_s);
             break;
          case QSCRIPT_CHAR:
             v->type_id = QSCRIPT_CHAR;
@@ -180,7 +179,6 @@ P_FUNC (qs_func_value)
             v->val_s[0] = n->first_child->contents[1];
             v->val_i = v->val_s[0];
             v->val_f = v->val_s[0];
-            p_error (node, "<<< CHAR '%s' >>>\n", v->val_s);
             break;
          case QSCRIPT_STRING:
             v->type_id = QSCRIPT_STRING;
@@ -303,8 +301,8 @@ P_FUNC (qs_func_action)
             a->type_id = QS_ACTION_INDEX;
             a->data_p = n->first_child->next->data;
             break;
-         case QSCRIPT_MEMBER:
-            a->type_id = QS_ACTION_MEMBER;
+         case QSCRIPT_PROPERTY:
+            a->type_id = QS_ACTION_PROPERTY;
             a->data_p = n->first_child->next->data;
             break;
       }

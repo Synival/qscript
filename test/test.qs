@@ -1,19 +1,5 @@
-# FIXME: Unfortunately, this reference needs to be declaredfirst
-#        so it gets instantiated for access in @main.
-
-# @my_object {
-@my_object {
-   # Eventually do something, like have properties!
-   = (%property, if (args (), arg(0), "my value"));
-}
-
-property_test {
-   @@my_object <{ = (%property, "herp derp"); }>;
-   echo (@@my_object <property (+ ("%prop", "erty"))>);
-}
-
 # Test a lot of stuff!
-@main {
+main {
    print_resource ();
 
    # Proper echo() behavior with some strings, numbers, and statements.
@@ -269,14 +255,14 @@ property_test {
 
    # Make sure object references do what they're supposed to.
    = ($self, this ());
-   = ($obj1, @@main);
+   = ($obj1, @main);
    = ($obj2, @@my_object);
    = ($obj3, @@bad_object);
    echo ("Object reference tests:");
-   echo ("   $self = ", $self, "       (id = ", id ($self), ")");
-   echo ("   $obj1 = ", $obj1, "       (id = ", id ($obj1), ")");
-   echo ("   $obj2 = ", $obj2,      "  (id = ", id ($obj2), ")");
-   echo ("   $obj3 = ", $obj3,       " (id = ", id ($obj3), ")");
+   echo ("   $self = ", name ($self), "        (id = ", id ($self), ")");
+   echo ("   $obj1 = ", name ($obj1), "        (id = ", id ($obj1), ")");
+   echo ("   $obj2 = ", name ($obj2),       "  (id = ", id ($obj2), ")");
+   echo ("   $obj3 = ", name ($obj3),        " (id = ", id ($obj3), ")");
    echo ("   ----------------------------------");
    echo ("   $self == $obj1 : ", == ($self, $obj1), " <-- should pass");
    echo ("   $obj1 == $obj2 : ", == ($obj1, $obj2));
@@ -295,6 +281,24 @@ property_test {
    echo ("   ? (@@bad)  : ", ? (@@bad));
    echo ("   ! (@@bad)  : ", ! (@@bad), " <-- should pass");
    echo ();
+
+   # Do some fancy stuff with properties.
+   echo ("Object property tests:");
+   echo ("   .int    = ", @@my_object.int);
+   echo ("   .string = ", @@my_object.string);
+   echo ("   .list   = ", @@my_object.list);
+   echo ("   .func   = ", @@my_object.func);
+   echo ("----------------------------------------");
+   echo ("   .+ (str, ing)     = ", @@my_object.+ (str, ing));
+   echo ("   .+ (fun, c)       = ", @@my_object.+ (fun, c));
+   echo ("   .func` (one)      = ", @@my_object.func` (one));
+   echo ("   .+ (fun, c)`(two) = ", @@my_object.+ (fun, c)`(two));
+   echo ("----------------------------------------");
+   echo ("   .string = ", @@my_object.string);
+   = (@@my_object.string, "this shouldn't work");
+   echo ("   .string = ", @@my_object.string);
+   echo ();
+   return ();
 
    # Everything here should call an error!  Use lambda for convenience.
    echo ("Error tests: ");
@@ -375,4 +379,15 @@ my_for_2 {
 fancy_string {
    args ($x);
    return (+ ("*-* ", $x, " *-*"));
+}
+
+@my_object {
+   # set some primitive properties.
+   = (.int,    100);
+   = (.string, "foo bar baz");
+   = (.list,   [a, b, c]);
+   = (.func,   [{
+      args ($value);
+      return (+ ("The argument is '", $value, "'."));
+   }]);
 }

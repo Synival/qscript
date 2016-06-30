@@ -33,6 +33,7 @@ qs_func_t qs_func_list_standard[] = {
    { "|",       "<val1> [... <valn>]",     2, qsf_math,    5 },
    { "&",       "<val1> [... <valn>]",     2, qsf_math,    6 },
    { "^",       "<val1> [... <valn>]",     2, qsf_math,    7 },
+   { "%",       "<val1> [... <valn>]",     2, qsf_math,    8 },
    { "+=","<variable> <val1> [... <valn>]",2, qsf_math,    20 },
    { "-=","<variable> <val1> [... <valn>]",2, qsf_math,    21 },
    { "*=","<variable> <val1> [... <valn>]",2, qsf_math,    22 },
@@ -41,6 +42,7 @@ qs_func_t qs_func_list_standard[] = {
    { "|=","<variable> <val1> [... <valn>]",2, qsf_math,    25 },
    { "&=","<variable> <val1> [... <valn>]",2, qsf_math,    26 },
    { "^=","<variable> <val1> [... <valn>]",2, qsf_math,    27 },
+   { "%=","<variable> <val1> [... <valn>]",2, qsf_math,    28 },
    { "if",      "<cond> <then> [<else>]",  2, qsf_if,      0 },
    { "==",      "<left> <right> [...]",    2, qsf_compare, 0 },
    { "!=",      "<left> <right> [...]",    2, qsf_compare, 1 },
@@ -72,6 +74,7 @@ qs_func_t qs_func_list_standard[] = {
                 "[<default action>]",      1, qsf_switch,  0 },
    { "args",    "[<ref1> ... <ref2>]",     0, qsf_args,    0 },
    { "arg",     "<index>",                 1, qsf_arg,     0 },
+   { "arg_list","",                        0, qsf_arg_list,0 },
    { "variable","<value>",                 1, qsf_variable,0 },
    { "property","<value>",                 1, qsf_property,1 },
    { "vars",    "<var1> [... <varn>]",     1, qsf_vars,    0 },
@@ -87,8 +90,10 @@ qs_func_t qs_func_list_standard[] = {
    { "object",  "<value>",                 1, qsf_cast,    QSCRIPT_OBJECT },
    { "this",    "",                        0, qsf_this,    0 },
    { "id",      "[<object>]",              1, qsf_id,      0 },
+   { "name",    "[<object>]",              1, qsf_id,      1 },
    { "func_exists", "<value>",             1, qsf_func_exists, 0 },
    { "tokenize","<value>",                 1, qsf_tokenize,0 },
+   { "multi",   "<line1> [... <linen>]",   1, qsf_multi,   0 },
    { NULL },
 };
 
@@ -170,6 +175,7 @@ QS_FUNC (qsf_math)
                case 5: v |= (int) rch; break;
                case 6: v &= (int) rch; break;
                case 7: v ^= (int) rch; break;
+               case 8: v %= (int) rch; break;
                default:
                   QS_ARG_ERROR (i, "invalid operation.\n");
                   return QSV_INVALID_OPER;
@@ -204,6 +210,7 @@ QS_FUNC (qsf_math)
                case 5: v |= r; break;
                case 6: v &= r; break;
                case 7: v ^= r; break;
+               case 8: v %= r; break;
                default:
                   QS_ARG_ERROR (i, "invalid operation.\n");
                   return QSV_INVALID_OPER;
@@ -228,7 +235,8 @@ QS_FUNC (qsf_math)
                   }
                   v /= r;
                   break;
-               case 4: v = powf (v, r); break;
+               case 4: v = powf (v, r);  break;
+               case 8: v = fmodf (v, r); break;
                default:
                   QS_ARG_ERROR (i, "invalid operation.\n");
                   return QSV_INVALID_OPER;
@@ -403,13 +411,29 @@ QS_FUNC (qsf_compare)
 
             /* if both ids are zero, compare the string. */
             if (val1->val_i == 0 && val2->val_i == 0)
-               rvalue = (strcmp (val1->val_s, val2->val_s) == 0) ? 1 : 0;
+               rvalue = (strcmp (val1->data, val2->data) == 0) ? 1 : 0;
             /* otherwise, compare ids. */
             else
                rvalue = (val1->val_i == val2->val_i) ? 1 : 0;
             /* flip the return value for != function. */
             if (sub_func == 1)
                rvalue ^= 1;
+            break;
+         }
+
+         /* undefined: ==, != */
+         case QSCRIPT_UNDEFINED: {
+            switch (sub_func) {
+               case 0:
+                  rvalue = (val2->type_id == QSCRIPT_UNDEFINED) ? 1 : 0;
+                  break;
+               case 1:
+                  rvalue = (val2->type_id == QSCRIPT_UNDEFINED) ? 0 : 1;
+                  break;
+               default:
+                  QS_ARG_ERROR (i, "invalid operation.\n");
+                  return QSV_INVALID_OPER;
+            }
             break;
          }
 
@@ -698,6 +722,31 @@ QS_FUNC (qsf_arg)
    return qs_arg_value (e->parent, list->values[i]);
 }
 
+QS_FUNC (qsf_arg_list)
+{
+   qs_execute_t *e;
+   qs_list_t *list;
+
+   /* make sure we came from an action, and there's a previous list
+    * of arguments passed to this function call. */
+   if ((e = qs_execute_get_call (exe)) == NULL ||
+       (list = e->list) == NULL) {
+      qs_func_error (exe, func->name, action->value->node,
+         "not a function call.\n");
+      return QSV_NOT_FUNC_CALL;
+   }
+
+   /* create a value that contains this list.  make it immutable. */
+   qs_value_t *rval = qs_scheme_heap_value (exe->scheme);
+   rval->flags &= ~QS_VALUE_MUTABLE;
+   rval->type_id = QSCRIPT_LIST;
+   qs_value_restring (rval, "<list>");
+   rval->val_p = list;
+
+   /* return our new value. */
+   return rval;
+}
+
 QS_FUNC (qsf_variable)
 {
    qs_value_t *val = QS_ARGV (0);
@@ -930,9 +979,8 @@ QS_FUNC (qsf_this)
    rval->type_id = QSCRIPT_OBJECT;
 
    /* set primitive values. */
-   char buf[256];
-   snprintf (buf, sizeof (buf), "@%s", object->name);
-   qs_value_restring (rval, buf);
+   qs_value_restring (rval, "<object>");
+   rval->data = strdup (object->name);
    rval->val_i = object->id;
 
    /* return it. */
@@ -1001,14 +1049,10 @@ QS_FUNC (qsf_cast)
          /* nope - attempt to get an object by type. */
          else {
             switch (val->type_id) {
-               /* strings must start with '@'. */
+               /* strings do a simple name lookup. */
                case QSCRIPT_STRING:
-                  if (val->val_s[0] != '@')
-                     obj = NULL;
-                  else {
-                     name = val->val_s + 1;
-                     obj = qs_object_get (exe->scheme, val->val_s + 1);
-                  }
+                  name = val->val_s;
+                  obj = qs_object_get (exe->scheme, name);
                   break;
 
                /* integers perform an id lookup. */
@@ -1026,15 +1070,14 @@ QS_FUNC (qsf_cast)
 
          /* if we found an object, use its values. */
          if (obj) {
-            char buf[256];
-            snprintf (buf, sizeof (buf), "@%s", obj->name);
-            name = buf;
+            name = obj->name;
             id = obj->id;
          }
 
          /* set properties and return our object. */
-         qs_value_restring (rval, name);
+         qs_value_restring (rval, "<object>");
          rval->val_i = id;
+         rval->data = strdup (name);
          return rval;
       }
 
@@ -1049,7 +1092,7 @@ QS_FUNC (qsf_cast)
 QS_FUNC (qsf_id)
 {
    /* make sure are argument is type 'object'. */
-   qs_value_t *val = QS_ARGV(0);
+   qs_value_t *val = QS_ARGV (0);
    if (val->type_id != QSCRIPT_OBJECT) {
       QS_ARG_ERROR (0, "value is type '%s' instead of 'object'.\n",
          qs_value_type (val));
@@ -1060,10 +1103,13 @@ QS_FUNC (qsf_id)
     * 'no object'. */
    qs_object_t *obj = qs_value_object (exe, val);
    if (obj == NULL)
-      return QSV_ZERO;
+      return QSV_NO_OBJECT;
 
-   /* return our object's id. */
-   return QS_RETI (obj->id);
+   /* return our object's name/id. */
+   if (sub_func == 0)
+      return QS_RETI (obj->id);
+   else
+      return QS_RETS (obj->name);
 }
 
 QS_FUNC (qsf_func_exists)
@@ -1132,5 +1178,40 @@ QS_FUNC (qsf_tokenize)
    }
 
    /* return the new value. */
+   return rval;
+}
+
+
+QS_FUNC (qsf_multi)
+{
+   /* no value if no lines. */
+   if (args == 0)
+      return QSV_UNDEFINED;
+
+   /* keep track of string values. */
+   char **strings = malloc (sizeof (char *) * args);
+   int total_len = 0, i;
+   for (i = 0; i < args; i++) {
+      strings[i] = QS_ARGS(i);
+      total_len += strlen (strings[i]) + 1;
+   }
+
+   /* create our return value. */
+   qs_value_t *rval = qs_scheme_heap_value (exe->scheme);
+   rval->type_id = QSCRIPT_STRING;
+
+   /* build our multiline string in place of the original. */
+   if (rval->val_s)
+      free (rval->val_s);
+   rval->val_s = malloc (sizeof (char) * total_len);
+   int pos = 0, len;
+   for (i = 0; i < args; i++) {
+      len = strlen (strings[i]);
+      memcpy (rval->val_s + pos, strings[i], len);
+      pos += len;
+      rval->val_s[pos++] = (i + 1 == args) ? '\0' : '\n';
+   }
+
+   /* return our new multi-line string. */
    return rval;
 }

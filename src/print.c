@@ -41,7 +41,7 @@ int qs_print_value (qs_value_t *v, int indent)
          }
          break;
       case QSCRIPT_PROPERTY:
-         printf ("\x1b[0;34m%%\x1b[1m%s\x1b[0m", v->val_s + 1);
+         printf ("\x1b[0;34;1m.%s\x1b[0m", v->val_s);
          break;
       case QSCRIPT_LIST:
          putchar ('[');
@@ -60,15 +60,10 @@ int qs_print_value (qs_value_t *v, int indent)
          printf ("\x1b[0;31;1mundefined\x1b[0m");
          break;
       case QSCRIPT_OBJECT:
-         if (v->val_s[0] == '@' && v->val_s[1] == '@')
-            printf ("\x1b[0;32m@@\x1b[1m%s\x1b[0m", v->val_s + 2);
-         else if (v->val_s[0] == '@')
-            printf ("\x1b[0;32m@\x1b[1m%s\x1b[0m", v->val_s + 1);
-         else
-            printf ("\x1b[0;32;1m%s\x1b[0m", v->val_s);
+         printf ("\x1b[0;32m@\x1b[1m%s\x1b[0m", (char *) v->data);
          break;
       default:
-         printf ("\x1b[0;31;1m???\x1b[0m");
+         printf ("\x1b[0;31;1m<unknown value>\x1b[0m");
          break;
    }
    return count + qs_print_value (v->child, indent);
@@ -87,10 +82,18 @@ int qs_print_action (qs_action_t *a, int indent)
          qs_print_value (a->data_p, indent + 3);
          printf ("]");
          break;
-      case QS_ACTION_MEMBER:
-         printf (" <");
-         qs_print_value (a->data_p, indent + 3);
-         printf (">");
+      case QS_ACTION_PROPERTY: {
+         qs_value_t *val = a->data_p;
+         if (val->type_id == QSCRIPT_STRING && val->child == NULL)
+            printf ("\x1b[0;34;1m.%s\x1b[0m", val->val_s);
+         else {
+            printf ("\x1b[0;34;1m.\x1b[0m");
+            qs_print_value (val, indent);
+         }
+         break;
+      }
+      default:
+         printf (" \x1b[0;31;1m<unknown action>\x1b[0m");
          break;
    }
    return 1;

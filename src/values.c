@@ -43,6 +43,7 @@ QSV_DEFINE (QSV_UNDEFINED,QSCRIPT_UNDEFINED, "<undefined>",         0, 0.00f);
 QSV_DEFINE (QSV_INVALID_VALUE,      QSV_ERR, "<invalid value>",     0, 0.00f);
 QSV_DEFINE (QSV_NO_OBJECT,          QSV_ERR, "<no object>",         0, 0.00f);
 QSV_DEFINE (QSV_ALREADY_WOUND,      QSV_ERR, "<already wound>",     0, 0.00f);
+QSV_DEFINE (QSV_INVALID_PROPERTY,   QSV_ERR, "<invalid property>",  0, 0.00f);
 
 int qs_value_copy (qs_execute_t *exe, qs_value_t *dest, qs_value_t *src)
    { return qs_value_copy_real (exe, dest, src, 0); }
@@ -85,8 +86,18 @@ int qs_value_copy_real (qs_execute_t *exe, qs_value_t *dest, qs_value_t *src,
             dest->data = data_i;
          }
          break;
+      case QSCRIPT_OBJECT:
+         if (src->data)
+            dest->data = strdup (src->data);
+         break;
+      case QSCRIPT_ACTION:
+         dest->val_p = src->val_p;
+         break;
       default:
          dest->val_p = src->val_p;
+         if (src->data)
+            p_error (dest->node, "BAD ERROR: didn't copy data for type '%s'. "
+               "expect undefined behavior.\n", qs_value_type (dest));
          break;
    }
 
@@ -154,10 +165,7 @@ qs_property_t *qs_value_get_property (qs_rlink_t *rlink, qs_value_t *v)
 {
    if (v->link_id == QS_LINK_PROPERTY)
       return v->link;
-   if (v->val_s[0] != '%')
-      return NULL;
-   else
-      return qs_property_get (rlink->object, v->val_s + 1);
+   return qs_property_get (rlink->object, v->val_s);
 }
 
 int qs_value_cleanup (qs_value_t *value)
@@ -176,6 +184,7 @@ int qs_value_cleanup (qs_value_t *value)
             break;
          case QSCRIPT_CHAR:
          case QSCRIPT_INDEX:
+         case QSCRIPT_OBJECT:
             free (value->data);
             break;
          case QSCRIPT_ACTION:
@@ -318,7 +327,7 @@ qs_value_t *qs_value_read (qs_execute_t *exe, qs_value_t *val)
             break;
          }
          default:
-            p_error (val->node, "cannot process value of type '%s'.\n",
+            p_error (val->node, "cannot process value of type '%s' (%d).\n",
                qs_value_type (val));
             return QSV_CANNOT_EXECUTE;
       }
@@ -361,6 +370,7 @@ int qs_value_can_modify (qs_execute_t *exe, qs_value_t *val)
 qs_value_t *qs_value_modify_value (qs_execute_t *exe, qs_value_t *val)
    { return qs_value_modify_value_real (exe, val, 1); }
 
+#include <signal.h>
 qs_value_t *qs_value_modify_value_real (qs_execute_t *exe,
    qs_value_t *val, int push)
 {
@@ -378,11 +388,17 @@ qs_value_t *qs_value_modify_value_real (qs_execute_t *exe,
       if (val->val_p && !qs_value_can_modify (exe, val->val_p))
          return NULL;
 
-   /* for properties, push a modification. */
-   if (push && val->link_id == QS_LINK_PROPERTY) {
+   /* properties have additional checks. */
+   if (val->link_id == QS_LINK_PROPERTY) {
       qs_property_t *p = val->link;
-      qs_property_push (p, exe->rlink);
-      return qs_value_modify_value_real (exe, p->value, 0);
+      if (exe != NULL && p->object != exe->rlink->object)
+         return NULL;
+
+      /* for properties, push a modification. */
+      if (push) {
+         qs_property_push (p, exe->rlink);
+         return qs_value_modify_value_real (exe, p->value, 0);
+      }
    }
 
    /* all tests passed! we can modify this. */
@@ -441,21 +457,22 @@ qs_object_t *qs_value_object (qs_execute_t *exe, qs_value_t *val)
 {
    qs_object_t *obj;
 
+   /* only allow this for objects. */
+   if (val->type_id != QSCRIPT_OBJECT)
+      return NULL;
+
    /* first, look for an object by id.  this will be ultra-quick. */
    if ((obj = qs_object_get_by_id (exe->scheme, val->val_i)) != NULL) {
       /* update the string if necessary. */
-      if (val->val_s[0] != '@' || strcmp (val->val_s + 1, obj->name) != 0) {
-         char buf[256];
-         snprintf (buf, sizeof (buf), "@%s", obj->name);
-         qs_value_restring (val, buf);
+      if (val->data == NULL || strcmp (val->data, obj->name) != 0) {
+         free (val->data);
+         val->data = strdup (obj->name);
       }
       return obj;
    }
 
    /* is there an object by name? */
-   if (val->val_s[0] != '@')
-      return NULL;
-   if ((obj = qs_object_get (exe->scheme, val->val_s + 1)) == NULL)
+   if ((obj = qs_object_get (exe->scheme, val->data)) == NULL)
       return NULL;
 
    /* we found an object! update our id reference and return it. */
