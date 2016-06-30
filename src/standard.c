@@ -301,7 +301,7 @@ QS_FUNC (qsf_if)
    else if (args >= 3)
       return QS_ARGV (2);
    else
-      return QSV_ONE;
+      return QSV_UNDEFINED;
 }
 
 QS_FUNC (qsf_compare)
