@@ -47,5 +47,6 @@ QS_FUNC (qsf_func_exists);
 QS_FUNC (qsf_tokenize);
 QS_FUNC (qsf_multi);
 QS_FUNC (qsf_arg_list);
+QS_FUNC (qsf_for_each);
 
 #endif

@@ -94,6 +94,7 @@ qs_func_t qs_func_list_standard[] = {
    { "func_exists", "<value>",             1, qsf_func_exists, 0 },
    { "tokenize","<value>",                 1, qsf_tokenize,0 },
    { "multi",   "<line1> [... <linen>]",   1, qsf_multi,   0 },
+   { "for_each","<list> <storage> <action>",1,qsf_for_each,0 },
    { NULL },
 };
 
@@ -128,7 +129,7 @@ QS_FUNC (qsf_math)
    if (sub_func >= 20) {
       /* get our lvalue.  can we modify it? */
       if ((lval = qs_value_modify_value (exe, QS_ARGV (0))) == NULL) {
-         QS_ARG_ERROR (0, "first argument cannot be modified.\n");
+         QS_ARG_ERROR (0, "argument cannot be modified.\n");
          return QSV_CANNOT_MODIFY;
       }
       if (lval->type_id == QSCRIPT_UNDEFINED) {
@@ -471,7 +472,7 @@ QS_FUNC (qsf_let)
 
    /* get our variable. */
    if ((lval = qs_value_modify_value (exe, QS_ARGV (0))) == NULL) {
-      QS_ARG_ERROR (0, "first argument cannot be modified.\n");
+      QS_ARG_ERROR (0, "argument cannot be modified.\n");
       return QSV_CANNOT_MODIFY;
    }
 
@@ -601,6 +602,7 @@ QS_FUNC (qsf_scope)
 
 QS_FUNC (qsf_while)
 {
+   /* push a new execution state for break() and continue(). */
    qs_value_t *r = QSV_UNDEFINED;
    qs_execute_t *e = qs_execute_push (QS_EXE_LOOP, exe->rlink, exe, action,
       func->name, 0, NULL);
@@ -617,6 +619,7 @@ QS_FUNC (qsf_while)
 
 QS_FUNC (qsf_for)
 {
+   /* push a new execution state for break() and continue(). */
    qs_value_t *r = QSV_UNDEFINED;
    qs_execute_t *e = qs_execute_push (QS_EXE_LOOP, exe->rlink, exe, action,
       func->name, 0, NULL);
@@ -635,6 +638,46 @@ QS_FUNC (qsf_for)
 
    /* return our last return value (or QSV_UNDEFINED for none). */
    return r;
+}
+
+QS_FUNC (qsf_for_each)
+{
+   /* make sure our first argument is a list. */
+   qs_value_t *val = QS_ARGV (0);
+   if (val->type_id != QSCRIPT_LIST) {
+      QS_ARG_ERROR (0, "argument must be type 'list' (is type '%s').\n",
+         qs_value_type (val));
+      return QSV_INVALID_TYPE;
+   }
+   qs_list_t *list = val->val_p;
+
+   /* make sure our second argument can be modified. */
+   qs_value_t *lval = qs_value_modify_value (exe, QS_ARGV (1));
+   if (lval == NULL) {
+      QS_ARG_ERROR (1, "argument cannot be modified.\n");
+      return QSV_CANNOT_MODIFY;
+   }
+
+   /* if the list is zero-length, bail here (without an error). */
+   int length = list->value_count;
+   if (length <= 0)
+      return QSV_UNDEFINED;
+
+   /* push a new execution state for break() and continue(). */
+   qs_execute_t *e = qs_execute_push (QS_EXE_LOOP, exe->rlink, exe, action,
+      func->name, 0, NULL);
+
+   /* iterate through list. */
+   qs_value_t *rval = QSV_UNDEFINED;
+   int i;
+   for (i = 0; i < length; i++) {
+      qs_value_copy (e, lval, list->values[i]);
+      rval = qs_arg_value (e, arg[2]);
+   }
+
+   /* pop our loop execution state and return the last processed value. */
+   qs_execute_pop (e);
+   return rval;
 }
 
 QS_FUNC (qsf_args)
@@ -678,7 +721,7 @@ QS_FUNC (qsf_args)
    qs_value_t *lval;
    for (i = 0; i < args; i++) {
       if ((lval = qs_value_modify_value (exe, QS_ARGV (i))) == NULL) {
-         QS_ARG_ERROR (i, "argument %d cannot be modified.\n", i + 1);
+         QS_ARG_ERROR (i, "argument cannot be modified.\n", i + 1);
          QS_RETURN ();
          return QSV_CANNOT_MODIFY;
       }
@@ -1212,6 +1255,7 @@ QS_FUNC (qsf_multi)
       rval->val_s[pos++] = (i + 1 == args) ? '\0' : '\n';
    }
 
-   /* return our new multi-line string. */
+   /* clean up and return our new multi-line string. */
+   free (strings);
    return rval;
 }
