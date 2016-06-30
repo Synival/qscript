@@ -21,7 +21,10 @@ qs_object_t *qs_object_new (qs_resource_t *rsrc)
    qs_object_t *new;
 
    /* create an object of 'name'. */
-   new = qs_object_new_base (rsrc->scheme, rsrc->name);
+   if (rsrc == NULL)
+      return NULL;
+   if ((new = qs_object_new_base (rsrc->scheme, rsrc->name)) == NULL)
+      return NULL;
 
    /* finish and return our new object. */
    qs_object_new_finish (new, rsrc);
@@ -33,9 +36,14 @@ qs_object_t *qs_object_new_auto (qs_resource_t *rsrc)
    char buf[256];
    qs_object_t *new;
 
+   /* sanity checks. */
+   if (rsrc == NULL)
+      return NULL;
+
    /* create a resource with a matching name, prefixed by '*'. */
    snprintf (buf, sizeof (buf), "@%s", rsrc->name);
-   new = qs_object_new_base (rsrc->scheme, buf);
+   if ((new = qs_object_new_base (rsrc->scheme, buf)) == NULL)
+      return NULL;
 
    /* keep an id reference to our resource. */
    new->resource = rsrc;
@@ -71,8 +79,8 @@ int qs_object_new_finish (qs_object_t *obj, qs_resource_t *rsrc)
 
    /* run our rlink. */
    /* TODO: unwind! */
-   rl = qs_rlink_push (obj, rsrc, 0);
-   qs_rlink_wind (rl, NULL);
+   if ((rl = qs_rlink_push (obj, rsrc, 0)) != NULL)
+      qs_rlink_wind (rl, NULL);
    /* TODO: rewind! */
 
    return 1;

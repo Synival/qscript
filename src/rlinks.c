@@ -42,6 +42,10 @@ qs_rlink_t *qs_rlink_push_at (qs_object_t *obj, qs_resource_t *resource,
 {
    qs_rlink_t *new;
 
+   /* bail if we have no resource to push. */
+   if (resource == NULL)
+      return NULL;
+
    /* allocate an empty rlink. */
    new = malloc (sizeof (qs_rlink_t));
    memset (new, 0, sizeof (qs_rlink_t));
