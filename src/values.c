@@ -276,7 +276,7 @@ qs_value_t *qs_value_evaluate_block (qs_execute_t *exe, qs_value_t *val)
 
    /* for blocks, get all of all variables declared in this scope. */
    if (new_exe) {
-      qs_variable_free_after (new_exe->rlink, last_var, &rval);
+      qs_variable_free_after (new_exe, last_var, &rval);
       qs_execute_pop (new_exe);
    }
 
@@ -478,4 +478,29 @@ qs_object_t *qs_value_object (qs_execute_t *exe, qs_value_t *val)
    /* we found an object! update our id reference and return it. */
    val->val_i = obj->id;
    return obj;
+}
+
+int qs_value_contains (qs_value_t *haystack, qs_value_t *needle)
+{
+   /* if the value IS variable, then yeah, it's definitely contained. */
+   if (haystack == needle)
+      return 1;
+   /* is 'val' an indexed character reference to 'var'? */
+   if (haystack->type_id == QSCRIPT_STRING && needle->type_id == QSCRIPT_CHAR
+       && haystack->val_s == needle->val_s)
+      return 1;
+   /* is this a list? if so, look in the list's self-allocated data. */
+   if (haystack->type_id == QSCRIPT_LIST) {
+      qs_list_t *list = haystack->data;
+      if (list->values_data) {
+         int i;
+         for (i = 0; i < list->value_count; i++)
+            if (list->values_data[i] && qs_value_contains (
+               list->values_data[i], needle))
+               return 1;
+      }
+   }
+
+   /* all checks passed - it's not in there. */
+   return 0;
 }

@@ -508,6 +508,7 @@ QS_FUNC (qsf_let)
             /* otherwise, lvalue <= rvalue */
             default:
                qs_value_copy (exe, lval, rval);
+               break;
          }
          break;
       }
@@ -1188,6 +1189,7 @@ QS_FUNC (qsf_tokenize)
    rval->type_id = QSCRIPT_LIST;
    qs_value_restring (rval, "<list>");
    rval->val_p = list;
+   rval->data = list;
 
    /* copy token values. */
    int start = 0;

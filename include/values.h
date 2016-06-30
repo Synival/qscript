@@ -55,6 +55,7 @@ char *qs_value_char_pointer (qs_value_t *val);
 int qs_value_as_char (qs_value_t *rval, char *out);
 int qs_value_update_from_string (qs_value_t *val);
 qs_object_t *qs_value_object (qs_execute_t *exe, qs_value_t *val);
+int qs_value_contains (qs_value_t *haystack, qs_value_t *needle);
 
 /* internal, constant return values. */
 extern qs_value_t *QSV_ZERO;

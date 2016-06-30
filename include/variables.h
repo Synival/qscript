@@ -29,7 +29,8 @@ qs_variable_t *qs_variable_new_object (qs_object_t *obj, char *name);
 qs_variable_t *qs_variable_new_rlink (qs_rlink_t *rlink, char *name);
 qs_value_t *qs_variable_value (qs_variable_t *variable);
 int qs_variable_free (qs_variable_t *v);
-int qs_variable_free_after (qs_rlink_t *rlink, qs_variable_t *v,
+int qs_variable_free_after (qs_execute_t *exe, qs_variable_t *v,
                             qs_value_t **return_val);
+int qs_variable_contains (qs_variable_t *var, qs_value_t *val);
 
 #endif

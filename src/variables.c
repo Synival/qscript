@@ -2,6 +2,7 @@
  * -----------
  * variable management in multiple scopes. */
 
+#include "execute.h"
 #include "funcs.h"
 #include "objects.h"
 #include "rlinks.h"
@@ -137,23 +138,23 @@ int qs_variable_free (qs_variable_t *v)
    return 1;
 }
 
-int qs_variable_free_after (qs_rlink_t *rlink, qs_variable_t *v,
+int qs_variable_free_after (qs_execute_t *exe, qs_variable_t *v,
                             qs_value_t **return_val)
 {
    qs_variable_t *v_next;
    int count = 0;
 
    /* start freeing variables after 'v' (if NULL, start at the beginning). */
-   for (v = (v ? v->next : rlink->variable_list_front); v != NULL;
+   for (v = (v ? v->next : exe->rlink->variable_list_front); v != NULL;
         v = v_next) {
       v_next = v->next;
 
       /* if a return value is the value of a local variable we're about to
        * free, make a copy of it on the heap and return that instead. */
-      if (*return_val && *return_val == &(v->value)) {
+      if (*return_val && qs_variable_contains (v, *return_val)) {
          qs_value_t *new;
-         new = qs_return_value_new (rlink->scheme);
-         qs_value_copy (NULL, new, *return_val);
+         new = qs_return_value_new (exe->rlink->scheme);
+         qs_value_copy (exe, new, *return_val);
          *return_val = new;
       }
 
@@ -163,4 +164,9 @@ int qs_variable_free_after (qs_rlink_t *rlink, qs_variable_t *v,
 
    /* return the total number of variables freed. */
    return count;
+}
+
+int qs_variable_contains (qs_variable_t *var, qs_value_t *val)
+{
+   return qs_value_contains (&(var->value), val);
 }

@@ -62,65 +62,11 @@ int qs_execute_pop (qs_execute_t *exe)
    return 1;
 }
 
-#if 0
-qs_value_t *qs_execute_parameter (qs_execute_t *exe, qs_parameter_t *p)
-{
-   qs_value_t *rval;
-
-   /* blocks are immediately resolved. */
-   if ((rval = p->value) == NULL)
-      return QSV_CANNOT_EXECUTE;
-   if (rval->type_id == QSCRIPT_BLOCK) {
-      qs_list_t *l = rval->val_p;
-      rval = qs_execute_block (exe, QSCRIPT_BLOCK,
-         l->parameter_count, l->parameters);
-   }
-
-   /* run actions on that value. */
-   qs_action_t *a;
-   for (a = p->action_list_front; a != NULL; a = a->next)
-      rval = qs_action_run (exe, a, rval);
-
-   /* return our final value. */
-   return rval;
-}
-#endif
-
-#if 0
-qs_value_t *qs_execute_block (qs_execute_t *exe, int type_id, int args,
-   qs_parameter_t **arg)
-{
-   qs_variable_t *last_var;
-   qs_value_t *rval = NULL;
-   qs_execute_t *e = exe;
-
-   /* remember where to pop variables after we're done executing this block. */
-   /* evaluate all parameters and return the result of the final one. */
-   if (type_id == QSCRIPT_BLOCK) {
-      last_var = exe->rlink->variable_list_back;
-      e = qs_execute_push (QS_EXE_BLOCK, exe->rlink, exe, exe->action,
-         exe->name, 0, NULL);
-   }
-
-   int i;
-   for (i = 0; i < args && !(e->flags & QS_EXE_BREAK); i++)
-      rval = qs_execute_parameter (e, arg[i]);
-   e->flags &= ~QS_EXE_BREAK;
-
-   /* for blocks, clear 'break' and get rid of all variables used
-    * by the block's scope. */
-   if (type_id == QSCRIPT_BLOCK) {
-      qs_variable_free_after (e->rlink, last_var, &rval);
-      qs_execute_pop (e);
-   }
-
-   /* return the result of return(), break(), or our last parameter. */
-   return rval;
-}
-#endif
-
 qs_execute_t *qs_execute_get_call (qs_execute_t *exe)
 {
+   /* only resources and lambda functions potentially have arguments.
+    * return the first one of those we find, going back from our current
+    * execution state. */
    while (exe) {
       if (exe->list && (exe->type_id == QS_EXE_LAMBDA ||
                         exe->type_id == QS_EXE_RESOURCE))
