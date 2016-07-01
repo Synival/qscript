@@ -74,8 +74,9 @@
 ## Variable scopes:
 
 1. Block
-2. Object
-3. Global
+2. RLink
+3. Object
+4. Global
 
 ## Action types:
 
