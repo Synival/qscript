@@ -7,19 +7,19 @@
 
 #include "defs.h"
 
-P_FUNC (qs_func_resource);
-P_FUNC (qs_func_resource_f);
-P_FUNC (qs_func_list);
-P_FUNC (qs_func_list_f);
-P_FUNC (qs_func_outer_list);
-P_FUNC (qs_func_outer_list_f);
-P_FUNC (qs_func_value);
-P_FUNC (qs_func_value_f);
-P_FUNC (qs_func_qstring);
-P_FUNC (qs_func_complex_string);
-P_FUNC (qs_func_copy_contents);
-P_FUNC (qs_func_action);
-P_FUNC (qs_func_action_f);
+P_FUNC (qs_language_resource);
+P_FUNC (qs_language_resource_f);
+P_FUNC (qs_language_list);
+P_FUNC (qs_language_list_f);
+P_FUNC (qs_language_outer_list);
+P_FUNC (qs_language_outer_list_f);
+P_FUNC (qs_language_value);
+P_FUNC (qs_language_value_f);
+P_FUNC (qs_language_qstring);
+P_FUNC (qs_language_complex_string);
+P_FUNC (qs_language_copy_contents);
+P_FUNC (qs_language_action);
+P_FUNC (qs_language_action_f);
 
 /* various kinds of processing functions. */
 int qs_language_init (void);

@@ -25,41 +25,41 @@ static p_symbol_t static_qs_symbols[] = {
    {QSCRIPT_ROOT,       "qscript",  "/^/ (<resource> | <comment>)* /$/"},
    {QSCRIPT_COMMENT,    "comment",  "'#' /[^\\n]*/"},
    {QSCRIPT_RESOURCE,   "resource", "(<rtype> <rname>) <outer_block>",
-      qs_func_resource, qs_func_resource_f},
+      qs_language_resource, qs_language_resource_f},
    {QSCRIPT_RTYPE,      "rtype",    "/[@]*/", NULL},
    {QSCRIPT_RNAME,      "rname",    "<qstring>", NULL},
    {QSCRIPT_BLOCK,      "block",    "((<value> ';')* | \"\")",
-      qs_func_list, qs_func_list_f},
+      qs_language_list, qs_language_list_f},
    {QSCRIPT_LIST,       "list",     "((<value> (',' <value>)*) | \"\")",
-      qs_func_list, qs_func_list_f},
+      qs_language_list, qs_language_list_f},
    {QSCRIPT_OUTER_LIST, "outer_list","'[' <list> ']'",
-      qs_func_outer_list, qs_func_outer_list_f},
+      qs_language_outer_list, qs_language_outer_list_f},
    {QSCRIPT_VALUE,      "value",
       "<comment>* <unwrap> (<number> | <variable> | <property> | "
       "<outer_list> | <outer_block> | <char> | <object> | <undefined> | "
       "<qstring>) <action>*",
-      qs_func_value, qs_func_value_f},
+      qs_language_value, qs_language_value_f},
    {QSCRIPT_OUTER_BLOCK,"outer_block", "'{' <block> '}'",
-      qs_func_outer_list, qs_func_outer_list_f},
+      qs_language_outer_list, qs_language_outer_list_f},
    {QSCRIPT_STRING,     "qstring", "(<complexstr>+ | <simplestr>)",
-      qs_func_qstring},
+      qs_language_qstring},
    {QSCRIPT_CHAR,       "char",    "/'.'/"},
    {QSCRIPT_SIMPLE_STRING, "simplestr",
       "/" QSCRIPT_SIMPLE_STRING_PATTERN "/"},
    {QSCRIPT_COMPLEX_STRING, "complexstr", "(/\"[^\"]*\"/ | /'[^']*'/)",
-      qs_func_complex_string},
+      qs_language_complex_string},
    {QSCRIPT_NUMBER,     "number",   "(<float> | <int>)"},
    {QSCRIPT_FLOAT,      "float",    "/[-+]?[0-9]+\\.[0-9]+/"},
    {QSCRIPT_INT,        "int",      "/[-+]?[0-9]+/"},
    {QSCRIPT_VARIABLE,   "variable",
       "/[\\$]+" QSCRIPT_VARIABLE_PATTERN "/",
-      qs_func_copy_contents},
+      qs_language_copy_contents},
    {QSCRIPT_OBJECT,     "object",
       "/[@]+" QSCRIPT_VARIABLE_PATTERN "/",
-      qs_func_copy_contents},
+      qs_language_copy_contents},
    {QSCRIPT_PROPERTY,   "property", "'.' <value> /[`]?/"},
    {QSCRIPT_ACTION,     "action",   "(<call> | <index> | <property>)",
-      qs_func_action, qs_func_action_f},
+      qs_language_action, qs_language_action_f},
    {QSCRIPT_CALL,       "call",     "'(' <list> ')'"},
    {QSCRIPT_UNWRAP,     "unwrap",   "('~' | \"\")"},
    {QSCRIPT_INDEX,      "index",    "'[' <value> ']'"},
@@ -68,7 +68,7 @@ static p_symbol_t static_qs_symbols[] = {
 };
 
 /* functions for processing various symbols. */
-P_FUNC (qs_func_complex_string)
+P_FUNC (qs_language_complex_string)
 {
    /* should have one child. */
    p_node_t *n = node->first_child;
@@ -79,7 +79,7 @@ P_FUNC (qs_func_complex_string)
    n->contents[len] = '\0';
 }
 
-P_FUNC (qs_func_qstring)
+P_FUNC (qs_language_qstring)
 {
    p_node_t *n;
    size_t len;
@@ -115,7 +115,7 @@ P_FUNC (qs_func_qstring)
    }
 }
 
-P_FUNC (qs_func_value)
+P_FUNC (qs_language_value)
 {
    qs_value_t *v, *v_next;
    p_node_t *n;
@@ -207,10 +207,10 @@ P_FUNC (qs_func_value)
       }
    }
 }
-P_FUNC (qs_func_value_f)
+P_FUNC (qs_language_value_f)
    { if (node->data) qs_value_free (node->data); }
 
-P_FUNC (qs_func_outer_list)
+P_FUNC (qs_language_outer_list)
 {
    /* steal our child node's data. */
    p_node_t *n = node->first_child->next;
@@ -238,10 +238,10 @@ P_FUNC (qs_func_outer_list)
       }
    }
 }
-P_FUNC (qs_func_outer_list_f)
+P_FUNC (qs_language_outer_list_f)
    { if (node->data) qs_list_free (node->data); }
 
-P_FUNC (qs_func_list)
+P_FUNC (qs_language_list)
 {
    p_node_t *n;
    int index = 0;
@@ -269,10 +269,10 @@ P_FUNC (qs_func_list)
          index++;
       }
 }
-P_FUNC (qs_func_list_f)
+P_FUNC (qs_language_list_f)
    { if (node->data) qs_list_free (node->data); }
 
-P_FUNC (qs_func_action)
+P_FUNC (qs_language_action)
 {
    /* create a value for this node. */
    qs_value_t *v = malloc (sizeof (qs_value_t));;
@@ -308,10 +308,10 @@ P_FUNC (qs_func_action)
       }
    }
 }
-P_FUNC (qs_func_action_f)
+P_FUNC (qs_language_action_f)
    { if (node->data) qs_value_free (node->data); }
 
-P_FUNC (qs_func_resource)
+P_FUNC (qs_language_resource)
 {
    p_node_t *n;
    qs_list_t *list = NULL;
@@ -349,10 +349,10 @@ P_FUNC (qs_func_resource)
       r->node = node;
    }
 }
-P_FUNC (qs_func_resource_f)
+P_FUNC (qs_language_resource_f)
    { if (node->data) qs_resource_free (node->data); }
 
-P_FUNC (qs_func_copy_contents)
+P_FUNC (qs_language_copy_contents)
 {
    if (node->contents)
       free (node->contents);
