@@ -117,10 +117,6 @@ int qs_object_free (qs_object_t *object)
    while (object->rlink_list_back)
       qs_rlink_pop (object->rlink_list_back);
 
-   /* free any remaining variables. */
-   while (object->variable_list_back)
-      qs_variable_free (object->variable_list_back);
-
    /* free properties. */
    while (object->property_list_back)
       qs_property_free (object->property_list_back);

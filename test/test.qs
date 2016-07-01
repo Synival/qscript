@@ -12,14 +12,17 @@ main {
 
    # Math evaluation demonstration for integers vs. floating points.
    echo ("Integer vs. floating point math tests:");
-   echo ("   7    * 11   = ",  * (  7, 11));
-   echo ("   7    * 11.5 = ",  * (  7, 11.5));
-   echo ("   7.1  * 11   = ",  * (7.1, 11));
-   echo ("   7.1  * 11.5 = ",  * (7.1, 11.5));
-   echo ("   8   ** 2    = ", ** (  8, 2));
-   echo ("   8   ** 2.5  = ", ** (  8, 2.5));
-   echo ("   8.0 ** 2    = ", ** (8.0, 2));
-   echo ("   8.0 ** 2.5  = ", ** (8.0, 2.5));
+   echo ("   7    * 11   = ",  * ( 7,   11));
+   echo ("   7    * 11.5 = ",  * ( 7,   11.5));
+   echo ("   7.1  * 11   = ",  * ( 7.1, 11));
+   echo ("   7.1  * 11.5 = ",  * ( 7.1, 11.5));
+   echo ("   8   ** 2    = ", ** ( 8,   2));
+   echo ("   8   ** 2.5  = ", ** ( 8,   2.5));
+   echo ("   8.0 ** 2    = ", ** ( 8.0, 2));
+   echo ("   8.0 ** 2.5  = ", ** ( 8.0, 2.5));
+   echo ("   13   % 5    = ",  % (13,   5));
+   echo ("   13   % 5.9  = ",  % (13,   5.9));
+   echo ("   13.0 % 5.9  = ",  % (13.0, 5.9));
    echo ();
 
    # Test standard logic.
@@ -50,8 +53,11 @@ main {
    echo ();
 
    echo ("Logic / math tests:");
+   echo ($expr);
    = ($logic_func, [{
+      echo ("Blarf");
       args ($expr);
+      echo ("Blorf");
       if ($expr, "true", "false");
    }]);
    echo ("   1 + 2 = 3 : ", $logic_func (== (+ (1, 2), 3)));
@@ -202,17 +208,21 @@ main {
    # Make sure variables in lambda function blocks get tossed out.
    echo ("Lambda variable scope tests:");
    = ($test_var, "value outside block");
-   echo ("   $test_var: ", $test_var);
+   echo ("   $test_var = ", $test_var);
    [{
       args ($x); vars (test_var);
       = ($test_var, $x);
-      echo ("   { $test_var: ", $test_var, " }");
+      echo (multi (
+         "   {",
+      + ("      $test_var = ", $test_var),
+         "   }"));
    }] ("value inside block");
-   echo ("   $test_var: ", $test_var);
+   echo ("   $test_var = ", $test_var);
    = ($l, [{ args ($x);
-             + ("arg1 = ", $x);
+             + ("argument inside lambda = ", $x);
            }]);
-   echo ("   ", $l ("argument read inside lambda"));
+   echo ("   $test_var = ", = ($test_var, $l (
+      "string from outside lambda")));
    echo ();
 
    # Make sure run() can be used in the most extreme cases.

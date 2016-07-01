@@ -35,7 +35,7 @@ QSV_DEFINE (QSV_CANNOT_UNWRAP,      QSV_ERR, "<cannot unwrap>",     0, 0.00f);
 QSV_DEFINE (QSV_SUCCESS,            QSV_ERR, "<success>",           0, 0.00f);
 QSV_DEFINE (QSV_NOT_IN_HEAP,        QSV_ERR, "<not in heap>",       0, 0.00f);
 QSV_DEFINE (QSV_SCOPE_LITERAL,      QSV_ERR, "literal",             0, 0.00f);
-QSV_DEFINE (QSV_SCOPE_OBJECT,       QSV_ERR, "object",              0, 0.00f);
+QSV_DEFINE (QSV_SCOPE_RLINK,        QSV_ERR, "rlink",               0, 0.00f);
 QSV_DEFINE (QSV_SCOPE_BLOCK,        QSV_ERR, "block",               0, 0.00f);
 QSV_DEFINE (QSV_SCOPE_PROPERTY,     QSV_ERR, "property",            0, 0.00f);
 QSV_DEFINE (QSV_SCOPE_UNKNOWN,      QSV_ERR, "unknown",             0, 0.00f);
@@ -133,13 +133,13 @@ char *qs_value_type (qs_value_t *val)
    }
 }
 
-qs_variable_t *qs_value_get_variable (qs_rlink_t *rlink, qs_value_t *v)
+qs_variable_t *qs_value_get_variable (qs_execute_t *exe, qs_value_t *v)
 {
    if (v->link_id == QS_LINK_VARIABLE)
       return v->link;
    switch (v->type_id) {
       case QSCRIPT_VARIABLE:
-         return qs_variable_get (rlink, v->val_s, v->val_i);
+         return qs_variable_get (exe, v->val_s, v->val_i);
       case QSCRIPT_STRING: {
          char *str = v->val_s;
          int scope = -1;
@@ -147,25 +147,25 @@ qs_variable_t *qs_value_get_variable (qs_rlink_t *rlink, qs_value_t *v)
             str++;
             if (*str == '$') {
                str++;
-               scope = QS_SCOPE_OBJECT;
+               scope = QS_SCOPE_RLINK;
             }
             else
                scope = QS_SCOPE_BLOCK;
          }
          if (scope == -1 || *str == '\0')
             return NULL;
-         return qs_variable_get (rlink, str, scope);
+         return qs_variable_get (exe, str, scope);
       }
       default:
          return NULL;
    }
 }
 
-qs_property_t *qs_value_get_property (qs_rlink_t *rlink, qs_value_t *v)
+qs_property_t *qs_value_get_property (qs_execute_t *exe, qs_value_t *v)
 {
    if (v->link_id == QS_LINK_PROPERTY)
       return v->link;
-   return qs_property_get (rlink->object, v->val_s);
+   return qs_property_get (exe->object, v->val_s);
 }
 
 int qs_value_cleanup (qs_value_t *value)
@@ -255,7 +255,6 @@ int qs_value_truth (qs_execute_t *exe, qs_value_t *val)
 
 qs_value_t *qs_value_evaluate_block (qs_execute_t *exe, qs_value_t *val)
 {
-   qs_variable_t *last_var;
    qs_list_t *list = val->val_p;
    qs_value_t *rval = QSV_UNDEFINED;
    qs_execute_t *new_exe = NULL;
@@ -264,7 +263,6 @@ qs_value_t *qs_value_evaluate_block (qs_execute_t *exe, qs_value_t *val)
    /* remember where to pop variables after we're done executing this block. */
    /* evaluate all parameters and return the result of the final one. */
    if (list->type_id == QSCRIPT_BLOCK) {
-      last_var = exe->rlink->variable_list_back;
       new_exe = qs_execute_push (QS_EXE_BLOCK, exe->rlink, exe, exe->action,
          exe->name, 0, NULL);
       exe = new_exe;
@@ -276,7 +274,7 @@ qs_value_t *qs_value_evaluate_block (qs_execute_t *exe, qs_value_t *val)
 
    /* for blocks, get all of all variables declared in this scope. */
    if (new_exe) {
-      qs_variable_free_after (new_exe, last_var, &rval);
+      qs_variable_free_after (new_exe, NULL, &rval);
       qs_execute_pop (new_exe);
    }
 
@@ -305,7 +303,7 @@ qs_value_t *qs_value_read (qs_execute_t *exe, qs_value_t *val)
             rval = qs_action_run (exe, rval, val->val_p);
             break;
          case QSCRIPT_VARIABLE: {
-            qs_variable_t *var = qs_value_get_variable (exe->rlink, val);
+            qs_variable_t *var = qs_value_get_variable (exe, val);
             if (var == NULL) {
                p_error (val->node, "cannot get variable for '%s'.\n",
                   val->val_s);
@@ -316,7 +314,7 @@ qs_value_t *qs_value_read (qs_execute_t *exe, qs_value_t *val)
             break;
          }
          case QSCRIPT_PROPERTY: {
-            qs_property_t *p = qs_value_get_property (exe->rlink, val);
+            qs_property_t *p = qs_value_get_property (exe, val);
             if (p == NULL) {
                p_error (val->node, "cannot get property for '%s'.\n",
                   val->val_s);
@@ -337,7 +335,7 @@ qs_value_t *qs_value_read (qs_execute_t *exe, qs_value_t *val)
 }
 
 qs_variable_t *qs_value_variable (qs_execute_t *exe, qs_value_t *val)
-   { return qs_value_get_variable (exe->rlink, qs_value_read (exe, val)); }
+   { return qs_value_get_variable (exe, qs_value_read (exe, val)); }
 
 int qs_value_length (qs_value_t *v)
 {
@@ -391,7 +389,7 @@ qs_value_t *qs_value_modify_value_real (qs_execute_t *exe,
    /* properties have additional checks. */
    if (val->link_id == QS_LINK_PROPERTY) {
       qs_property_t *p = val->link;
-      if (exe != NULL && p->object != exe->rlink->object)
+      if (exe != NULL && p->object != exe->object)
          return NULL;
 
       /* for properties, push a modification. */

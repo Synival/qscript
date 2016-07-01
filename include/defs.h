@@ -32,7 +32,7 @@ enum qscript_execute_type_e {
 enum qscript_variable_scope_e {
    QS_SCOPE_UNDEFINED = -1,
    QS_SCOPE_LITERAL = 0,
-   QS_SCOPE_OBJECT,
+   QS_SCOPE_RLINK,
    QS_SCOPE_BLOCK,
    QS_SCOPE_LAST
 };

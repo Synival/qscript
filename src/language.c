@@ -160,7 +160,7 @@ P_FUNC (qs_func_value)
             /* (contents[0] is guaranteed to be '$', so this is safe.) */
             if (n->contents[1] == '$') {
                v->val_s = strdup (n->contents + 2);
-               v->val_i = QS_SCOPE_OBJECT;
+               v->val_i = QS_SCOPE_RLINK;
             }
             else {
                v->val_s = strdup (n->contents + 1);

@@ -588,9 +588,9 @@ QS_FUNC (qsf_scope)
       case QS_LINK_VARIABLE: {
          qs_variable_t *var = val->link;
          switch (var->link_id) {
-            case QS_SCOPE_OBJECT:  return QSV_SCOPE_OBJECT;
-            case QS_SCOPE_BLOCK:   return QSV_SCOPE_BLOCK;
-            default:               return QSV_SCOPE_UNKNOWN;
+            case QS_SCOPE_RLINK: return QSV_SCOPE_RLINK;
+            case QS_SCOPE_BLOCK: return QSV_SCOPE_BLOCK;
+            default:             return QSV_SCOPE_UNKNOWN;
          }
       }
       case QS_LINK_PROPERTY:
@@ -801,7 +801,7 @@ QS_FUNC (qsf_variable)
    switch (val->type_id) {
       case QSCRIPT_STRING: {
          qs_variable_t *var;
-         if ((var = qs_value_get_variable (rlink, val)) == NULL) {
+         if ((var = qs_value_get_variable (exe, val)) == NULL) {
             QS_ARG_ERROR (0, "invalid variable scope or name from '%s'.\n",
                           val->val_s);
             return QSV_NOT_VARIABLE;
@@ -825,7 +825,7 @@ QS_FUNC (qsf_property)
    switch (val->type_id) {
       case QSCRIPT_STRING: {
          qs_property_t *p;
-         if ((p = qs_value_get_property (rlink, val)) == NULL) {
+         if ((p = qs_value_get_property (exe, val)) == NULL) {
             QS_ARG_ERROR (0, "invalid property from '%s'.\n", val->val_s);
             return QSV_NOT_PROPERTY;
          }
@@ -859,9 +859,15 @@ QS_FUNC (qsf_inv)
 
 QS_FUNC (qsf_vars)
 {
+   /* get whatever code block we're in. */
+   qs_execute_t *e = qs_execute_get_block (exe);
+
+   /* create new variables in that code block. */
    int i;
    for (i = 0; i < args; i++)
-      qs_variable_new_rlink (rlink, QS_ARGS (i));
+      qs_variable_new_execute (e, QS_ARGS (i));
+
+   /* return the number of new variables. */
    return QS_RETI (args);
 }
 

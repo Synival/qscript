@@ -11,38 +11,43 @@
 
 #include "variables.h"
 
-qs_variable_t *qs_variable_get (qs_rlink_t *rlink, char *name, int scope)
+qs_variable_t *qs_variable_get (qs_execute_t *exe, char *name, int scope)
 {
    qs_variable_t *v;
    switch (scope) {
-      case QS_SCOPE_OBJECT:
-         if ((v = qs_variable_get_object (rlink->object, name)) == NULL)
-            return qs_variable_new_object (rlink->object, name);
+      case QS_SCOPE_RLINK:
+         if ((v = qs_variable_get_rlink (exe->rlink, name)) == NULL)
+            return qs_variable_new_rlink (exe->rlink, name);
          return v;
       case QS_SCOPE_BLOCK:
-         if ((v = qs_variable_get_rlink (rlink, name)) == NULL)
-            return qs_variable_new_rlink (rlink, name);
+         if ((v = qs_variable_get_execute (exe, name)) == NULL)
+            return qs_variable_new_execute (exe, name);
          return v;
       default:
          return NULL;
    }
 }
 
-qs_variable_t *qs_variable_get_object (qs_object_t *obj, char *name)
+qs_variable_t *qs_variable_get_rlink (qs_rlink_t *rlink, char *name)
 {
    qs_variable_t *v;
-   for (v = obj->variable_list_back; v != NULL; v = v->prev)
+   while (rlink->parent)
+      rlink = rlink->parent;
+   for (v = rlink->variable_list_back; v != NULL; v = v->prev)
       if (strcmp (v->name, name) == 0)
          return v;
    return NULL;
 }
 
-qs_variable_t *qs_variable_get_rlink (qs_rlink_t *rlink, char *name)
+qs_variable_t *qs_variable_get_execute (qs_execute_t *exe, char *name)
 {
    qs_variable_t *v;
-   for (v = rlink->variable_list_back; v != NULL; v = v->prev)
-      if (strcmp (v->name, name) == 0)
-         return v;
+   while (exe) {
+      for (v = exe->variable_list_back; v != NULL; v = v->prev)
+         if (strcmp (v->name, name) == 0)
+            return v;
+      exe = exe->parent;
+   }
    return NULL;
 }
 
@@ -60,41 +65,48 @@ qs_variable_t *qs_variable_new_base (qs_scheme_t *scheme, char *name)
    return new;
 }
 
-qs_variable_t *qs_variable_new_object (qs_object_t *obj, char *name)
-{
-   qs_variable_t *new;
-
-   /* create a new variable to be popped at the end of the current block. */
-   new = qs_variable_new_base (obj->scheme, name);
-
-   /* link to the end of the object. */
-   new->link_id = QS_SCOPE_OBJECT;
-   new->parent = obj;
-   new->prev = obj->variable_list_back;
-   if (new->prev) new->prev->next          = new;
-   else           obj->variable_list_front = new;
-   obj->variable_list_back = new;
-   obj->variable_count++;
-
-   /* return our new variable. */
-   return new;
-}
-
 qs_variable_t *qs_variable_new_rlink (qs_rlink_t *rlink, char *name)
 {
    qs_variable_t *new;
 
+   /* declare at the top-most rlink. */
+   while (rlink->parent)
+      rlink = rlink->parent;
+
    /* create a new variable to be popped at the end of the current block. */
    new = qs_variable_new_base (rlink->scheme, name);
 
-   /* link to the end of the rlink. */
-   new->link_id = QS_SCOPE_BLOCK;
+   /* link to the end of the object. */
+   new->link_id = QS_SCOPE_RLINK;
    new->parent = rlink;
    new->prev = rlink->variable_list_back;
    if (new->prev) new->prev->next            = new;
    else           rlink->variable_list_front = new;
    rlink->variable_list_back = new;
    rlink->variable_count++;
+
+   /* return our new variable. */
+   return new;
+}
+
+qs_variable_t *qs_variable_new_execute (qs_execute_t *exe, char *name)
+{
+   qs_variable_t *new;
+
+   /* declare variable at the block. */
+   exe = qs_execute_get_block (exe);
+
+   /* create a new variable to be popped at the end of the current block. */
+   new = qs_variable_new_base (exe->scheme, name);
+
+   /* link to the end of the rlink. */
+   new->link_id = QS_SCOPE_BLOCK;
+   new->parent = exe;
+   new->prev = exe->variable_list_back;
+   if (new->prev) new->prev->next          = new;
+   else           exe->variable_list_front = new;
+   exe->variable_list_back = new;
+   exe->variable_count++;
 
    /* return our new variable. */
    return new;
@@ -112,23 +124,23 @@ int qs_variable_free (qs_variable_t *v)
 
    /* remove from whatever list this variable is attached to. */
    switch (v->link_id) {
-      case QS_SCOPE_OBJECT: {
-         qs_object_t *o = v->parent;
+      case QS_SCOPE_RLINK: {
+         qs_rlink_t *r = v->parent;
          if (v->next) v->next->prev          = v->prev;
-         else         o->variable_list_back  = v->prev;
+         else         r->variable_list_back  = v->prev;
          if (v->prev) v->prev->next          = v->next;
-         else         o->variable_list_front = v->next;
-         o->variable_count--;
+         else         r->variable_list_front = v->next;
+         r->variable_count--;
          break;
       }
 
       case QS_SCOPE_BLOCK: {
-         qs_rlink_t *rl = v->parent;
-         if (v->next) v->next->prev           = v->prev;
-         else         rl->variable_list_back  = v->prev;
-         if (v->prev) v->prev->next           = v->next;
-         else         rl->variable_list_front = v->next;
-         rl->variable_count--;
+         qs_execute_t *e = v->parent;
+         if (v->next) v->next->prev          = v->prev;
+         else         e->variable_list_back  = v->prev;
+         if (v->prev) v->prev->next          = v->next;
+         else         e->variable_list_front = v->next;
+         e->variable_count--;
          break;
       }
    }
@@ -145,7 +157,7 @@ int qs_variable_free_after (qs_execute_t *exe, qs_variable_t *v,
    int count = 0;
 
    /* start freeing variables after 'v' (if NULL, start at the beginning). */
-   for (v = (v ? v->next : exe->rlink->variable_list_front); v != NULL;
+   for (v = (v ? v->next : exe->variable_list_front); v != NULL;
         v = v_next) {
       v_next = v->next;
 

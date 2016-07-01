@@ -14,12 +14,12 @@ struct _qs_rlink_t {
    qs_resource_t *resource;
    int flags;
 
-   /* variables. */
-   int variable_count;
-   qs_variable_t *variable_list_front, *variable_list_back;
-
    /* modificiations applied to properties. */
    qs_stack_t *stack_modify;
+
+   /* top rlink-scope variables. */
+   qs_variable_t *variable_list_front, *variable_list_back;
+   int variable_count;
 
    /* link information. */
    int priority;

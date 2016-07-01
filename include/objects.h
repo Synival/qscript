@@ -14,10 +14,8 @@ struct _qs_object_t {
    qs_id_t id;
    int flags;
 
-   /* rlinks, object-scope variables, properties. */
+   /* rlinks and property lists. */
    qs_rlink_t *rlink_list_front, *rlink_list_back;
-   qs_variable_t *variable_list_front, *variable_list_back;
-   int variable_count;
    qs_property_t *property_list_front, *property_list_back;
    int property_count;
    qs_modify_t *last_modify;

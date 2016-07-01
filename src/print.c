@@ -32,7 +32,7 @@ int qs_print_value (qs_value_t *v, int indent)
          break;
       case QSCRIPT_VARIABLE:
          switch (v->val_i) {
-            case QS_SCOPE_OBJECT:
+            case QS_SCOPE_RLINK:
                printf ("\x1b[0;36m$$\x1b[1m%s\x1b[0m", v->val_s);
                break;
             case QS_SCOPE_BLOCK:

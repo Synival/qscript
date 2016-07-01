@@ -105,7 +105,7 @@ qs_value_t *qs_func_run (qs_execute_t *exe, qs_func_t *func)
       return QSV_NOT_ENOUGH_ARGS;
    }
    else
-      return func->func (exe->rlink->object, exe->rlink, exe, exe->action,
+      return func->func (exe->object, exe->rlink, exe, exe->action,
          func, func->sub_func, exe->list->value_count, exe->list->values);
 }
 
