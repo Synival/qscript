@@ -148,17 +148,12 @@ qs_variable_t *qs_value_get_variable (qs_execute_t *exe, qs_value_t *v)
          return qs_variable_get (exe, v->val_s, v->val_i);
       case QSCRIPT_STRING: {
          char *str = v->val_s;
-         int scope = -1;
+         int scope = QS_SCOPE_BLOCK;
          if (*str == '$') {
             str++;
-            if (*str == '$') {
-               str++;
-               scope = QS_SCOPE_RLINK;
-            }
-            else
-               scope = QS_SCOPE_BLOCK;
+            scope = QS_SCOPE_RLINK;
          }
-         if (scope == -1 || *str == '\0')
+         if (*str == '\0')
             return NULL;
          return qs_variable_get (exe, str, scope);
       }

@@ -127,10 +127,11 @@ QS_FUNC (qsf_math)
    int i, start, math_func;
 
    /* are we setting a value...? */
+   qs_value_t *aval = QS_ARGV(0);
    if (sub_func >= 20) {
       /* get our lvalue.  can we modify it? */
-      if ((lval = qs_value_modify_value (exe, QS_ARGV (0))) == NULL) {
-         QS_ARG_ERROR (0, "argument cannot be modified.\n");
+      if ((lval = qs_value_modify_value (exe, aval)) == NULL) {
+         QS_ARG_ERROR (0, "argument '%s' cannot be modified.\n", aval->val_s);
          return QSV_CANNOT_MODIFY;
       }
       if (lval->type_id == QSCRIPT_UNDEFINED) {
@@ -483,8 +484,9 @@ QS_FUNC (qsf_let)
    qs_value_t *lval;
 
    /* get our variable. */
-   if ((lval = qs_value_modify_value (exe, QS_ARGV (0))) == NULL) {
-      QS_ARG_ERROR (0, "argument cannot be modified.\n");
+   qs_value_t *aval = QS_ARGV(0);
+   if ((lval = qs_value_modify_value (exe, aval)) == NULL) {
+      QS_ARG_ERROR (0, "argument '%s' cannot be modified.\n", aval->val_s);
       return QSV_CANNOT_MODIFY;
    }
 
@@ -675,9 +677,10 @@ QS_FUNC (qsf_for_each)
    qs_list_t *list = val->val_p;
 
    /* make sure our second argument can be modified. */
-   qs_value_t *lval = qs_value_modify_value (exe, QS_ARGV (1));
+   qs_value_t *aval = QS_ARGV(1),
+              *lval = qs_value_modify_value (exe, QS_ARGV (1));
    if (lval == NULL) {
-      QS_ARG_ERROR (1, "argument cannot be modified.\n");
+      QS_ARG_ERROR (1, "argument '%s' cannot be modified.\n", aval->val_s);
       return QSV_CANNOT_MODIFY;
    }
 
@@ -741,10 +744,11 @@ QS_FUNC (qsf_args)
    /* resolve all variables in the PREVIOUS execution state and store
     * them in new local variables. */
    int i, count = 0;
-   qs_value_t *lval;
+   qs_value_t *aval, *lval;
    for (i = 0; i < args; i++) {
-      if ((lval = qs_value_modify_value (exe, QS_ARGV (i))) == NULL) {
-         QS_ARG_ERROR (i, "argument cannot be modified.\n", i + 1);
+      aval = QS_ARGV(i);
+      if ((lval = qs_value_modify_value (exe, aval)) == NULL) {
+         QS_ARG_ERROR (i, "argument '%s' cannot be modified.\n", aval->val_s);
          QS_RETURN ();
          return QSV_CANNOT_MODIFY;
       }
@@ -802,7 +806,7 @@ QS_FUNC (qsf_arg_list)
       return QSV_NOT_FUNC_CALL;
    }
 
-   /* create a value that contains this list.  make it immutable. */
+   /* create a value that contains this list.  make certain it's immutable. */
    qs_value_t *rval = qs_scheme_heap_value (exe->scheme);
    rval->flags &= ~QS_VALUE_MUTABLE;
    rval->type_id = QSCRIPT_LIST;
@@ -1046,16 +1050,9 @@ QS_FUNC (qsf_length)
 
 QS_FUNC (qsf_this)
 {
-   /* create an object type to return. */
+   /* create an object type, set reference to ourselves, and return it. */
    qs_value_t *rval = qs_scheme_heap_value (exe->scheme);
-   rval->type_id = QSCRIPT_OBJECT;
-
-   /* set primitive values. */
-   qs_value_restring (rval, "<object>");
-   rval->data = strdup (object->name);
-   rval->val_i = object->id;
-
-   /* return it. */
+   qs_value_init (rval, QSCRIPT_OBJECT, object->name, object->id);
    return rval;
 }
 
@@ -1078,29 +1075,26 @@ QS_FUNC (qsf_cast)
       case QSCRIPT_CHAR: {
          /* create a char value. */
          qs_value_t *rval = qs_scheme_heap_value (exe->scheme);
-         rval->type_id = QSCRIPT_CHAR;
 
          /* what character should it be? */
-         char buf[2];
+         int ch;
          switch (val->type_id) {
             case QSCRIPT_INT:
             case QSCRIPT_FLOAT:
-               buf[0] = (val->val_i >= 1 && val->val_i <= 255) ?
-                         val->val_i : '?';
+               ch = val->val_i;
                break;
             case QSCRIPT_STRING:
-               buf[0] = (val->val_s[0] != 0) ? val->val_s[0] : '?';
+               ch = val->val_s[0];
                break;
             default:
-               buf[0] = '?';
+               ch = '?';
                break;
          }
-         buf[1] = '\0';
+         if (ch < 1 || ch > 255)
+            ch = '?';
 
-         /* set values and return our new variable. */
-         qs_value_restring (rval, buf);
-         rval->val_i = buf[0];
-         rval->val_f = buf[0];
+         /* set value and return our new variable. */
+         qs_value_init (rval, QSCRIPT_CHAR, ch, NULL, NULL);
          return rval;
       }
 

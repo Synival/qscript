@@ -262,15 +262,20 @@ main {
    echo ();
 
    # Make sure object references do what they're supposed to.
-   = ($self, this ());
+   = ($self,  this ());
+   = ($selfn, object (name (this ())));
+   = ($selfi, object (id   (this ())));
    = ($obj1, @main);
    = ($obj2, @@my_object);
    = ($obj3, @@bad_object);
    echo ("Object reference tests:");
-   echo ("   $self = ", name ($self), "        (id = ", id ($self), ")");
+   echo ("   $self = ", name ($self),  "       (id = ", id ($self), ")");
+   echo ("  $selfn = ", name ($selfn), "       (id = ", id ($selfn),")");
+   echo ("  $selfi = ", name ($selfi), "       (id = ", id ($selfi),")");
+   echo ("   ----------------------------------");
    echo ("   $obj1 = ", name ($obj1), "        (id = ", id ($obj1), ")");
    echo ("   $obj2 = ", name ($obj2),       "  (id = ", id ($obj2), ")");
-   echo ("   $obj3 = ", name ($obj3),        " (id = ", id ($obj3), ")");
+   echo ("   $obj3 = ", name ($obj3), "        (id = ", id ($obj3), ")");
    echo ("   ----------------------------------");
    echo ("   $self == $obj1 : ", == ($self, $obj1), " <-- should pass");
    echo ("   $obj1 == $obj2 : ", == ($obj1, $obj2));
@@ -292,15 +297,38 @@ main {
 
    # Do some fancy stuff with properties.
    echo ("Object property tests:");
-   echo ("   .int    = ", @@my_object.int);
-   echo ("   .string = ", @@my_object.string);
-   echo ("   .list   = ", @@my_object.list);
-   echo ("   .func   = ", @@my_object.func);
-   echo ("----------------------------------------");
-   echo ("   .+ (str, ing)     = ", @@my_object.+ (str, ing));
-   echo ("   .+ (fun, c)       = ", @@my_object.+ (fun, c));
-   echo ("   .func` (one)      = ", @@my_object.func` (one));
-   echo ("   .+ (fun, c)`(two) = ", @@my_object.+ (fun, c)`(two));
+   echo ("   @@myobject.int     = ",  @@my_object.int);
+   echo ("   @@myobject.string  = ",  @@my_object.string);
+   echo ("  ~@@myobject.list    = ", ~@@my_object.list);
+   echo ("   @@myobject.func    = ",  @@my_object.func);
+   echo ("--------------------------------------------------");
+   echo ("   @@myobject.+ (str, ing)     = ", @@my_object.+ (str, ing));
+   echo ("   @@myobject.+ (fun, c)       = ", @@my_object.+ (fun, c));
+   echo ("   @@myobject.func` (one)      = ", @@my_object.func` (one));
+   echo ("   @@myobject.+ (fun, c)`(two) = ", @@my_object.+ (fun, c)`(two));
+   echo ();
+
+   # Do as many wacky casts as we can.
+   = (.string,   "This is a property of type 'string'.");
+   = ($string, "This is a block variable of type 'string'.");
+   = ($$string, "This is an rlink variable of type 'string'.");
+   echo ("Casting tests:");
+   echo ("   + (int ('12340'), 5)      = ", + (int ('12340'), 5));
+   echo ("   * (float (4), 1.5)        = ", * (float (4), 1.5));
+   echo ("   char ('string')           = ", char ('string'));
+   echo ("   char (65)                 = ", char (65));
+   echo ("   char (65.7)               = ", char (65.7));
+   echo ("   char (0)                  = ", char (0));
+   echo ("   char (256)                = ", char (256));
+   echo ("   + (char (65), 1)          = ", + (char (65), 1));
+   echo ("   string (65)               = ", string (65));
+   echo ("   string (65.7)             = ", string (65.7));
+   echo ("   int ([a, b, c])           = ", int ([a, b, c]));
+   echo ("   string ([a, b, c])        = ", string ([a, b, c]));
+   echo ("   variable ('string')       = ", variable ('string'));
+   echo ("   variable ('$string')      = ", variable ('$string'));
+   echo ("   property ('string')       = ", property ('string'));
+   echo ("   object ('@my_object').int = ", object ("@my_object").int);
    echo ();
 
    # Everything here should call an error!  Use lambda for convenience.
@@ -337,6 +365,7 @@ main {
    $error_test (< (@@main, @@my_object));
    $error_test (== (@@main, "@@my_object"));
    $error_test (= (@@my_object.string, "this shouldn't work"));
+   $error_test (= (this(), @@my_object));
    echo ("   Error test concluded.");
    echo ();
 }
@@ -388,7 +417,7 @@ fancy_string {
    # set some primitive properties.
    = (.int,    100);
    = (.string, "foo bar baz");
-   = (.list,   [a, b, c]);
+   = (.list,   [One, Two, Three]);
    = (.func,   [{
       args ($value);
       return (+ ("The argument is '", $value, "'."));
