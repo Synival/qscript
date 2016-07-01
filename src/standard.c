@@ -298,7 +298,7 @@ QS_FUNC (qsf_math)
       }
       /* for more cases, just copy the value over. */
       else
-         qs_value_copy (exe, lval, rval);
+         qs_value_copy_const (exe, lval, rval);
    }
 
    /* herp derp */

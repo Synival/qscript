@@ -215,6 +215,7 @@ qs_value_t *qs_action_index (qs_execute_t *exe, qs_value_t *val,
          /* add a value to the heap that contains our character. */
          rval = qs_scheme_heap_value (exe->scheme);
          rval->type_id = QSCRIPT_CHAR;
+         rval->flags |= (val->flags & QS_VALUE_MUTABLE);
 
          /* for reading purposes, it will be a virtual 'char' type. */
          qs_value_restring (rval, "0");

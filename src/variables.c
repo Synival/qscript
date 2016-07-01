@@ -61,7 +61,7 @@ qs_variable_t *qs_variable_new_base (qs_scheme_t *scheme, char *name)
    new->value.link     = new;
    new->value.scheme   = scheme;
    new->value.flags    = QS_VALUE_MUTABLE;
-   qs_value_copy (NULL, &(new->value), QSV_UNDEFINED);
+   qs_value_init (&(new->value), QSCRIPT_UNDEFINED, NULL);
    return new;
 }
 
@@ -166,7 +166,7 @@ int qs_variable_free_after (qs_execute_t *exe, qs_variable_t *v,
       if (*return_val && qs_variable_contains (v, *return_val)) {
          qs_value_t *new;
          new = qs_return_value_new (exe->rlink->scheme);
-         qs_value_copy (exe, new, *return_val);
+         qs_value_copy_const (exe, new, *return_val);
          *return_val = new;
       }
 

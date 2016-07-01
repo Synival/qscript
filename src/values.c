@@ -63,7 +63,8 @@ int qs_value_copy_real (qs_execute_t *exe, qs_value_t *dest, qs_value_t *src,
 
    /* make sure it's modifiable. */
    if (!force && !qs_value_can_modify (exe, dest)) {
-      p_error (NULL, "attempted to modify immutable value.\n");
+      p_error (exe->action ? exe->action->value->node : NULL,
+         "attempted to modify immutable value '%s'.\n", dest->val_s);
       return 0;
    }
 
