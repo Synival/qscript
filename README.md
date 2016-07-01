@@ -2,10 +2,37 @@
 
 (This document is an early draft.  More coming soon.)
 
+## Why:
+
+1. Need to keep persistant object states that can be modified without potential state corruption.
+2. Need to let objects interact with each other and efficiently respond to all changes from other objects.
+
 ## Mission:
 
 1. Instantiate any number of objects with relationships to each other in a consistent but dynamically modifiable state.
 2. Allow interaction between object space and programming space using C.
+3. Resource execution on objects in arbitrary order determined by priority values.
+4. Allow language extension through schemes.
+
+## Language Grammar:
+
+1. TBC
+
+## Internal structures:
+
+1. qs_object_t
+2. qs_value_t
+3. qs_resource_t
+4. qs_rlink_t
+5. qs_scheme_t
+6. qs_func_t
+7. qs_variable_t
+8. qs_execute_t
+9. qs_list_t
+10. qs_action_t
+11. qs_stack_t
+12. qs_property_t
+13. qs_modify_t
 
 ## What's done:
 
@@ -21,9 +48,12 @@
 2. Object "metaspace"
 3. Keep track of property access between objects
 4. Object list search functions
-5. External object modification from qscript via resource pushing/popping
+5. Object modification from qscript via resource pushing/popping
 6. State-safe object-scoped variables
 7. Global (metaspace) variables
+8. Reading object properties / variables from external environment
+9. External modification of object variables
+10. "Execution" scripts
 
 ## Primitives:
 
@@ -40,6 +70,12 @@
 1. variable
 2. property
 3. action
+
+## Variable scopes:
+
+1. Block
+2. Object
+3. Global
 
 ## Action types:
 
@@ -139,3 +175,16 @@
 5. object
 6. variable
 7. property
+
+## Implementation:
+
+1. Your first qscript
+2. Example of a simple parser.
+3. More complex qscript with multiple objects.
+4. Instantiating and freeing objects.
+5. Reading properties from objects.
+6. Reading and writing object variables.
+7. Internal cross-object access.
+8. External pushing / popping resources onto objects.
+9. Internal pushing / popping.
+10. Priorities, winding, unwinding, rewinding
