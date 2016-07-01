@@ -67,6 +67,7 @@ qs_func_t qs_func_list_standard[] = {
    { "--",      "<variable>",              1, qsf_let,    -1 },
    { "type",    "<value>",                 1, qsf_type,    0 },
    { "scope",   "<value>",                 1, qsf_scope,   0 },
+   { "index",   "<value>",                 1, qsf_index,   0 },
    { "while",   "<condition> <action>",    2, qsf_while,   0 },
    { "for",     "<init> <cond> <after> <action>",
                                            4, qsf_for,     0 },
@@ -165,18 +166,22 @@ QS_FUNC (qsf_math)
                case 1: v -= (int) rch; break;
                case 2: v *= (int) rch; break;
                case 3: {
-                  if (rch == 0) {
-                     QS_ARG_ERROR (i, "division by zero.\n");
+                  if (rch == 0)
                      return QSV_DIVISION_BY_ZERO;
-                  }
-                  v /= (int) rch;
+                  else
+                     v /= (int) rch;
                   break;
                }
                case 4: v  = (int) powf (v, rch); break;
                case 5: v |= (int) rch; break;
                case 6: v &= (int) rch; break;
                case 7: v ^= (int) rch; break;
-               case 8: v %= (int) rch; break;
+               case 8:
+                  if (rch == 0)
+                     return QSV_MOD_BY_ZERO;
+                  else
+                     v %= (int) rch;
+                  break;
                default:
                   QS_ARG_ERROR (i, "invalid operation.\n");
                   return QSV_INVALID_OPER;
@@ -199,19 +204,22 @@ QS_FUNC (qsf_math)
                case 0: v += r; break;
                case 1: v -= r; break;
                case 2: v *= r; break;
-               case 3: {
-                  if (r == 0) {
-                     QS_ARG_ERROR (i, "division by zero.\n");
+               case 3:
+                  if (r == 0)
                      return QSV_DIVISION_BY_ZERO;
-                  }
-                  v /= r;
+                  else
+                     v /= r;
                   break;
-               }
                case 4: v = (int) powf (v, r); break;
                case 5: v |= r; break;
                case 6: v &= r; break;
                case 7: v ^= r; break;
-               case 8: v %= r; break;
+               case 8:
+                  if (r == 0)
+                     return QSV_MOD_BY_ZERO;
+                  else
+                     v %= r;
+                  break;
                default:
                   QS_ARG_ERROR (i, "invalid operation.\n");
                   return QSV_INVALID_OPER;
@@ -230,14 +238,18 @@ QS_FUNC (qsf_math)
                case 1: v -= r; break;
                case 2: v *= r; break;
                case 3:
-                  if (r == 0.00f) {
-                     QS_ARG_ERROR (i, "division by zero.\n");
+                  if (r == 0.00f)
                      return QSV_DIVISION_BY_ZERO;
-                  }
-                  v /= r;
+                  else
+                     v /= r;
                   break;
                case 4: v = powf (v, r);  break;
-               case 8: v = fmodf (v, r); break;
+               case 8:
+                  if (r == 0.00f)
+                     return QSV_MOD_BY_ZERO;
+                  else
+                     v = fmodf (v, r);
+                  break;
                default:
                   QS_ARG_ERROR (i, "invalid operation.\n");
                   return QSV_INVALID_OPER;
@@ -599,6 +611,16 @@ QS_FUNC (qsf_scope)
          QS_ARG_ERROR (0, "unknown scope for value.\n");
          return QSV_INVALID_VALUE;
    }
+}
+
+QS_FUNC (qsf_index)
+{
+   qs_value_t *val = QS_ARGV (0);
+   if (val->type_id != QSCRIPT_CHAR && val->type_id != QSCRIPT_INDEX)
+      return QSV_INVALID_TYPE;
+   if (val->val_p == NULL)
+      return QSV_NO_INDEX;
+   return QS_RETI (*((int *) val->data));
 }
 
 QS_FUNC (qsf_while)

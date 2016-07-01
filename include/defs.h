@@ -30,6 +30,7 @@ enum qscript_execute_type_e {
 
 /* variable scopes. */
 enum qscript_variable_scope_e {
+   QS_SCOPE_AUTO = -2,
    QS_SCOPE_UNDEFINED = -1,
    QS_SCOPE_LITERAL = 0,
    QS_SCOPE_RLINK,
@@ -48,6 +49,7 @@ enum qscript_action_type_e {
 
 /* our giant list of qscript tokens. */
 enum qscript_tag_e {
+   QSCRIPT_INVALID = -2,
    QSCRIPT_UNDEFINED = -1,
    QSCRIPT_ROOT = 0,
    QSCRIPT_COMMENT,

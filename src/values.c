@@ -2,6 +2,8 @@
  * --------
  * useful functions for value types. */
 
+#include <stdarg.h>
+
 #include "actions.h"
 #include "execute.h"
 #include "language.h"
@@ -24,11 +26,13 @@ QSV_DEFINE (QSV_NOT_PROPERTY,       QSV_ERR, "<not property>",      0, 0.00f);
 QSV_DEFINE (QSV_CANNOT_MODIFY,      QSV_ERR, "<cannot modify>",     0, 0.00f);
 QSV_DEFINE (QSV_NOT_FUNC_CALL,      QSV_ERR, "<not function call>", 0, 0.00f);
 QSV_DEFINE (QSV_INVALID_INDEX,      QSV_ERR, "<invalid index>",     0, 0.00f);
+QSV_DEFINE (QSV_NO_INDEX,           QSV_ERR, "<no index>",          0, 0.00f);
 QSV_DEFINE (QSV_INVALID_SUB_FUNC,   QSV_ERR, "<invalid sub_func>",  0, 0.00f);
 QSV_DEFINE (QSV_NOT_ENOUGH_ARGS,    QSV_ERR, "<not enough args>" ,  0, 0.00f);
 QSV_DEFINE (QSV_INVALID_FUNC,       QSV_ERR, "<invalid func>",      0, 0.00f);
 QSV_DEFINE (QSV_INVALID_OPER,       QSV_ERR, "<invalid operation>", 0, 0.00f);
 QSV_DEFINE (QSV_DIVISION_BY_ZERO,   QSV_ERR, "<division by zero>",  0, 0.00f);
+QSV_DEFINE (QSV_MOD_BY_ZERO,        QSV_ERR, "<mod by zero>",       0, 0.00f);
 QSV_DEFINE (QSV_INVALID_RESOURCE,   QSV_ERR, "<invalid resource>",  0, 0.00f);
 QSV_DEFINE (QSV_CANNOT_EXECUTE,     QSV_ERR, "<cannot execute>",    0, 0.00f);
 QSV_DEFINE (QSV_CANNOT_UNWRAP,      QSV_ERR, "<cannot unwrap>",     0, 0.00f);
@@ -117,6 +121,7 @@ int qs_value_copy_real (qs_execute_t *exe, qs_value_t *dest, qs_value_t *src,
 char *qs_value_type (qs_value_t *val)
 {
    switch (val->type_id) {
+      case QSCRIPT_INVALID:   return "invalid";
       case QSCRIPT_UNDEFINED: return "undefined";
       case QSCRIPT_STRING:    return "string";
       case QSCRIPT_FLOAT:     return "float";
@@ -170,12 +175,18 @@ qs_property_t *qs_value_get_property (qs_execute_t *exe, qs_value_t *v)
 
 int qs_value_cleanup (qs_value_t *value)
 {
-   /* free children. */
+   /* free children... */
    if (value->child) {
       qs_value_free (value->child);
       value->child = NULL;
    }
 
+   /* ...and free ourselves. */
+   return qs_value_cleanup_self (value);
+}
+
+int qs_value_cleanup_self (qs_value_t *value)
+{
    /* if there's some type-specific data, free it. */
    if (value->data) {
       switch (value->type_id) {
@@ -196,10 +207,17 @@ int qs_value_cleanup (qs_value_t *value)
       }
       value->data = NULL;
    }
+
+   /* reset everything else. */
    if (value->val_s) {
       free (value->val_s);
       value->val_s = NULL;
    }
+   value->val_i = 0;
+   value->val_f = 0.00f;
+   value->val_p = 0;
+
+   /* return success. */
    return 1;
 }
 
@@ -503,4 +521,102 @@ int qs_value_contains (qs_value_t *haystack, qs_value_t *needle)
 
    /* all checks passed - it's not in there. */
    return 0;
+}
+
+int qs_value_init (qs_value_t *val, int type, ...)
+{
+   va_list va;
+   int rval = 1;
+
+   /* reset variable to our type. */
+   qs_value_cleanup_self (val);
+   val->type_id = type;
+
+   /* assign parameters based on type. */
+   va_start (va, type);
+   switch (type) {
+      case QSCRIPT_UNDEFINED: {
+         char *str = va_arg (va, char *);
+         qs_value_restring (val, str ? str : "<undefined>");
+         break;
+      }
+      case QSCRIPT_STRING:
+         qs_value_restring (val, va_arg (va, char *));
+         qs_value_update_from_string (val);
+         break;
+      case QSCRIPT_INT: {
+         val->val_i = va_arg (va, int);
+         val->val_f = val->val_i;
+         char buf[256];
+         snprintf (buf, sizeof (buf), "%d", val->val_i);
+         qs_value_restring (val, buf);
+         break;
+      }
+      case QSCRIPT_FLOAT: {
+         val->val_f = (float) va_arg (va, double);
+         val->val_i = (int) val->val_f;
+         char buf[256];
+         snprintf (buf, sizeof (buf), "%g", val->val_f);
+         qs_value_restring (val, buf);
+         break;
+      }
+      case QSCRIPT_CHAR: {
+         char buf[2];
+         buf[0] = (char) va_arg (va, int);
+         buf[1] = '\0';
+         qs_value_restring (val, buf);
+         val->val_i = (int)   buf[0];
+         val->val_f = (float) buf[0];
+
+         /* is this part of a string? */
+         val->val_p = va_arg (va, char *);
+         if (val->val_p) {
+            /* it is.  is there an index? */
+            int *data = va_arg (va, int *);
+            if (data) {
+               int *data_p = malloc (sizeof (int));
+               *data_p = *data;
+               val->data = data_p;
+            }
+         }
+         break;
+      }
+      case QSCRIPT_OBJECT:
+         qs_value_restring (val, "<object>");
+         val->data = strdup (va_arg (va, char *));
+         val->val_i = va_arg (va, qs_id_t);
+         val->val_f = val->val_i;
+         break;
+      case QSCRIPT_VARIABLE: {
+         val->val_i = va_arg (va, int);
+         val->val_f = val->val_i;
+         char *str = va_arg (va, char *);
+         if (val->val_i == QS_SCOPE_AUTO) {
+            if (str[0] == '$') {
+               qs_value_restring (val, str + 1);
+               val->val_i = QS_SCOPE_RLINK;
+            }
+            else {
+               qs_value_restring (val, str);
+               val->val_i = QS_SCOPE_BLOCK;
+            }
+         }
+         else
+            qs_value_restring (val, str);
+         break;
+      }
+      case QSCRIPT_PROPERTY:
+         qs_value_restring (val, va_arg (va, char *));
+         break;
+      default:
+         /* can't initialize this value.  complain. */
+         p_error (val->node, "cannot initialize variable of type '%s'.\n",
+                  qs_value_type (val));
+         rval = 0;
+         break;
+   }
+   va_end (va);
+
+   /* return 1 on success, 0 on error. */
+   return rval;
 }

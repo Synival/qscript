@@ -55,9 +55,7 @@ main {
    echo ("Logic / math tests:");
    echo ($expr);
    = ($logic_func, [{
-      echo ("Blarf");
       args ($expr);
-      echo ("Blorf");
       if ($expr, "true", "false");
    }]);
    echo ("   1 + 2 = 3 : ", $logic_func (== (+ (1, 2), 3)));
@@ -115,8 +113,8 @@ main {
    # Show off our language types and variable scoping.
    echo ("Type tests:");
    echo ("   string    | ", type (string));
-   echo ("   'a'       | ", type ('a'));
-   echo ("   string[0] | ", type (string[0]));
+   echo ("   'a'       | ", type ('a'), " (", index ('a'), ")");
+   echo ("   string[1] | ", type (string[0]), " (", index (string[1]), ")");
    echo ("   0         | ", type (0));
    echo ("   1.00      | ", type (1.00));
    echo ("   [string]  | ", type ([string]));
@@ -323,7 +321,6 @@ main {
    $error_test (run (derp));
    $error_test (run (for));
    $error_test (- (a, b, c));
-   $error_test (/ (1, 0));
    $error_test (| (5.0, 1.0));
    $error_test ({+= ($not_defined_yet, 100, 200);});
    $error_test (++ ($not_defined_yet));

@@ -119,7 +119,6 @@ P_FUNC (qs_language_value)
 {
    qs_value_t *v, *v_next;
    p_node_t *n;
-   char buf[256];
 
    /* link an empty value. */
    v = malloc (sizeof (qs_value_t));
@@ -130,62 +129,50 @@ P_FUNC (qs_language_value)
    v_next = v;
    for (n = node->first_child; n != NULL; n = n->next) {
       switch (n->type_id) {
+         /* parameter flags. */
          case QSCRIPT_UNWRAP:
             if (n->first_child->contents[0] == '~')
                v->flags |= QS_VALUE_UNWRAP;
             break;
+
+         /* primitive types. */
+         case QSCRIPT_UNDEFINED:
+            qs_value_init (v, QSCRIPT_UNDEFINED, NULL);
+            break;
          case QSCRIPT_NUMBER:
-            v->val_i = atoi (n->first_child->first_child->contents);
-            v->val_f = atof (n->first_child->first_child->contents);
             switch (n->first_child->type_id) {
                case QSCRIPT_INT:
-                  v->type_id = QSCRIPT_INT;
-                  snprintf (buf, sizeof (buf), "%d", v->val_i);
-                  v->val_s = strdup (buf);
+                  qs_value_init (v, QSCRIPT_INT,
+                     atoi (n->first_child->first_child->contents));
                   break;
                case QSCRIPT_FLOAT:
-                  v->type_id = QSCRIPT_FLOAT;
-                  snprintf (buf, sizeof (buf), "%g", v->val_f);
-                  v->val_s = strdup (buf);
+                  qs_value_init (v, QSCRIPT_FLOAT,
+                     atof (n->first_child->first_child->contents));
                   break;
             }
             break;
          case QSCRIPT_OBJECT:
+            qs_value_init (v, QSCRIPT_OBJECT, n->contents + 1,
+                           (qs_id_t) 0);
             v->type_id = QSCRIPT_OBJECT;
-            v->val_s = strdup ("<object>");
-            v->data = strdup (n->contents + 1);
             break;
          case QSCRIPT_VARIABLE:
-            v->type_id = QSCRIPT_VARIABLE;
-            /* (contents[0] is guaranteed to be '$', so this is safe.) */
-            if (n->contents[1] == '$') {
-               v->val_s = strdup (n->contents + 2);
-               v->val_i = QS_SCOPE_RLINK;
-            }
-            else {
-               v->val_s = strdup (n->contents + 1);
-               v->val_i = QS_SCOPE_BLOCK;
-            }
-            v->val_f = 0.00f;
+            qs_value_init (v, QSCRIPT_VARIABLE, QS_SCOPE_AUTO,
+                           n->contents + 1);
             break;
          case QSCRIPT_PROPERTY:
-            v->type_id = QSCRIPT_PROPERTY;
-            v->val_p = n->first_child->next->data;
-            v->val_s = strdup (((qs_value_t *) v->val_p)->val_s);
+            qs_value_init (v, QSCRIPT_PROPERTY, ((qs_value_t *)
+               n->first_child->next->data)->val_s);
             break;
          case QSCRIPT_CHAR:
-            v->type_id = QSCRIPT_CHAR;
-            v->val_s = strdup ("0");
-            v->val_s[0] = n->first_child->contents[1];
-            v->val_i = v->val_s[0];
-            v->val_f = v->val_s[0];
+            qs_value_init (v, QSCRIPT_CHAR, (int) n->first_child->contents[1],
+                           NULL, NULL);
             break;
          case QSCRIPT_STRING:
-            v->type_id = QSCRIPT_STRING;
-            v->val_s = strdup (n->contents);
-            v->val_i = atoi (n->contents);
-            v->val_f = atoi (n->contents);
+            qs_value_init (v, QSCRIPT_STRING, n->contents);
             break;
+
+         /* these are internal and handled deeper in the parse tree. */
          case QSCRIPT_OUTER_LIST:
             v->type_id = QSCRIPT_LIST;
             v->val_s = strdup ("<list>");
@@ -200,9 +187,6 @@ P_FUNC (qs_language_value)
             v_next->child = n->data;
             v_next->child->parent = v_next;
             v_next = v_next->child;
-            break;
-         case QSCRIPT_UNDEFINED:
-            qs_value_copy_const (NULL, v, QSV_UNDEFINED);
             break;
       }
    }

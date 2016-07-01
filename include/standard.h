@@ -21,6 +21,7 @@ QS_FUNC (qsf_return);
 QS_FUNC (qsf_let);
 QS_FUNC (qsf_type);
 QS_FUNC (qsf_scope);
+QS_FUNC (qsf_index);
 QS_FUNC (qsf_while);
 QS_FUNC (qsf_for);
 QS_FUNC (qsf_lambda);

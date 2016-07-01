@@ -57,19 +57,20 @@
 
 ## Primitives:
 
-1. int
-2. float
-3. string
-4. char
-5. list
-6. object
-7. undefined
+1. undefined
+2. int
+3. float
+4. string
+5. char
+6. list
+7. object
 
 ## Internal value types:
 
-1. variable
-2. property
-3. action
+1. block
+2. variable
+3. property
+4. action
 
 ## Variable scopes:
 
