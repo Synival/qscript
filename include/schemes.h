@@ -42,7 +42,7 @@ qs_func_t *qs_scheme_get_func (qs_scheme_t *scheme, char *name);
 int qs_scheme_free (qs_scheme_t *scheme);
 qs_value_t *qs_scheme_heap_value (qs_scheme_t *scheme);
 int qs_scheme_cleanup (qs_scheme_t *scheme);
-int qs_scheme_link (qs_scheme_t *scheme);
+int qs_scheme_update (qs_scheme_t *scheme);
 
 /* stack free functions. */
 QS_STACK_FUNC (qs_scheme_sf_values);

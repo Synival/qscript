@@ -7,7 +7,7 @@
 
 #include "lists.h"
 
-qs_list_t *qs_list_new (int size)
+qs_list_t *qs_list_new (qs_scheme_t *scheme, int size)
 {
    qs_list_t *new;
    int mem_size = (size > 0) ? size : 1;
@@ -15,6 +15,7 @@ qs_list_t *qs_list_new (int size)
    /* allocate our list. */
    new = malloc (sizeof (qs_list_t));
    memset (new, 0, sizeof (qs_list_t));
+   new->scheme = scheme;
    new->value_count = size;
 
    /* populate it with blank values. */
@@ -44,11 +45,10 @@ int qs_list_free (qs_list_t *list)
    return 1;
 }
 
-qs_list_t *qs_list_copy (qs_scheme_t *scheme, qs_list_t *list)
+qs_list_t *qs_list_copy (qs_list_t *list)
 {
    /* allocate a new list of equal size. */
-   qs_list_t *new = qs_list_new (list->value_count);
-   new->scheme = scheme;
+   qs_list_t *new = qs_list_new (list->scheme, list->value_count);
 
    /* copy values over. */
    int i;
@@ -66,4 +66,13 @@ qs_list_t *qs_list_copy (qs_scheme_t *scheme, qs_list_t *list)
 
    /* return our new list. */
    return new;
+}
+
+qs_value_t *qs_list_value (qs_execute_t *exe, qs_list_t *list, int index)
+{
+   if (index < 0)
+      return NULL;
+   if (index >= list->value_count)
+      return NULL;
+   return qs_value_read (exe, list->values[index]);
 }

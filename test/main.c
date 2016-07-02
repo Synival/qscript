@@ -19,7 +19,7 @@ int main (void)
    }
 
    /* finish linking compiled scripts. */
-   qs_scheme_link (scheme);
+   qs_scheme_update (scheme);
 
    /* instantiate main. */
    qs_object_new (qs_resource_get (scheme, "main"));

@@ -82,6 +82,7 @@ int qs_action_parameters (qs_execute_t *exe, qs_action_t *action,
    /* create a new list. */
    *out = malloc (sizeof (qs_list_t));
    memset (*out, 0, sizeof (qs_list_t));
+   (*out)->scheme      = l->scheme;
    (*out)->value_count = new_args;
    (*out)->values      = new_arg;
 

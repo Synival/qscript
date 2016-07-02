@@ -131,7 +131,7 @@ int qs_scheme_cleanup (qs_scheme_t *scheme)
    return count;
 }
 
-int qs_scheme_link (qs_scheme_t *scheme)
+int qs_scheme_update (qs_scheme_t *scheme)
 {
    qs_resource_t *r;
    int count = 0;

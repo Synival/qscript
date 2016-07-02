@@ -20,14 +20,33 @@
    if ((v = qs_value_read (exe, val)) == NULL) \
       return x;
 
+/* */
 qs_value_t *qs_arg_value (qs_execute_t *exe, qs_value_t *val)
    { return qs_value_read (exe, val); }
+
+/* simple primitives. */
 char *qs_arg_string (qs_execute_t *exe, qs_value_t *val)
    { qs_arg_start ("<error>"); return v->val_s; }
 float qs_arg_float  (qs_execute_t *exe, qs_value_t *val)
    { qs_arg_start (0); return v->val_f; }
 int   qs_arg_int    (qs_execute_t *exe, qs_value_t *val)
    { qs_arg_start (0); return v->val_i; }
+
+/* complex primitives. */
+qs_list_t *qs_arg_list (qs_execute_t *exe, qs_value_t *val)
+{
+   qs_arg_start (NULL);
+   if (v->type_id != QSCRIPT_LIST)
+      return NULL;
+   return v->val_p;
+}
+qs_object_t *qs_arg_object (qs_execute_t *exe, qs_value_t *val)
+{
+   qs_arg_start (NULL);
+   if (v->type_id != QSCRIPT_OBJECT)
+      return NULL;
+   return qs_value_object (exe, val);
+}
 
 int qs_func_error (qs_execute_t *exe, char *func_name, p_node_t *node,
                    char *format, ...)
@@ -52,46 +71,28 @@ qs_value_t *qs_return_value_new (qs_scheme_t *scheme)
 qs_value_t *qs_return_string (qs_scheme_t *scheme, char *s)
 {
    qs_value_t *r = qs_return_value_new (scheme);
-   r->type_id = QSCRIPT_STRING;
-   qs_value_restring (r, s);
-   qs_value_update_from_string (r);
+   qs_value_init (r, QSCRIPT_STRING, s);
    return r;
 }
 
 qs_value_t *qs_return_int (qs_scheme_t *scheme, int i)
 {
-   char buf[256];
    qs_value_t *r = qs_return_value_new (scheme);
-   r->type_id = QSCRIPT_INT;
-   snprintf (buf, sizeof (buf), "%d", i);
-   qs_value_restring (r, buf);
-   r->val_i = i;
-   r->val_f = i;
+   qs_value_init (r, QSCRIPT_INT, i);
    return r;
 }
 
 qs_value_t *qs_return_float (qs_scheme_t *scheme, float f)
 {
-   char buf[256];
    qs_value_t *r = qs_return_value_new (scheme);
-   r->type_id = QSCRIPT_FLOAT;
-   snprintf (buf, sizeof (buf), "%g", f);
-   qs_value_restring (r, buf);
-   r->val_i = f;
-   r->val_f = f;
+   qs_value_init (r, QSCRIPT_FLOAT, f);
    return r;
 }
 
 qs_value_t *qs_return_char (qs_scheme_t *scheme, char c)
 {
-   char buf[2];
    qs_value_t *r = qs_return_value_new (scheme);
-   r->type_id = QSCRIPT_CHAR;
-   buf[0] = c;
-   buf[1] = '\0';
-   qs_value_restring (r, buf);
-   r->val_i = c;
-   r->val_f = c;
+   qs_value_init (r, QSCRIPT_CHAR, c, NULL, NULL);
    return r;
 }
 

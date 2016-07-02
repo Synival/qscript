@@ -9,14 +9,6 @@
 
 #include "parser.h"
 
-/* variable reference type. */
-enum qscript_ref_type_e {
-   QS_REF_NONE = 0,
-   QS_REF_VARIABLE,
-   QS_REF_INDEX,
-   QS_REF_LAST
-};
-
 /* variable scopes. */
 enum qscript_execute_type_e {
    QS_EXE_UNDEFINED = 0,
@@ -30,9 +22,8 @@ enum qscript_execute_type_e {
 
 /* variable scopes. */
 enum qscript_variable_scope_e {
-   QS_SCOPE_AUTO = -2,
-   QS_SCOPE_UNDEFINED = -1,
-   QS_SCOPE_LITERAL = 0,
+   QS_SCOPE_AUTO = -1,
+   QS_SCOPE_UNDEFINED = 0,
    QS_SCOPE_RLINK,
    QS_SCOPE_BLOCK,
    QS_SCOPE_LAST
@@ -49,9 +40,9 @@ enum qscript_action_type_e {
 
 /* our giant list of qscript tokens. */
 enum qscript_tag_e {
-   QSCRIPT_INVALID = -2,
-   QSCRIPT_UNDEFINED = -1,
-   QSCRIPT_ROOT = 0,
+   QSCRIPT_INVALID = -1,
+   QSCRIPT_UNDEFINED = 0,
+   QSCRIPT_ROOT,
    QSCRIPT_COMMENT,
    QSCRIPT_RESOURCE,
    QSCRIPT_RTYPE,
@@ -142,6 +133,8 @@ typedef QS_STACK_FUNC(qs_stack_func);
 #define QS_ARGS(x) (qs_arg_string   (exe, arg[x]))
 #define QS_ARGF(x) (qs_arg_float    (exe, arg[x]))
 #define QS_ARGI(x) (qs_arg_int      (exe, arg[x]))
+#define QS_ARGL(x) (qs_arg_list     (exe, arg[x]))
+#define QS_ARGO(x) (qs_arg_object   (exe, arg[x]))
 #define QS_ARG_ERROR(x,...) \
    (qs_func_error (exe, func->name, arg[x]->node, __VA_ARGS__))
 

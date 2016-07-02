@@ -211,6 +211,7 @@ P_FUNC (qs_language_outer_list)
       /* allocate an empty list and link it to this node. */
       qs_list_t *l = malloc (sizeof (qs_list_t));
       memset (l, 0, sizeof (qs_list_t));
+      l->scheme = node->parse_data;
       l->values = malloc (sizeof (qs_value_t *));
       l->node = node;
       node->data = l;
@@ -233,6 +234,7 @@ P_FUNC (qs_language_list)
    /* create an empty list. */
    qs_list_t *l = malloc (sizeof (qs_list_t));
    memset (l, 0, sizeof (qs_list_t));
+   l->scheme = node->parse_data;
    l->type_id = node->type_id;
    l->node = node;
    node->data = l;
@@ -343,7 +345,7 @@ P_FUNC (qs_language_copy_contents)
    node->contents = strdup (node->first_child->contents);
 }
 
-int qs_language_init (void)
+int qs_parse_init (void)
 {
    /* create our language if we haven't already.
     * if it fails, return -1 from now on. */
@@ -393,7 +395,7 @@ p_node_t *qs_parse_content (qs_scheme_t *scheme, char *file, char *content)
 {
 
    /* initialize our language if we haven't already. */
-   if (qs_language_init () == -1)
+   if (qs_parse_init () == -1)
       return NULL;
 
    /* parse the results.  return an error if it didn't work. */

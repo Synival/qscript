@@ -269,13 +269,13 @@ main {
    = ($obj2, @@my_object);
    = ($obj3, @@bad_object);
    echo ("Object reference tests:");
-   echo ("   $self = ", name ($self),  "       (id = ", id ($self), ")");
-   echo ("  $selfn = ", name ($selfn), "       (id = ", id ($selfn),")");
-   echo ("  $selfi = ", name ($selfi), "       (id = ", id ($selfi),")");
+   echo ("   $self = ", name ($self), "        (id = ", id ($self), ")");
+   echo ("  $selfn = ", name ($selfn),"        (id = ", id ($selfn),")");
+   echo ("  $selfi = ", name ($selfi),"        (id = ", id ($selfi),")");
    echo ("   ----------------------------------");
    echo ("   $obj1 = ", name ($obj1), "        (id = ", id ($obj1), ")");
    echo ("   $obj2 = ", name ($obj2),       "  (id = ", id ($obj2), ")");
-   echo ("   $obj3 = ", name ($obj3), "        (id = ", id ($obj3), ")");
+   echo ("   $obj3 = ", name ($obj3),        " (id = ", id ($obj3), ")");
    echo ("   ----------------------------------");
    echo ("   $self == $obj1 : ", == ($self, $obj1), " <-- should pass");
    echo ("   $obj1 == $obj2 : ", == ($obj1, $obj2));
@@ -345,7 +345,7 @@ main {
    $error_test (made-up-function ());
    $error_test (= (not-a-variable, value));
    $error_test (variable (0));
-   $error_test (variable (no-scope));
+   $error_test (variable (this ()));
    $error_test (run (derp));
    $error_test (run (for));
    $error_test (- (a, b, c));

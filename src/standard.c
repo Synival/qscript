@@ -130,7 +130,7 @@ QS_FUNC (qsf_math)
    qs_value_t *aval = QS_ARGV(0);
    if (sub_func >= 20) {
       /* get our lvalue.  can we modify it? */
-      if ((lval = qs_value_modify_value (exe, aval)) == NULL) {
+      if ((lval = qs_value_lvalue (exe, aval)) == NULL) {
          QS_ARG_ERROR (0, "argument '%s' cannot be modified.\n", aval->val_s);
          return QSV_CANNOT_MODIFY;
       }
@@ -485,7 +485,7 @@ QS_FUNC (qsf_let)
 
    /* get our variable. */
    qs_value_t *aval = QS_ARGV(0);
-   if ((lval = qs_value_modify_value (exe, aval)) == NULL) {
+   if ((lval = qs_value_lvalue (exe, aval)) == NULL) {
       QS_ARG_ERROR (0, "argument '%s' cannot be modified.\n", aval->val_s);
       return QSV_CANNOT_MODIFY;
    }
@@ -678,7 +678,7 @@ QS_FUNC (qsf_for_each)
 
    /* make sure our second argument can be modified. */
    qs_value_t *aval = QS_ARGV(1),
-              *lval = qs_value_modify_value (exe, QS_ARGV (1));
+              *lval = qs_value_lvalue (exe, QS_ARGV (1));
    if (lval == NULL) {
       QS_ARG_ERROR (1, "argument '%s' cannot be modified.\n", aval->val_s);
       return QSV_CANNOT_MODIFY;
@@ -747,7 +747,7 @@ QS_FUNC (qsf_args)
    qs_value_t *aval, *lval;
    for (i = 0; i < args; i++) {
       aval = QS_ARGV(i);
-      if ((lval = qs_value_modify_value (exe, aval)) == NULL) {
+      if ((lval = qs_value_lvalue (exe, aval)) == NULL) {
          QS_ARG_ERROR (i, "argument '%s' cannot be modified.\n", aval->val_s);
          QS_RETURN ();
          return QSV_CANNOT_MODIFY;
@@ -827,7 +827,7 @@ QS_FUNC (qsf_variable)
    switch (val->type_id) {
       case QSCRIPT_STRING: {
          qs_variable_t *var;
-         if ((var = qs_value_get_variable (exe, val)) == NULL) {
+         if ((var = qs_value_variable (exe, val)) == NULL) {
             QS_ARG_ERROR (0, "invalid variable scope or name from '%s'.\n",
                           val->val_s);
             return QSV_NOT_VARIABLE;
@@ -851,7 +851,7 @@ QS_FUNC (qsf_property)
    switch (val->type_id) {
       case QSCRIPT_STRING: {
          qs_property_t *p;
-         if ((p = qs_value_get_property (exe, val)) == NULL) {
+         if ((p = qs_value_property (exe, val)) == NULL) {
             QS_ARG_ERROR (0, "invalid property from '%s'.\n", val->val_s);
             return QSV_NOT_PROPERTY;
          }
@@ -1207,7 +1207,7 @@ QS_FUNC (qsf_tokenize)
 
    /* allocate a new list. */
    qs_value_t *rval = qs_scheme_heap_value (exe->scheme);
-   qs_list_t *list = qs_list_new (count);
+   qs_list_t *list = qs_list_new (exe->scheme, count);
    rval->type_id = QSCRIPT_LIST;
    qs_value_restring (rval, "<list>");
    rval->val_p = list;

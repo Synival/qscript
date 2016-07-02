@@ -37,8 +37,8 @@ int qs_value_copy_const (qs_execute_t *exe, qs_value_t *dest, qs_value_t *src);
 int qs_value_copy_real (qs_execute_t *exe, qs_value_t *dest, qs_value_t *src,
    int force);
 char *qs_value_type (qs_value_t *val);
-qs_variable_t *qs_value_get_variable (qs_execute_t *exe, qs_value_t *v);
-qs_property_t *qs_value_get_property (qs_execute_t *exe, qs_value_t *v);
+qs_variable_t *qs_value_variable (qs_execute_t *exe, qs_value_t *v);
+qs_property_t *qs_value_property (qs_execute_t *exe, qs_value_t *v);
 int qs_value_cleanup (qs_value_t *value);
 int qs_value_cleanup_self (qs_value_t *value);
 int qs_value_free (qs_value_t *value);
@@ -46,18 +46,19 @@ int qs_value_truth (qs_execute_t *exe, qs_value_t *val);
 int qs_value_length (qs_value_t *v);
 qs_value_t *qs_value_evaluate_block (qs_execute_t *exe, qs_value_t *val);
 qs_value_t *qs_value_read (qs_execute_t *exe, qs_value_t *val);
-qs_variable_t *qs_value_variable (qs_execute_t *exe, qs_value_t *val);
 int qs_value_restring (qs_value_t *v, char *str);
 int qs_value_can_modify (qs_execute_t *exe, qs_value_t *val);
-qs_value_t *qs_value_modify_value (qs_execute_t *exe, qs_value_t *val);
-qs_value_t *qs_value_modify_value_real (qs_execute_t *exe,
-   qs_value_t *val, int push);
+qs_value_t *qs_value_lvalue (qs_execute_t *exe, qs_value_t *val);
+qs_value_t *qs_value_lvalue_real (qs_execute_t *exe, qs_value_t *val,
+   int push);
 char *qs_value_char_pointer (qs_value_t *val);
 int qs_value_as_char (qs_value_t *rval, char *out);
 int qs_value_update_from_string (qs_value_t *val);
 qs_object_t *qs_value_object (qs_execute_t *exe, qs_value_t *val);
 int qs_value_contains (qs_value_t *haystack, qs_value_t *needle);
 int qs_value_init (qs_value_t *val, int type, ...);
+int qs_value_list_internalize (qs_value_t *value);
+qs_list_t *qs_value_list (qs_value_t *value);
 
 /* internal, constant return values. */
 extern qs_value_t *QSV_ZERO;
@@ -78,8 +79,6 @@ extern qs_value_t *QSV_MOD_BY_ZERO;
 extern qs_value_t *QSV_INVALID_RESOURCE;
 extern qs_value_t *QSV_CANNOT_EXECUTE;
 extern qs_value_t *QSV_CANNOT_UNWRAP;
-extern qs_value_t *QSV_SUCCESS;
-extern qs_value_t *QSV_NOT_IN_HEAP;
 extern qs_value_t *QSV_SCOPE_LITERAL;
 extern qs_value_t *QSV_SCOPE_RLINK;
 extern qs_value_t *QSV_SCOPE_BLOCK;

@@ -18,7 +18,8 @@ struct _qs_list_t {
 
 /* list functions. */
 int qs_list_free (qs_list_t *list);
-qs_list_t *qs_list_new (int size);
-qs_list_t *qs_list_copy (qs_scheme_t *scheme, qs_list_t *list);
+qs_list_t *qs_list_new (qs_scheme_t *scheme, int size);
+qs_list_t *qs_list_copy (qs_list_t *list);
+qs_value_t *qs_list_value (qs_execute_t *exe, qs_list_t *list, int index);
 
 #endif

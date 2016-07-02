@@ -36,8 +36,6 @@ QSV_DEFINE (QSV_MOD_BY_ZERO,        QSV_ERR, "<mod by zero>",       0, 0.00f);
 QSV_DEFINE (QSV_INVALID_RESOURCE,   QSV_ERR, "<invalid resource>",  0, 0.00f);
 QSV_DEFINE (QSV_CANNOT_EXECUTE,     QSV_ERR, "<cannot execute>",    0, 0.00f);
 QSV_DEFINE (QSV_CANNOT_UNWRAP,      QSV_ERR, "<cannot unwrap>",     0, 0.00f);
-QSV_DEFINE (QSV_SUCCESS,            QSV_ERR, "<success>",           0, 0.00f);
-QSV_DEFINE (QSV_NOT_IN_HEAP,        QSV_ERR, "<not in heap>",       0, 0.00f);
 QSV_DEFINE (QSV_SCOPE_LITERAL,      QSV_ERR, "literal",             0, 0.00f);
 QSV_DEFINE (QSV_SCOPE_RLINK,        QSV_ERR, "rlink",               0, 0.00f);
 QSV_DEFINE (QSV_SCOPE_BLOCK,        QSV_ERR, "block",               0, 0.00f);
@@ -80,8 +78,8 @@ int qs_value_copy_real (qs_execute_t *exe, qs_value_t *dest, qs_value_t *src,
    /* how do we handle the pointer? */
    switch (dest->type_id) {
       case QSCRIPT_LIST:
-         dest->data = qs_list_copy (dest->scheme, src->val_p);
-         dest->val_p = dest->data;
+         dest->val_p = src->val_p;
+         qs_value_list_internalize (dest);
          break;
       case QSCRIPT_INDEX:
       case QSCRIPT_CHAR:
@@ -139,7 +137,7 @@ char *qs_value_type (qs_value_t *val)
    }
 }
 
-qs_variable_t *qs_value_get_variable (qs_execute_t *exe, qs_value_t *v)
+qs_variable_t *qs_value_variable (qs_execute_t *exe, qs_value_t *v)
 {
    if (v->link_id == QS_LINK_VARIABLE)
       return v->link;
@@ -162,7 +160,7 @@ qs_variable_t *qs_value_get_variable (qs_execute_t *exe, qs_value_t *v)
    }
 }
 
-qs_property_t *qs_value_get_property (qs_execute_t *exe, qs_value_t *v)
+qs_property_t *qs_value_property (qs_execute_t *exe, qs_value_t *v)
 {
    if (v->link_id == QS_LINK_PROPERTY)
       return v->link;
@@ -317,7 +315,7 @@ qs_value_t *qs_value_read (qs_execute_t *exe, qs_value_t *val)
             rval = qs_action_run (exe, rval, val->val_p);
             break;
          case QSCRIPT_VARIABLE: {
-            qs_variable_t *var = qs_value_get_variable (exe, val);
+            qs_variable_t *var = qs_value_variable (exe, val);
             if (var == NULL) {
                p_error (val->node, "cannot get variable for '%s'.\n",
                   val->val_s);
@@ -328,7 +326,7 @@ qs_value_t *qs_value_read (qs_execute_t *exe, qs_value_t *val)
             break;
          }
          case QSCRIPT_PROPERTY: {
-            qs_property_t *p = qs_value_get_property (exe, val);
+            qs_property_t *p = qs_value_property (exe, val);
             if (p == NULL) {
                p_error (val->node, "cannot get property for '%s'.\n",
                   val->val_s);
@@ -347,9 +345,6 @@ qs_value_t *qs_value_read (qs_execute_t *exe, qs_value_t *val)
    }
    return rval;
 }
-
-qs_variable_t *qs_value_variable (qs_execute_t *exe, qs_value_t *val)
-   { return qs_value_get_variable (exe, qs_value_read (exe, val)); }
 
 int qs_value_length (qs_value_t *v)
 {
@@ -378,13 +373,13 @@ int qs_value_restring (qs_value_t *v, char *str)
 }
 
 int qs_value_can_modify (qs_execute_t *exe, qs_value_t *val)
-   { return (qs_value_modify_value_real (exe, val, 0)) ? 1 : 0; }
-qs_value_t *qs_value_modify_value (qs_execute_t *exe, qs_value_t *val)
-   { return qs_value_modify_value_real (exe, val, 1); }
+   { return (qs_value_lvalue_real (exe, val, 0)) ? 1 : 0; }
+qs_value_t *qs_value_lvalue (qs_execute_t *exe, qs_value_t *val)
+   { return qs_value_lvalue_real (exe, val, 1); }
 
 #include <signal.h>
-qs_value_t *qs_value_modify_value_real (qs_execute_t *exe,
-   qs_value_t *val, int push)
+qs_value_t *qs_value_lvalue_real (qs_execute_t *exe, qs_value_t *val,
+   int push)
 {
    /* read-only execution states vorbid this. */
    if (exe && exe->flags & QS_EXE_READ_ONLY)
@@ -409,7 +404,7 @@ qs_value_t *qs_value_modify_value_real (qs_execute_t *exe,
       /* for properties, push a modification. */
       if (push) {
          qs_property_push (p, exe->rlink);
-         return qs_value_modify_value_real (exe, p->value, 0);
+         return qs_value_lvalue_real (exe, p->value, 0);
       }
    }
 
@@ -615,4 +610,33 @@ int qs_value_init (qs_value_t *val, int type, ...)
 
    /* return 1 on success, 0 on error. */
    return rval;
+}
+
+qs_list_t *qs_value_list (qs_value_t *value)
+{
+   if (value->type_id != QSCRIPT_LIST)
+      return NULL;
+   return value->val_p;
+}
+
+int qs_value_list_internalize (qs_value_t *value)
+{
+   /* not allowed for non-lists. */
+   if (value->type_id != QSCRIPT_LIST) {
+      p_error (value->node, "attempted to internalize list contents of "
+         "'%s' of type '%s'.\n", value->val_s, qs_value_type (value));
+      return 0;
+   }
+
+   /* if already internalized, do nothing, but return success. */
+   if (value->val_p == value->data)
+      return 1;
+   if (value->data)
+      p_error (value->node, "internalization of list ignores already "
+         "internalized data.  memory leak likely.\n");
+
+   /* copy the list and return success. */
+   value->data = qs_list_copy (value->val_p);
+   value->val_p = value->data;
+   return 1;
 }
