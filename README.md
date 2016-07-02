@@ -2,6 +2,8 @@
 
 (This document is an early draft.  More coming soon.)
 
+## What's in this project:
+
 ## Mission:
 
 1. Instantiate any number of objects with relationships to each other in a

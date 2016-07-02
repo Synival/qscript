@@ -13,7 +13,7 @@ LIBFULL  = 0.0.1
 
 default: all
 
-all: $(LIB) $(TEST)
+all: $(LIB) $(TEST) example
 
 $(TEST): $(OBJ_TEST)
 	$(CC) -Wl,-R,'$$ORIGIN' $(OBJ_TEST) -o $(TEST) $(LFLAGS_TEST)
@@ -28,6 +28,11 @@ src/%.o: src/%.c
 test/%.o: test/%.c
 	$(CC) $(CFLAGS_TEST) -o $@ -c $<
 
+.FORCE:
+example: .FORCE
+	cd example && make
+
 clean:
 	find . -name "*.o" -exec rm {} \;
 	rm -f $(LIB) $(LIB).$(LIBMAJOR) $(LIB).$(LIBFULL) $(TEST)
+	cd example && make clean
