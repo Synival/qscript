@@ -2,21 +2,113 @@
 
 (This document is an early draft.  More coming soon.)
 
-## Why:
-
-1. Need to keep persistant object states that can be modified without potential state corruption.
-2. Need to let objects interact with each other and efficiently respond to all changes from other objects.
-
 ## Mission:
 
-1. Instantiate any number of objects with relationships to each other in a consistent but dynamically modifiable state.
+1. Instantiate any number of objects with relationships to each other in a
+   consistent but dynamically modifiable state.
 2. Allow interaction between object space and programming space using C.
-3. Resource execution on objects in arbitrary order determined by priority values.
+3. Resource execution on objects in arbitrary order determined by priority
+   values.
 4. Allow language extension through schemes.
+
+## Why:
+
+1. Need to keep persistant object states that can be modified without
+   potential state corruption.
+2. Need to let objects interact with each other and efficiently respond to
+   all changes from other objects.
 
 ## Language Grammar:
 
-1. TBC
+### Comments
+
+The character `#` can be used when any value, resource, or action is expected.
+All text following `#` will be ignored by the parser.
+
+### `<resource>`
+
+```
+[@]resource <block>
+```
+
+The '@' character indicates that the resource is to be automatically
+instantiated with as object named '@resource-name'.
+
+### `<block>`
+
+```
+{
+   <value>1;
+   ...
+   <value>n;
+}
+```
+
+Blocks are immediately evaluated whenever they are used as expressions.
+They return the last evaluated value's return value, including the value
+passed to `return()`, `break()`, or `continue()`.
+
+### `<value>`
+
+```
+[~]<value type> <action>1 ... <action>n
+```
+
+The '~' indicates that the result is to be *unfolded* into the action from
+which it is called.  This requires the evaluated value to be of type `list`,
+otherwise it will report an error.  The contents of the list will be inserted
+into the parameter list of the action from which it was called.
+
+### `<value type>`
+
+Matches the first of the following, starting from the top:
+```
+<int>
+<float>
+<variable>
+<property>
+<list>
+<block>
+<char>
+<object>
+<undefined>
+<string>
+```
+
+#### `<int>`
+
+#### `<float>`
+
+#### `<variable>`
+
+#### `<property>`
+
+#### `<list>`
+
+#### `<block>`
+
+#### `<char>`
+
+#### `<object>`
+
+#### `<undefined>`
+
+#### `<string>`
+
+### `<action>`
+
+Matches the first of the following, starting from the top:
+```
+<call>
+<index>
+<property>
+```
+
+#### `<call>`
+
+#### `<index>`
+
+#### `<property>`
 
 ## Internal structures:
 

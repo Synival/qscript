@@ -28,17 +28,18 @@ static p_symbol_t static_qs_symbols[] = {
       qs_language_resource, qs_language_resource_f},
    {QSCRIPT_RTYPE,      "rtype",    "/[@]*/", NULL},
    {QSCRIPT_RNAME,      "rname",    "<qstring>", NULL},
-   {QSCRIPT_BLOCK,      "block",    "((<value> ';')* | \"\")",
+   {QSCRIPT_BLOCK,      "block",    "((<comment> | (<value> ';'))* | \"\")",
       qs_language_list, qs_language_list_f},
-   {QSCRIPT_LIST,       "list",     "((<value> (',' <value>)*) | \"\")",
+   {QSCRIPT_LIST,       "list",     "((<value> (',' <value>)* /[,]?/) | \"\")",
       qs_language_list, qs_language_list_f},
    {QSCRIPT_OUTER_LIST, "outer_list","'[' <list> ']'",
       qs_language_outer_list, qs_language_outer_list_f},
    {QSCRIPT_VALUE,      "value",
-      "<comment>* <unwrap> (<number> | <variable> | <property> | "
-      "<outer_list> | <outer_block> | <char> | <object> | <undefined> | "
-      "<qstring>) <action>*",
+      "<comment>* /[~]?/ <value_type> <action>*",
       qs_language_value, qs_language_value_f},
+   {QSCRIPT_VALUE_TYPE, "value_type",
+      "(<number> | <variable> | <property> | <outer_list> | <outer_block> | "
+       "<char> | <object> | <undefined> | <qstring>)"},
    {QSCRIPT_OUTER_BLOCK,"outer_block", "'{' <block> '}'",
       qs_language_outer_list, qs_language_outer_list_f},
    {QSCRIPT_STRING,     "qstring", "(<complexstr>+ | <simplestr>)",
@@ -58,7 +59,8 @@ static p_symbol_t static_qs_symbols[] = {
       "/[@]+" QSCRIPT_VARIABLE_PATTERN "/",
       qs_language_copy_contents},
    {QSCRIPT_PROPERTY,   "property", "'.' <value> /[`]?/"},
-   {QSCRIPT_ACTION,     "action",   "(<call> | <index> | <property>)",
+   {QSCRIPT_ACTION,     "action",
+      "<comment>* (<call> | <index> | <property>)",
       qs_language_action, qs_language_action_f},
    {QSCRIPT_CALL,       "call",     "'(' <list> ')'"},
    {QSCRIPT_UNWRAP,     "unwrap",   "('~' | \"\")"},
@@ -118,7 +120,6 @@ P_FUNC (qs_language_qstring)
 P_FUNC (qs_language_value)
 {
    qs_value_t *v, *v_next;
-   p_node_t *n;
 
    /* link an empty value. */
    v = malloc (sizeof (qs_value_t));
@@ -126,65 +127,76 @@ P_FUNC (qs_language_value)
    v->node = node;
    node->data = v;
 
-   v_next = v;
-   for (n = node->first_child; n != NULL; n = n->next) {
-      switch (n->type_id) {
-         /* parameter flags. */
-         case QSCRIPT_UNWRAP:
-            if (n->first_child->contents[0] == '~')
-               v->flags |= QS_VALUE_UNWRAP;
-            break;
+   /* if a value begins with '~', the contents must be of type QSCRIPT_LIST.
+    * the list contents will be inserted into a function/resource/lambda
+    * call's argument list.  this is called 'unwrapping'. */
+   if (node->first_child->contents[0] == '~')
+      v->flags |= QS_VALUE_UNWRAP;
 
-         /* primitive types. */
-         case QSCRIPT_UNDEFINED:
-            qs_value_init (v, QSCRIPT_UNDEFINED, NULL);
-            break;
-         case QSCRIPT_NUMBER:
-            switch (n->first_child->type_id) {
-               case QSCRIPT_INT:
-                  qs_value_init (v, QSCRIPT_INT,
-                     atoi (n->first_child->first_child->contents));
+   /* process the rest of our arguments. */
+   v_next = v;
+   p_node_t *vn;
+   for (vn = node->first_child->next; vn != NULL; vn = vn->next) {
+      switch (vn->type_id) {
+         /* the main value. */
+         case QSCRIPT_VALUE_TYPE: {
+            p_node_t *n = vn->first_child;
+            switch (n->type_id) {
+               /* primitive types. */
+               case QSCRIPT_UNDEFINED:
+                  qs_value_init (v, QSCRIPT_UNDEFINED, NULL);
                   break;
-               case QSCRIPT_FLOAT:
-                  qs_value_init (v, QSCRIPT_FLOAT,
-                     atof (n->first_child->first_child->contents));
+               case QSCRIPT_NUMBER:
+                  switch (n->first_child->type_id) {
+                     case QSCRIPT_INT:
+                        qs_value_init (v, QSCRIPT_INT,
+                           atoi (n->first_child->first_child->contents));
+                        break;
+                     case QSCRIPT_FLOAT:
+                        qs_value_init (v, QSCRIPT_FLOAT,
+                           atof (n->first_child->first_child->contents));
+                        break;
+                  }
+                  break;
+               case QSCRIPT_OBJECT:
+                  qs_value_init (v, QSCRIPT_OBJECT, n->contents + 1,
+                                 (qs_id_t) 0);
+                  v->type_id = QSCRIPT_OBJECT;
+                  break;
+               case QSCRIPT_VARIABLE:
+                  qs_value_init (v, QSCRIPT_VARIABLE, QS_SCOPE_AUTO,
+                                 n->contents + 1);
+                  break;
+               case QSCRIPT_PROPERTY:
+                  qs_value_init (v, QSCRIPT_PROPERTY, ((qs_value_t *)
+                     n->first_child->next->data)->val_s);
+                  break;
+               case QSCRIPT_CHAR:
+                  qs_value_init (v, QSCRIPT_CHAR, (int)
+                     n->first_child->contents[1], NULL, NULL);
+                  break;
+               case QSCRIPT_STRING:
+                  qs_value_init (v, QSCRIPT_STRING, n->contents);
+                  break;
+
+               /* these are internal and handled deeper in the parse tree. */
+               case QSCRIPT_OUTER_LIST:
+                  v->type_id = QSCRIPT_LIST;
+                  v->val_s = strdup ("<list>");
+                  v->val_p = n->data;
+                  break;
+               case QSCRIPT_OUTER_BLOCK:
+                  v->type_id = QSCRIPT_BLOCK;
+                  v->val_s = strdup ("<block>");
+                  v->val_p = n->data;
                   break;
             }
             break;
-         case QSCRIPT_OBJECT:
-            qs_value_init (v, QSCRIPT_OBJECT, n->contents + 1,
-                           (qs_id_t) 0);
-            v->type_id = QSCRIPT_OBJECT;
-            break;
-         case QSCRIPT_VARIABLE:
-            qs_value_init (v, QSCRIPT_VARIABLE, QS_SCOPE_AUTO,
-                           n->contents + 1);
-            break;
-         case QSCRIPT_PROPERTY:
-            qs_value_init (v, QSCRIPT_PROPERTY, ((qs_value_t *)
-               n->first_child->next->data)->val_s);
-            break;
-         case QSCRIPT_CHAR:
-            qs_value_init (v, QSCRIPT_CHAR, (int) n->first_child->contents[1],
-                           NULL, NULL);
-            break;
-         case QSCRIPT_STRING:
-            qs_value_init (v, QSCRIPT_STRING, n->contents);
-            break;
+         }
 
-         /* these are internal and handled deeper in the parse tree. */
-         case QSCRIPT_OUTER_LIST:
-            v->type_id = QSCRIPT_LIST;
-            v->val_s = strdup ("<list>");
-            v->val_p = n->data;
-            break;
-         case QSCRIPT_OUTER_BLOCK:
-            v->type_id = QSCRIPT_BLOCK;
-            v->val_s = strdup ("<block>");
-            v->val_p = n->data;
-            break;
+         /* any actions to be performed on the value. */
          case QSCRIPT_ACTION:
-            v_next->child = n->data;
+            v_next->child = vn->data;
             v_next->child->parent = v_next;
             v_next = v_next->child;
             break;

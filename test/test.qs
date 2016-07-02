@@ -423,3 +423,9 @@ fancy_string {
       return (+ ("The argument is '", $value, "'."));
    }]);
 }
+
+# comment
+@comment_test {
+   # comment
+   [a, b, c,];
+}
