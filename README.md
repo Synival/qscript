@@ -24,6 +24,27 @@
 2. Need to let objects interact with each other and efficiently respond to
    all changes from other objects.
 
+## What's done:
+
+1. Complete qscript language definition.
+2. Parser implementation.
+3. Runtime execution.
+4. Ongoing feature test script (test.qs)
+5. Ongoing test game (qmaze)
+
+## What's not:
+
+1. Fully implemented and testing resource unwinding and rewinding
+2. Object "metaspace"
+3. Keep track of property access between objects
+4. Object list search functions
+5. Object modification from qscript via resource pushing/popping
+6. State-safe object-scoped variables
+7. Global (metaspace) variables
+8. Reading object properties / variables from external environment
+9. External modification of object variables
+10. "Execution" scripts
+
 ## Language Grammar:
 
 ### Comments
@@ -131,27 +152,6 @@ Matches the first of the following, starting from the top:
 11. `qs_stack_t`
 12. `qs_property_t`
 13. `qs_modify_t`
-
-## What's done:
-
-1. Complete qscript language definition.
-2. Parser implementation.
-3. Runtime execution.
-4. Ongoing feature test script (test.qs)
-5. Ongoing test game (qmaze)
-
-## What's not:
-
-1. Fully implemented and testing resource unwinding and rewinding
-2. Object "metaspace"
-3. Keep track of property access between objects
-4. Object list search functions
-5. Object modification from qscript via resource pushing/popping
-6. State-safe object-scoped variables
-7. Global (metaspace) variables
-8. Reading object properties / variables from external environment
-9. External modification of object variables
-10. "Execution" scripts
 
 ## Primitives:
 
