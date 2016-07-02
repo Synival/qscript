@@ -11,6 +11,9 @@
 
 ## Mission:
 
+*"To create a persistent state multi-object space with dynamic object
+   instantiation, arbitrary code injection, and interactive variables."*
+
 1. Instantiate any number of objects with relationships to each other in a
    consistent but dynamically modifiable state.
 2. Allow interaction between object space and programming space using C.
