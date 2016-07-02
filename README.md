@@ -5,7 +5,7 @@
 ## What's in This Project:
 
 1. Source for `libqscript`.
-2. `libqscript` language test.
+2. qscript parser that instantiates `main`.
 3. Example project 'QMaze'.
 
 ## Mission:
@@ -49,6 +49,7 @@
 13. `rlink` action queues for `qs_scheme_update()`.
 14. qfunc `free()`, `spawn()`, and more object manipulation.
 15. More list-manipulating functions.
+16. This documention (derp)
 
 ## Language Grammar:
 
@@ -65,7 +66,7 @@ All text following `#` will be ignored by the parser.
 **Defines a resource named `<string>` containing code `<block>`.**
 
 The '@' character indicates that the resource is to be automatically
-instantiated with as object named '@resource-name'.
+instantiated as an object named '@resource-name'.
 
 ### `<block>`
 
