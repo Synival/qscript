@@ -221,7 +221,21 @@ defined as `<block>`s for the sake of formatting consistency.
 
 #### `<index>`
 
+```
+'[' <value> ']'
+```
+
+**Returns an element of a **`<list>`** or a single character in a **`<string>`
+**.**
+
+Indexes are considered *lvalues* and can be assigned with any assignment
+function.  However, indexing `<string>`s is very strict; the indexed value
+will always be of type `<char>` and only values valid for assignment must
+safely cast to type `<char>`.
+
 #### `<property>`
+
+(See `<property>` definition under `<primitive>`.)
 
 ## Internal structures:
 
