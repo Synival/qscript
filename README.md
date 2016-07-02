@@ -2,7 +2,11 @@
 
 (This document is an early draft.  More coming soon.)
 
-## What's in this project:
+## What's in This Project:
+
+1. Source for `libqscript`.
+2. `libqscript` language test.
+3. Example project 'QMaze'.
 
 ## Mission:
 
