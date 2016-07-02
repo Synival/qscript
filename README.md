@@ -60,8 +60,9 @@ All text following `#` will be ignored by the parser.
 ### `<resource>`
 
 ```
-[@]resource <block>
+[@]<string> <block>
 ```
+**Defines a resource named `<string>` containing code `<block>`.**
 
 The '@' character indicates that the resource is to be automatically
 instantiated with as object named '@resource-name'.
@@ -69,30 +70,34 @@ instantiated with as object named '@resource-name'.
 ### `<block>`
 
 ```
-{
+'{'
    <value>1;
    <value>2;
    ...
    <value>n;
-}
+'}'
 ```
+**Creates a series of zero or more values for evaluation.**
 
-Blocks are immediately evaluated whenever they are used as expressions.
-They return the last evaluated value's return value, including the value
-passed to `return()`, `break()`, or `continue()`.
+Block contents are immediately evaluated whenever they are referenced by
+values or call actions.
+They return the last evaluation's return value, which includes the value
+passed to `return()`, `break()`, or `continue()`.  The the block contains
+zero values, `QSV_UNDEFINED` is returned.
 
 ### `<value>`
 
 ```
-[~]<value type> <action>1 ... <action>n
+[~]<primitive> <action>1 ... <action>n
 ```
+**Universal symbol for literal primitives, function calls, and other actions.**
 
 The '~' indicates that the result is to be *unfolded* into the action from
-which it is called.  This requires the evaluated value to be of type `list`,
+which it is called.  This requires the evaluation to be of type `list`,
 otherwise it will report an error.  The contents of the list will be inserted
 into the parameter list of the action from which it was called.
 
-### `<value type>`
+### `<primitive>`
 
 *Matches the first of the following, starting from the top:*
 ```
@@ -110,28 +115,31 @@ into the parameter list of the action from which it was called.
 
 #### `<int>`
 
-*Regular expression*: `[-+]?[0-9]+`
+*Regular expression*: `[-+]?[0-9]+` 
+(One or more digits optionally preceded by '-' or '+'.)
 
-One or more digits optionally preceded by '-' or '+'.
+**Creates an integer value.**
 
 #### `<float>`
 
-*Regular expression*: `[-+]?[0-9]+\.[0-9]+`
+*Regular expression*: `[-+]?[0-9]+\.[0-9]+` 
+(One or more digits optionally preceded by '-' or '+', followed by a decimal
+point and one or more digits.)
 
-One or more digits optionally preceded by '-' or '+', followed by a decimal
-point and one or more digits.
+**Creates a floating-point value.**
 
-Any sequence of digits optionally preceded by '-' or '+'.
 
 #### `<variable>`
 
-*Regular expression*: `[\\$]+[a-zA-Z0-9_]+`
+*Regular expression*: `[\\$]+[a-zA-Z0-9_]+` 
+(One or more `$` characters followed by one or more alphanumeric/underscore
+characters.)
 
-One or more `$` characters followed by one or more alphanumeric/underscore
-characters.
+**Creates a reference to a block- or rlink-scope variable.**
 
 A single `$` refers to a *block scope* variable.  Two (`$$`) characters refers
 to an *rlink scope* variable.
+If the variable is not found in the current scope, it will be created.
 
 #### `<property>`
 
@@ -139,29 +147,36 @@ to an *rlink scope* variable.
 .<value>[`]
 ```
 
+**Creates a reference to the current object or, if used as an action, a
+property belonging to parent value's object.**
+
 The optional `(backquote)` acts as a closing parenthesis, allowing actions to
-be called on the evaluation of the property.  If omitted, all proceeding
-actions will be considered belonging to `<value>`.
+be called on the evaluation of the property.
+If omitted, all proceeding actions will be considered belonging to `<value>`.
+
+If called as an action, an error will be reported if the evaluation of the
+parent value is not of type `<object>`.
 
 #### `<list>`
 
 ```
-[<value>1, <value>2, ... <value>n]
+'[' <value>1, <value>2, ... <value>n ']'
 ```
+
+**Creates a list of zero or more values.**
+
+Values contained in the list are not evaluated until they are indexed.
 
 #### `<char>`
 
-*Regular expression*: `'.'`
-
-Any single character surrounded by single quotes.
+*Regular expression*: `'.'` 
+(Any single character surrounded by single quotes.)
 
 #### `<object>`
 
-*Regular expression*: `[@]+[a-zA-Z_]+`
-
-One or more `@` characters followed by one or more alphanumeric/underscore
-characters.
-
+*Regular expression*: `[@]+[a-zA-Z_]+` 
+(One or more `@` characters followed by one or more alphanumeric/underscore
+characters.)
 A single `@` refers to externally instantiated objects.  Two (`@@`) refers to
 an auto-instantiated object from a resource.
 
@@ -169,13 +184,14 @@ an auto-instantiated object from a resource.
 
 *Exact string match*: `undefined`
 
-Evaluates to `QSV_UNDEFINED`.
+**Evaluates to **`QSV_UNDEFINED`**.  Does not create a new value.**
 
 #### `<string>`
 
 ### `<action>`
 
-Matches the first of the following, starting from the top:
+*Matches the first of the following, starting from the top:*
+
 ```
 <call>
 <index>
@@ -183,6 +199,25 @@ Matches the first of the following, starting from the top:
 ```
 
 #### `<call>`
+
+```
+(<value>1, <value>2, ... <value>n)
+```
+
+**Executes a resource, function, or list, supplying zero or more parameters.**
+
+Resources are attempted to be evaluated first.  Any resource can be executed,
+including auto-instantiated resources.  Parameters are read as arguments via
+the `arg()`, `args()`, and `arg_list()` qfuncs.
+
+Any function supplied by the scheme, including the standard, will then be
+executed.
+
+If the parent evaluation is type `<list>`, it is considered a *lambda
+functions* and all list elements will be evaluated as if they are a resource.
+Internal calls to `arg()`, `args()`, and `arg_list()` will pull arguments from
+the lambda function's parameter list.  It is recommended that list elements be
+defined as `<block>`s for the sake of formatting consistency.
 
 #### `<index>`
 
@@ -242,7 +277,7 @@ Matches the first of the following, starting from the top:
 10. `QSCRIPT_OUTER_LIST`
 11. `QSCRIPT_VALUE`
 12. `QSCRIPT_VFLAGS`
-13. `QSCRIPT_VALUE_TYPE`
+13. `QSCRIPT_PRIMITIVE`
 14. `QSCRIPT_OUTER_BLOCK`
 15. `QSCRIPT_SEPARATOR`
 16. `QSCRIPT_STRING`

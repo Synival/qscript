@@ -116,6 +116,13 @@ qs_value_t *qs_action_call (qs_execute_t *exe, qs_value_t *val,
    qs_resource_t *r;
    qs_execute_t *e;
 
+   /* we can only execute strings and lists. */
+   if (val->type_id != QSCRIPT_STRING && val->type_id != QSCRIPT_LIST) {
+      p_error (action->value->node, "cannot execute call action for value of "
+         "type '%s'.\n", qs_value_type (val));
+      return QSV_CANNOT_EXECUTE;
+   }
+
    /* determine our arguments. */
    qs_list_t *l_in = action->data_p, *l = NULL;
    if (qs_action_parameters (exe, action, val->val_s, l_in, &l) < 0)

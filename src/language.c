@@ -35,10 +35,10 @@ static p_symbol_t static_qs_symbols[] = {
    {QSCRIPT_OUTER_LIST, "outer_list","'[' <list> ']'",
       qs_language_outer_list, qs_language_outer_list_f},
    {QSCRIPT_VALUE,      "value",
-      "<comment>* <vflags> <value_type> <action>*",
+      "<comment>* <vflags> <primitive> <action>*",
       qs_language_value, qs_language_value_f},
    {QSCRIPT_VFLAGS,     "vflags",   "/[~]*/", NULL},
-   {QSCRIPT_VALUE_TYPE, "value_type",
+   {QSCRIPT_PRIMITIVE,  "primitive",
       "(<number> | <variable> | <property> | <outer_list> | <outer_block> | "
        "<char> | <object> | <undefined> | <qstring>)"},
    {QSCRIPT_OUTER_BLOCK,"outer_block", "'{' <block> '}'",
@@ -149,7 +149,7 @@ P_FUNC (qs_language_value)
          }
 
          /* the main value. */
-         case QSCRIPT_VALUE_TYPE: {
+         case QSCRIPT_PRIMITIVE: {
             p_node_t *n = vn->first_child;
             switch (n->type_id) {
                /* primitive types. */
