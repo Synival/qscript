@@ -24,9 +24,9 @@
 static p_symbol_t static_qs_symbols[] = {
    {QSCRIPT_ROOT,       "qscript",  "/^/ (<resource> | <comment>)* /$/"},
    {QSCRIPT_COMMENT,    "comment",  "'#' /[^\\n]*/"},
-   {QSCRIPT_RESOURCE,   "resource", "(<rtype> <rname>) <outer_block>",
+   {QSCRIPT_RESOURCE,   "resource", "(<rflags> <rname>) <outer_block>",
       qs_language_resource, qs_language_resource_f},
-   {QSCRIPT_RTYPE,      "rtype",    "/[@]*/", NULL},
+   {QSCRIPT_RFLAGS,     "rflags",   "/[@]*/", NULL},
    {QSCRIPT_RNAME,      "rname",    "<qstring>", NULL},
    {QSCRIPT_BLOCK,      "block",    "((<comment> | (<value> ';'))* | \"\")",
       qs_language_list, qs_language_list_f},
@@ -35,8 +35,9 @@ static p_symbol_t static_qs_symbols[] = {
    {QSCRIPT_OUTER_LIST, "outer_list","'[' <list> ']'",
       qs_language_outer_list, qs_language_outer_list_f},
    {QSCRIPT_VALUE,      "value",
-      "<comment>* /[~]?/ <value_type> <action>*",
+      "<comment>* <vflags> <value_type> <action>*",
       qs_language_value, qs_language_value_f},
+   {QSCRIPT_VFLAGS,     "vflags",   "/[~]*/", NULL},
    {QSCRIPT_VALUE_TYPE, "value_type",
       "(<number> | <variable> | <property> | <outer_list> | <outer_block> | "
        "<char> | <object> | <undefined> | <qstring>)"},
@@ -63,7 +64,6 @@ static p_symbol_t static_qs_symbols[] = {
       "<comment>* (<call> | <index> | <property>)",
       qs_language_action, qs_language_action_f},
    {QSCRIPT_CALL,       "call",     "'(' <list> ')'"},
-   {QSCRIPT_UNWRAP,     "unwrap",   "('~' | \"\")"},
    {QSCRIPT_INDEX,      "index",    "'[' <value> ']'"},
    {QSCRIPT_UNDEFINED,  "undefined","\"undefined\""},
    {-1}
@@ -127,17 +127,27 @@ P_FUNC (qs_language_value)
    v->node = node;
    node->data = v;
 
-   /* if a value begins with '~', the contents must be of type QSCRIPT_LIST.
-    * the list contents will be inserted into a function/resource/lambda
-    * call's argument list.  this is called 'unwrapping'. */
-   if (node->first_child->contents[0] == '~')
-      v->flags |= QS_VALUE_UNWRAP;
-
    /* process the rest of our arguments. */
    v_next = v;
    p_node_t *vn;
-   for (vn = node->first_child->next; vn != NULL; vn = vn->next) {
+   for (vn = node->first_child; vn != NULL; vn = vn->next) {
       switch (vn->type_id) {
+         case QSCRIPT_VFLAGS: {
+            char *ch;
+            for (ch = vn->first_child->contents; *ch != '\0'; ch++) {
+               switch (*ch) {
+                  /* if a value begins with '~', the contents must be of type
+                  * QSCRIPT_LIST.  the list contents will be inserted into a
+                  * function/resource/lambda call's argument list.  this is
+                  * called 'unwrapping'. */
+                  case '~':
+                     v->flags |= QS_VALUE_UNWRAP;
+                     break;
+               }
+            }
+            break;
+         }
+
          /* the main value. */
          case QSCRIPT_VALUE_TYPE: {
             p_node_t *n = vn->first_child;
@@ -320,7 +330,7 @@ P_FUNC (qs_language_resource)
    for (n = node->first_child; n != NULL; n = n->next) {
       switch (n->type_id) {
          /* process flags. */
-         case QSCRIPT_RTYPE:
+         case QSCRIPT_RFLAGS:
             for (ch = n->first_child->contents; *ch != '\0'; ch++) {
                switch (*ch) {
                   case '@': flags |= QS_RSRC_AUTO_INSTANTIATE; break;

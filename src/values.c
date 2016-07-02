@@ -120,7 +120,6 @@ int qs_value_copy_real (qs_execute_t *exe, qs_value_t *dest, qs_value_t *src,
 char *qs_value_type (qs_value_t *val)
 {
    switch (val->type_id) {
-      case QSCRIPT_INVALID:   return "invalid";
       case QSCRIPT_UNDEFINED: return "undefined";
       case QSCRIPT_STRING:    return "string";
       case QSCRIPT_FLOAT:     return "float";
