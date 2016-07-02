@@ -9,6 +9,7 @@
 #include "link.h"
 #include "lists.h"
 #include "objects.h"
+#include "parser.h"
 #include "resources.h"
 #include "schemes.h"
 #include "values.h"

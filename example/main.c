@@ -2,6 +2,8 @@
 #define _GNU_SOURCE
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <ftw.h>
 
 #include "qscript/qscript.h"

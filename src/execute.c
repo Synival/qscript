@@ -2,6 +2,7 @@
  * ---------
  * execution of rlinks on objects. */
 
+#include <stdlib.h>
 #include <string.h>
 
 #include "actions.h"

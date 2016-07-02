@@ -15,8 +15,8 @@ bar ('-'),
 "quit - Stop playing QMaze"));
 
    = (.desc, multi (
-"   A cubic room the size of your bed chamber.  Each side is made of stone "
-"bricks and painted white. Perhaps if you look at the room a little closer, "
+"   A cubic room the size of your bed chamber.  Each side is made of stone ",
+"bricks and painted white. Perhaps if you look at the room a little closer, ",
 "you might find some clues."));
 
    = (.hints, [

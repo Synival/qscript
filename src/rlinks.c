@@ -12,6 +12,7 @@
 #include "language.h"
 #include "link.h"
 #include "objects.h"
+#include "parser.h"
 #include "resources.h"
 #include "schemes.h"
 #include "stacks.h"

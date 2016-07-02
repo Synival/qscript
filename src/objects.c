@@ -8,6 +8,7 @@
 
 #include "link.h"
 #include "execute.h"
+#include "parser.h"
 #include "properties.h"
 #include "resources.h"
 #include "rlinks.h"

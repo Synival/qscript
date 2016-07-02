@@ -3,11 +3,13 @@
  * useful functions to be used in qs_func()s. */
 
 #include <stdio.h>
+#include <stdarg.h>
 
 #include "actions.h"
 #include "execute.h"
 #include "language.h"
 #include "lists.h"
+#include "parser.h"
 #include "rlinks.h"
 #include "schemes.h"
 #include "values.h"

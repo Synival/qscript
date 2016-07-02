@@ -2,11 +2,15 @@
  * ---------
  * parsing of parameters during execution. */
 
+#include <stdlib.h>
+#include <string.h>
+
 #include "execute.h"
 #include "funcs.h"
 #include "language.h"
 #include "lists.h"
 #include "objects.h"
+#include "parser.h"
 #include "properties.h"
 #include "resources.h"
 #include "rlinks.h"

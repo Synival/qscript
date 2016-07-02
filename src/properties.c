@@ -3,9 +3,12 @@
  * values assigned to objects, modifiable via stack. */
 
 #include <signal.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "link.h"
 #include "objects.h"
+#include "parser.h"
 #include "resources.h"
 #include "rlinks.h"
 #include "stacks.h"

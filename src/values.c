@@ -2,13 +2,16 @@
  * --------
  * useful functions for value types. */
 
+#include <stdio.h>
 #include <stdarg.h>
+#include <string.h>
 
 #include "actions.h"
 #include "execute.h"
 #include "language.h"
 #include "lists.h"
 #include "objects.h"
+#include "parser.h"
 #include "properties.h"
 #include "rlinks.h"
 #include "schemes.h"
@@ -376,7 +379,6 @@ int qs_value_can_modify (qs_execute_t *exe, qs_value_t *val)
 qs_value_t *qs_value_lvalue (qs_execute_t *exe, qs_value_t *val)
    { return qs_value_lvalue_real (exe, val, 1); }
 
-#include <signal.h>
 qs_value_t *qs_value_lvalue_real (qs_execute_t *exe, qs_value_t *val,
    int push)
 {

@@ -2,6 +2,10 @@
  * -------
  * list objects assigned to values. */
 
+#include <stdlib.h>
+#include <string.h>
+
+#include "parser.h"
 #include "schemes.h"
 #include "values.h"
 

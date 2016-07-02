@@ -7,7 +7,7 @@
 
 #include <stdint.h>
 
-#include "parser.h"
+#include "parser_types.h"
 
 /* variable scopes. */
 enum qscript_execute_type_e {

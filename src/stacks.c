@@ -3,6 +3,7 @@
  * dynamic, resizable stack type used in our scheme. */
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "stacks.h"
 

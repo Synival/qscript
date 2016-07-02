@@ -11,6 +11,7 @@
 #include "language.h"
 #include "lists.h"
 #include "objects.h"
+#include "parser.h"
 #include "resources.h"
 #include "rlinks.h"
 #include "stacks.h"

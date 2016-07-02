@@ -2,6 +2,9 @@
  * -----------
  * variable management in multiple scopes. */
 
+#include <stdlib.h>
+#include <string.h>
+
 #include "execute.h"
 #include "funcs.h"
 #include "objects.h"

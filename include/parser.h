@@ -11,17 +11,7 @@
 #include <stdint.h>
 
 #include "mpc.h"
-
-/* simple typedefs. */
-typedef uint32_t p_id_t;
-
-/* typedefs for our parser. */
-typedef struct _p_symbol_t p_symbol_t;
-typedef struct _p_node_t   p_node_t;
-
-/* functions assigned to our parser. */
-#define P_FUNC(x) void x (p_node_t *node)
-typedef P_FUNC(p_func_t);
+#include "parser_types.h"
 
 /* symbol declarations for parsing and execution. */
 struct _p_symbol_t {

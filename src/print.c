@@ -2,6 +2,8 @@
  * -------
  * printing qscripts out to stdout. */
 
+#include <stdio.h>
+
 #include "actions.h"
 #include "language.h"
 #include "lists.h"
