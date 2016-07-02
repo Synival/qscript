@@ -35,15 +35,20 @@
 ## What's not:
 
 1. Fully implemented and testing resource unwinding and rewinding
-2. Object "metaspace"
-3. Keep track of property access between objects
-4. Object list search functions
-5. Object modification from qscript via resource pushing/popping
-6. State-safe object-scoped variables
-7. Global (metaspace) variables
+2. Value "influences" from external sources
+3. Object list search functions
+4. Object relationship management
+5. Object modification from inside qscript via resource pushing/popping
+6. Object-scoped variables
+7. Globally-scoped variables
 8. Reading object properties / variables from external environment
 9. External modification of object variables
 10. "Execution" scripts
+11. Evaluated value caching for uninfluenced values
+12. Function flags for "only when first activated", "execution-only"
+13. `rlink` action queues for `qs_scheme_update()`.
+14. qfunc `free()`, `spawn()`, and more object manipulation.
+15. More list-manipulating functions.
 
 ## Language Grammar:
 
@@ -66,6 +71,7 @@ instantiated with as object named '@resource-name'.
 ```
 {
    <value>1;
+   <value>2;
    ...
    <value>n;
 }
@@ -88,7 +94,7 @@ into the parameter list of the action from which it was called.
 
 ### `<value type>`
 
-Matches the first of the following, starting from the top:
+*Matches the first of the following, starting from the top:*
 ```
 <int>
 <float>
@@ -104,21 +110,66 @@ Matches the first of the following, starting from the top:
 
 #### `<int>`
 
+*Regular expression*: `[-+]?[0-9]+`
+
+One or more digits optionally preceded by '-' or '+'.
+
 #### `<float>`
+
+*Regular expression*: `[-+]?[0-9]+\.[0-9]+`
+
+One or more digits optionally preceded by '-' or '+', followed by a decimal
+point and one or more digits.
+
+Any sequence of digits optionally preceded by '-' or '+'.
 
 #### `<variable>`
 
+*Regular expression*: `[\\$]+[a-zA-Z0-9_]+`
+
+One or more `$` characters followed by one or more alphanumeric/underscore
+characters.
+
+A single `$` refers to a *block scope* variable.  Two (`$$`) characters refers
+to an *rlink scope* variable.
+
 #### `<property>`
+
+```
+.<value>[`]
+```
+
+The optional `(backquote)` acts as a closing parenthesis, allowing actions to
+be called on the evaluation of the property.  If omitted, all proceeding
+actions will be considered belonging to `<value>`.
 
 #### `<list>`
 
-#### `<block>`
+```
+[<value>1, <value>2, ... <value>n]
+```
 
 #### `<char>`
 
+*Regular expression*: `'.'`
+
+Any single character surrounded by single quotes.
+
 #### `<object>`
 
+*Regular expression*: `[@]+[a-zA-Z_]+`
+
+One or more `@` characters followed by one or more alphanumeric/underscore
+characters.
+
+A single `@` refers to externally instantiated objects.  Two (`@@`) refers to
+an auto-instantiated object from a resource.
+
 #### `<undefined>`
+
+*Exact string match*: `undefined`
+
+Evaluates to `QSV_UNDEFINED`.
 
 #### `<string>`
 

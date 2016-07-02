@@ -112,6 +112,7 @@ main {
 
    # Show off our language types and variable scoping.
    echo ("Type tests:");
+   echo ("   undefined | ", type (undefined));
    echo ("   string    | ", type (string));
    echo ("   'a'       | ", type ('a'), " (", index ('a'), ")");
    echo ("   string[1] | ", type (string[0]), " (", index (string[1]), ")");

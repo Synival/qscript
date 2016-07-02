@@ -154,7 +154,9 @@ P_FUNC (qs_language_value)
             switch (n->type_id) {
                /* primitive types. */
                case QSCRIPT_UNDEFINED:
-                  qs_value_init (v, QSCRIPT_UNDEFINED, NULL);
+                  qs_value_free (v);
+                  v = QSV_UNDEFINED;
+                  node->data = v;
                   break;
                case QSCRIPT_NUMBER:
                   switch (n->first_child->type_id) {
@@ -214,7 +216,10 @@ P_FUNC (qs_language_value)
    }
 }
 P_FUNC (qs_language_value_f)
-   { if (node->data) qs_value_free (node->data); }
+{
+   if (node->data && node->data != QSV_UNDEFINED)
+      qs_value_free (node->data);
+}
 
 P_FUNC (qs_language_outer_list)
 {
