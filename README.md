@@ -6,7 +6,8 @@
 
 1. Source for `libqscript`.
 2. qscript parser that instantiates `main`.
-3. Example project 'QMaze'.
+3. qscript *test.qs* script to test various functions.
+4. Example project *QMaze*.
 
 ## Mission:
 
