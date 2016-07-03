@@ -332,6 +332,19 @@ main {
    echo ("   object ('@my_object').int = ", object ("@my_object").int);
    echo ();
 
+   # A complicated (and ridiculously slow) recursive test.
+   echo ("Recursive function test:");
+   echo ("   First 8 numbers in the Fibonacci sequence:");
+   print ("   ");
+   = ($limit, 8);
+   for (= ($i, 1), <= ($i, $limit), ++ ($i), {
+      print (fibonacci_recurse ($i));
+      if (== ($i, $limit),
+         echo (),
+         print (", "));
+   });
+   echo ();
+
    # Everything here should call an error!  Use lambda for convenience.
    echo ("Error tests: ");
    = ($error_test, [{
@@ -425,8 +438,25 @@ fancy_string {
    }]);
 }
 
-# comment
+# comment outside of resource
 @comment_test {
-   # comment
-   [a, b, c,];
+   # comment inside block
+   [a, #comment inside list
+    b,
+    c,
+   ];
+   # comment at end of block
+}
+
+
+# fibonacci_recurse (n)
+#    Calculate and return Fibonacci number n using recursion.
+fibonacci_recurse {
+   args ($n);
+   if (<= ($n, 0), return (0));      # Stop at zero.
+   if (== ($n, 1), return (1));      # Stop at one.
+   + (                               # Automatically returns:
+      fibonacci_recurse (- ($n, 1)), #  f(n-1) + f(n-2)
+      fibonacci_recurse (- ($n, 2))
+   );
 }

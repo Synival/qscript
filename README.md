@@ -1,32 +1,17 @@
-# qscript
+# *qscript*
 
-(This document is an early draft.  More coming soon.)
+This library is designed to create a persistent-state world of generic objects with arbitrary code injection/ejection via scripts, complex inter-object relationships, and a sensible interface between the scripting environment and the project.  A script's purpose is twofold: to 1) non-destructively modify object properties and 2) apply scripts onto other objects matching specified criteria.  The qscript language is functional, small, flexible, and grammatically minimal.
+
+---
+
+# Project Status:
 
 ## What's in This Project:
 
-1. Source for `libqscript`.
-2. qscript parser that instantiates `main`.
+1. Source for *libqscript* (contains [mpc](https://github.com/orangeduck/mpc))
+2. qscript parser that instantiates object `main`.
 3. qscript *test.qs* script to test various functions.
 4. Example project *QMaze*.
-
-## Mission:
-
-*"To create a persistent state multi-object space with dynamic object
-   instantiation, arbitrary code injection, and interactive variables."*
-
-1. Instantiate any number of objects with relationships to each other in a
-   consistent but dynamically modifiable state.
-2. Allow interaction between object space and programming space using C.
-3. Resource execution on objects in arbitrary order determined by priority
-   values.
-4. Allow language extension through schemes.
-
-## Why:
-
-1. Need to keep persistant object states that can be modified without
-   potential state corruption.
-2. Need to let objects interact with each other and efficiently respond to
-   all changes from other objects.
 
 ## What's done:
 
@@ -47,22 +32,162 @@
 7. Globally-scoped variables
 8. Reading object properties / variables from external environment
 9. External modification of object variables
-10. "Execution" scripts
+10. "Instant" execution scripts
 11. Evaluated value caching for uninfluenced values
-12. Function flags for "only when first activated", "execution-only"
-13. `rlink` action queues for `qs_scheme_update()`.
+12. Function flags for "only when first activated", "instant-only"
+13. `qs_rlink_t` action queues for `qs_scheme_update()`.
 14. qfunc `free()`, `spawn()`, and more object manipulation.
 15. More list-manipulating functions.
-16. This documention (derp)
+16. This documention.
+17. Non-game example... Minimal web browser?
 
-## Language Grammar:
+---
 
-### Comments
+# Why *qscript*?
+
+## Problems to Solve
+
+If your project's world contains objects with properties that are either modified from more than one part of your program or influenced by other objects, the world will become more difficult to manage as your project grows more complex and you have more objects to manage.  Elements in a web page, for example, have a complex set of positional relationships to each other that must update accurately and efficiently when the browser is resized or additional content loads.  Rather than completely recalculating all positions of those elements on every update - which is slow - it would be faster to make a single transformation concerning the exact thing that changed.  Unfortunately, considering all the variables involved, such a transformation is difficult to determine and, if done incorrectly, would break the formatting permenantly.
+
+## *qscript's* Solution
+
+*qscript* aims to solve these potential problems and make object management easier by tracking all object property modifications and their outside influences in their proper order.  All modifications are executed from object scripts that can be dynamically inserted, removed, and re-ordered.  Modifications influenced by the properties of other objects are tracked and updated as those properties change, eliminating the need to constantly check for such updates manually.
+
+When an object update is necessary, the affects objects of the world are *unwound* to their state before the modification occurred.  The update is then performed and any scripts that were previously unwound are then *rewound* in their original order.  The result is a world that can be easily and efficiently modified without fear of corrupting its state.
+
+## Game Development Example
+
+Let's say you're designing a small role-playing game in which a character can change equipment and modify stats through temporary buffs and debuffs.  At one point in the game, the character's *STR* is affected by the following transformations:
+
+ Modifier                            | Transformation      | *STR* Value
+-------------------------------------|---------------------|--------------
+ 1. Base stat:                       | `str = 10`          | 10
+ 2. Level 10 stat increase:          | `str += level * 2`  | 30
+ 3. Berserker class bonus:           | `str *= 1.5`        | 45
+ 4. Sword weapon bonus:              | `str += 5`          | 50
+ 5. Quad Damage (10 sec remaining):  | `str *= 4`          | 200
+ 6. Well-Fed (50 sec remaining):     | `str += 5`          | 205
+
+There are a few ways the *STR* stat can be stored.  It could be calculated each time it is referenced using an internal formula, accounting for base stats, levels, class bonuses, equipment, buffs, debuffs, and any other factors that may develop later.  This works, but a hard-coded calculation isn't very flexible and could get cumbersome as more abilities get tacked-on.  Another downside to this method is that each stat would need its own similar function to be maintained.
+
+Another option would be to destructively transform *STR* for each modifier and revert the transformation when the modifier is disabled.  This creates some obvious problems if the operations aren't communicative; if changes aren't reverted in their proper order, the value will be corrupted.  When the "Quad Damage" and "Well-Fed" buffs wear off, *STR* should return to the previous value of 50.  However, "Quad Damage" is set to wear off before "Well-Fed" will.  The reverting transformations would result in `str /= 4` followed by `str -= 5`, which results in 46.25, corrupting *STR* forever.
+
+## Resource winding, unwinding, and rewinding
+
+The solution offered by *qscript* to the problem above is to apply *resource* scripts to objects at arbitrary *priorities* that push new values to properties via modification stack.  This is called *injecting*, and resources injected onto objects are called *rlinks*.  The rlinks are executed from lowest priority to highest.  Execution of an rlink is called *winding*.
+
+Here is the list of rlinks applied to our character:
+
+ Priority | Resource
+----------|-----------------------
+ 0.       | `character_base`
+ 10.      | `character_level(10)`
+ 20.      | `class_berserker`
+ 30.      | `weapon_sword`
+ 40.      | `buff_quad_damage`
+ 41.      | `buff_well_fed`
+
+When "Quad Damage" wears off, the rlink `buff_quad_damage` must be *ejected*, or removed, from the object.  The first step is to undo all modifications made to *STR* from all rlinks at higher priorities as well as the rlink to be ejected.  This process is called `unwinding`.  In reverse order (high to low priority), `buff_well_fed` will be unwound, followed by `buff_quad_damage`.  At this point, `buff_quad_damage` is ejected.  All rlinks that were previously unwound now need to be `rewound`, or re-executed, from low to high priority.
+
+## Object Relationships
+
+(feature unfinished)
+
+## Object- and Global-scope Variables
+
+(feature unfinished)
+
+---
+
+# Language:
+
+(mission statement)
+
+## Examples:
+
+### Transformation scripts:
+
+```
+# Multiply strength by 4.
+buff_quad_damage {
+   *= (str, 4);
+}
+
+# Make left-handed people right-handed and vice-versa.
+switch_handedness {
+   if (==(.handed, "left"),  =(.handed, "right"), # left  ==> right
+       ==(.handed, "right"), =(.handed, "left")); # right ==> left
+}
+```
+
+### Code flow:
+
+These examples are designed to showcase various forms of loops.
+
+```
+# fibonacci_for (n):
+#    Calculate and return the nth Fibonacci number using a for() loop.
+fibonacci_for {
+   args ($n);
+   if (<= ($n, 2),
+      return (1));
+
+   = ($prev,    1);
+   = ($current, 1);
+   for (= ($i, 2), < ($i, $n), ++($i), {
+      =  ($tmp, $prev);
+      =  ($prev, $current);
+      += ($current, $tmp);
+   });
+}
+
+# fibonacci_recurse (n)
+#    Calculate and return the nth Fibonacci number using recursion.
+fibonacci_recurse {
+   args ($n);
+   if (<= ($n, 0), return (0));      # Stop at zero.
+   if (== ($n, 1), return (1));      # Stop at one.
+   + (                               # Automatically returns:
+      fibonacci_recurse (- ($n, 1)), #  f(n-1) + f(n-2)
+      fibonacci_recurse (- ($n, 2))
+   );
+}
+```
+
+### Misc. utility functions:
+
+```
+# Echo a string with preceeding spaces.
+echo_indented {                                   # Takes (int, string).
+   args ($indent, $string);                       # Assign arguments to variables.
+   = ($istr, "");                                 # Initialize indented spaces.
+   for (= ($i, 0), < ($i, $indent), ++ ($i),      # Do this $length times:
+      += ($istr, ' '));                           # Append a space to $istr
+   return (echo ($istr, $string));                # Echo/return string w/ indents.
+}
+
+# Echo a meme, more nicely-formatted than it deserves to be.
+echo_doge {
+   = ($my_string, "so string, very tokens, wow"); # Let's tokenize a meme.
+   = ($count, 0);                                 # Keep track of indentation.
+   for_each (tokenize ($my_string), $token, {     # Tokenize.
+      -= ($token[0], 32);                         # Capitalize the first letter.
+      echo_indented (* (2, $count), $token);      # Print our token with indents.
+      ++ ($count);                                # Increment counter.
+   });
+}
+```
+
+## Grammar:
+
+(table of contents)
+
+### Comments:
 
 The character `#` can be used when any value, resource, or action is expected.
 All text following `#` will be ignored by the parser.
 
-### `<resource>`
+### `<resource>`:
 
 ```
 [@]<string> <block>
@@ -72,7 +197,7 @@ All text following `#` will be ignored by the parser.
 The '@' character indicates that the resource is to be automatically
 instantiated as an object named '@resource-name'.
 
-### `<block>`
+### `<block>`:
 
 ```
 '{'
@@ -90,7 +215,7 @@ They return the last evaluation's return value, which includes the value
 passed to `return()`, `break()`, or `continue()`.  The the block contains
 zero values, `QSV_UNDEFINED` is returned.
 
-### `<value>`
+### `<value>`:
 
 ```
 [~]<primitive> <action>1 ... <action>n
@@ -102,7 +227,7 @@ which it is called.  This requires the evaluation to be of type `list`,
 otherwise it will report an error.  The contents of the list will be inserted
 into the parameter list of the action from which it was called.
 
-### `<primitive>`
+### `<primitive>`:
 
 *Matches the first of the following, starting from the top:*
 ```
@@ -118,14 +243,14 @@ into the parameter list of the action from which it was called.
 <string>
 ```
 
-#### `<int>`
+#### `<int>`:
 
 *Regular expression*: `[-+]?[0-9]+` 
 (One or more digits optionally preceded by '-' or '+'.)
 
 **Creates an integer value.**
 
-#### `<float>`
+#### `<float>`:
 
 *Regular expression*: `[-+]?[0-9]+\.[0-9]+` 
 (One or more digits optionally preceded by '-' or '+', followed by a decimal
@@ -133,8 +258,7 @@ point and one or more digits.)
 
 **Creates a floating-point value.**
 
-
-#### `<variable>`
+#### `<variable>`:
 
 *Regular expression*: `[\\$]+[a-zA-Z0-9_]+` 
 (One or more `$` characters followed by one or more alphanumeric/underscore
@@ -146,14 +270,15 @@ A single `$` refers to a *block scope* variable.  Two (`$$`) characters refers
 to an *rlink scope* variable.
 If the variable is not found in the current scope, it will be created.
 
-#### `<property>`
+#### `<property>`:
 
 ```
 .<value>[`]
 ```
 
-**Creates a reference to the current object or, if used as an action, a
-property belonging to parent value's object.**
+**Creates a reference to a property belonging to the current object's.
+Can be used as an `<action>`, in which case it creates a reference to a property
+belonging to the evaluated parent value.**
 
 The optional `(backquote)` acts as a closing parenthesis, allowing actions to
 be called on the evaluation of the property.
@@ -162,7 +287,7 @@ If omitted, all proceeding actions will be considered belonging to `<value>`.
 If called as an action, an error will be reported if the evaluation of the
 parent value is not of type `<object>`.
 
-#### `<list>`
+#### `<list>`:
 
 ```
 '[' <value>1, <value>2, ... <value>n ']'
@@ -172,12 +297,12 @@ parent value is not of type `<object>`.
 
 Values contained in the list are not evaluated until they are indexed.
 
-#### `<char>`
+#### `<char>`:
 
 *Regular expression*: `'.'` 
 (Any single character surrounded by single quotes.)
 
-#### `<object>`
+#### `<object>`:
 
 *Regular expression*: `[@]+[a-zA-Z_]+` 
 (One or more `@` characters followed by one or more alphanumeric/underscore
@@ -185,15 +310,15 @@ characters.)
 A single `@` refers to externally instantiated objects.  Two (`@@`) refers to
 an auto-instantiated object from a resource.
 
-#### `<undefined>`
+#### `<undefined>`:
 
 *Exact string match*: `undefined`
 
 **Evaluates to **`QSV_UNDEFINED`**.  Does not create a new value.**
 
-#### `<string>`
+#### `<string>`:
 
-### `<action>`
+### `<action>`:
 
 *Matches the first of the following, starting from the top:*
 
@@ -203,7 +328,7 @@ an auto-instantiated object from a resource.
 <property>
 ```
 
-#### `<call>`
+#### `<call>`:
 
 ```
 (<value>1, <value>2, ... <value>n)
@@ -224,7 +349,7 @@ Internal calls to `arg()`, `args()`, and `arg_list()` will pull arguments from
 the lambda function's parameter list.  It is recommended that list elements be
 defined as `<block>`s for the sake of formatting consistency.
 
-#### `<index>`
+#### `<index>`:
 
 ```
 '[' <value> ']'
@@ -238,11 +363,13 @@ function.  However, indexing `<string>`s is very strict; the indexed value
 will always be of type `<char>` and only values valid for assignment must
 safely cast to type `<char>`.
 
-#### `<property>`
+#### `<property>`:
 
 (See `<property>` definition under `<primitive>`.)
 
-## Internal structures:
+# Internal Workings:
+
+## Structures:
 
 1. `qs_object_t`
 2. `qs_value_t`
@@ -346,16 +473,16 @@ safely cast to type `<char>`.
 2. index
 3. property
 
-## Standard library:
+# *qscript* Standard library:
 
-### Text output:
+## Text output:
 
 1. `print`
 2. `echo`
 3. `print_resource`
 4. `print_value`
 
-### Functional:
+## Functional:
 
 1. `+`
 2. `-`
@@ -380,7 +507,7 @@ safely cast to type `<char>`.
 21. `!^^`
 22. `multi`
 
-### Informative:
+## Informative:
 
 1. `?`
 2. `!`
@@ -394,7 +521,7 @@ safely cast to type `<char>`.
 10. `func_exists`
 11. `tokenize`
 
-### Assigning / Modifying:
+## Assigning / Modifying:
 
 1. `+=`
 2. `-=`
@@ -410,7 +537,7 @@ safely cast to type `<char>`.
 12. `--`
 13. `vars`
 
-### Code Flow:
+## Code Flow:
 
 1. `if`
 2. `return`
@@ -423,13 +550,13 @@ safely cast to type `<char>`.
 9. `eval`
 10. `for_each`
 
-### Argument Processing:
+## Argument Processing:
 
 1. `args`
 2. `arg`
 3. `arg_list`
 
-### Casting:
+## Casting:
 
 1. `int`
 2. `string`
@@ -439,15 +566,15 @@ safely cast to type `<char>`.
 6. `variable`
 7. `property`
 
-## Public Macros:
+# Public Macros:
 
-### Definitions:
+## Definitions:
 
 1. `QS_FUNC`
 2. `QS_STACK_FUNC`
 3. `QSV_DEFINE`
 
-### Inside `qs_func` call:
+## Inside `qs_func` call:
 
 1. `QS_ARGV`
 2. `QS_ARGS`
@@ -464,7 +591,7 @@ safely cast to type `<char>`.
 13. `QS_BREAK`
 14. `QS_CONTINUE`
 
-## Public Functions:
+# Public Functions:
 
 1. `qs_arg_float`
 2. `qs_arg_int`
@@ -542,7 +669,7 @@ safely cast to type `<char>`.
 74. `qs_variable_get`
 75. `qs_variable_value`
 
-## Pre-defined Values:
+# Pre-defined Values:
 
 1. `QSV_ZERO`
 2. `QSV_ONE`
@@ -573,7 +700,7 @@ safely cast to type `<char>`.
 27. `QSV_ALREADY_WOUND`
 28. `QSV_INVALID_PROPERTY`
 
-## Implementation:
+# Implementation:
 
 1. Your first qscript
 2. Example of a simple parser.

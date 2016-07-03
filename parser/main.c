@@ -32,7 +32,9 @@ int main (void)
 
    /* read from our file. */
    errno = 0;
-   if (!qs_parse_content (scheme, "stdin", content)) {
+   int res = (qs_parse_content (scheme, "stdin", content) ? 1 : 0);
+   free (content);
+   if (!res) {
       if (errno != 0) {
          perror ("Unable to parse content");
          exit (errno);

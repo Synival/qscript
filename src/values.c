@@ -107,6 +107,10 @@ int qs_value_copy_real (qs_execute_t *exe, qs_value_t *dest, qs_value_t *src,
          break;
    }
 
+   /* keep a reference to children. */
+   if (src->child)
+      dest->child = src->child;
+#if 0
    /* copy children. */
    if (src->child) {
       dest->child = malloc (sizeof (qs_value_t));
@@ -115,6 +119,7 @@ int qs_value_copy_real (qs_execute_t *exe, qs_value_t *dest, qs_value_t *src,
       dest->child->flags = QS_VALUE_MUTABLE;
       qs_value_copy (exe, dest->child, src->child);
    }
+#endif
 
    /* return success. */
    return 1;
@@ -172,10 +177,11 @@ qs_property_t *qs_value_property (qs_execute_t *exe, qs_value_t *v)
 int qs_value_cleanup (qs_value_t *value)
 {
    /* free children... */
-   if (value->child) {
-      qs_value_free (value->child);
-      value->child = NULL;
+   if (value->child_data) {
+      qs_value_free (value->child_data);
+      value->child_data = NULL;
    }
+   value->child = NULL;
 
    /* ...and free ourselves. */
    return qs_value_cleanup_self (value);
@@ -223,10 +229,6 @@ int qs_value_free (qs_value_t *value)
     * linked to the code.  remove reference in the code. */
    if (!value->scheme && value->node)
          value->node->data = NULL;
-
-   /* get rid of lines to other values. */
-   if (value->parent) value->parent->child = value->child;
-   if (value->child)  value->child->parent = value->parent;
 
    /* clean up other stuff and return true. */
    qs_value_cleanup (value);

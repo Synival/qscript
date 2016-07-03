@@ -89,7 +89,8 @@ qs_execute_t *qs_execute_get_block (qs_execute_t *exe)
 {
    /* stop when we reach a code block. */
    for (; exe != NULL; exe = exe->parent)
-      if (exe->type_id == QS_EXE_BLOCK)
+      if (exe->type_id == QS_EXE_BLOCK ||
+          exe->type_id == QS_EXE_RESOURCE)
          return exe;
    return NULL;
 }

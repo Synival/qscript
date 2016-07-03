@@ -26,7 +26,7 @@ struct _qs_value_t {
    int link_id;
    void *link;
    qs_list_t *list;
-   qs_value_t *parent, *child;
+   qs_value_t *child, *child_data;
    p_node_t *node;
    qs_scheme_t *scheme;
 };

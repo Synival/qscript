@@ -210,7 +210,6 @@ P_FUNC (qs_language_value)
          /* any actions to be performed on the value. */
          case QSCRIPT_ACTION:
             v_next->child = vn->data;
-            v_next->child->parent = v_next;
             v_next = v_next->child;
             break;
       }
@@ -370,7 +369,8 @@ P_FUNC (qs_language_copy_contents)
 {
    if (node->contents)
       free (node->contents);
-   node->contents = strdup (node->first_child->contents);
+   node->contents = node->first_child->contents;
+   node->first_child->contents = NULL;
 }
 
 int qs_parse_init (void)

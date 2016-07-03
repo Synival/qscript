@@ -118,6 +118,7 @@ QS_FUNC (qsf_print)
       case 0: printf ("%s",   buf); break;
       case 1: printf ("%s\n", buf); break;
    }
+   fflush (stdout);
 
    /* return whatever string we just printed. */
    return QS_RETS (buf);
@@ -656,7 +657,7 @@ QS_FUNC (qsf_for)
    qs_arg_value (e, arg[0]);
    while (qs_value_truth (e, qs_arg_value (e, arg[1])) &&
           !(e->flags & QS_EXE_BREAK)) {
-      qs_arg_value (e, arg[3]);
+      r = qs_arg_value (e, arg[3]);
       if (e->flags & QS_EXE_BREAK)
          break;
       qs_arg_value (e, arg[2]);

@@ -16,25 +16,26 @@ struct _qs_func_t {
 };
 
 /* function execution. */
-qs_value_t *qs_func_run (qs_execute_t *exe, qs_func_t *func);
+inline qs_value_t *qs_func_run (qs_execute_t *exe, qs_func_t *func);
 
 /* utility functions used inside qscript functions. */
-qs_value_t *qs_arg_value (qs_execute_t *exe, qs_value_t *val);
+inline qs_value_t *qs_arg_value (qs_execute_t *exe, qs_value_t *val);
 
 /* arg processing functions. */
-char *qs_arg_string (qs_execute_t *exe, qs_value_t *val);
-float qs_arg_float  (qs_execute_t *exe, qs_value_t *val);
-int   qs_arg_int    (qs_execute_t *exe, qs_value_t *val);
-qs_list_t *qs_arg_list (qs_execute_t *exe, qs_value_t *val);
-int qs_func_error (qs_execute_t *exe, char *func_name, p_node_t *node,
+inline char *qs_arg_string (qs_execute_t *exe, qs_value_t *val);
+inline float qs_arg_float  (qs_execute_t *exe, qs_value_t *val);
+inline int   qs_arg_int    (qs_execute_t *exe, qs_value_t *val);
+inline qs_list_t *qs_arg_list (qs_execute_t *exe, qs_value_t *val);
+inline qs_object_t *qs_arg_object (qs_execute_t *exe, qs_value_t *val);
+inline int qs_func_error (qs_execute_t *exe, char *func_name, p_node_t *node,
    char *format, ...);
 
 /* return value producing functions. */
-qs_value_t *qs_return_value_new (qs_scheme_t *scheme);
-qs_value_t *qs_return_string (qs_scheme_t *scheme, char *s);
-qs_value_t *qs_return_int (qs_scheme_t *scheme, int i);
-qs_value_t *qs_return_float (qs_scheme_t *scheme, float f);
-qs_value_t *qs_return_char (qs_scheme_t *scheme, char c);
+inline qs_value_t *qs_return_value_new (qs_scheme_t *scheme);
+inline qs_value_t *qs_return_string (qs_scheme_t *scheme, char *s);
+inline qs_value_t *qs_return_int (qs_scheme_t *scheme, int i);
+inline qs_value_t *qs_return_float (qs_scheme_t *scheme, float f);
+inline qs_value_t *qs_return_char (qs_scheme_t *scheme, char c);
 
 /* code flow functions. */
 int qs_func_break    (qs_execute_t *e);

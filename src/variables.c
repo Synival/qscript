@@ -49,6 +49,8 @@ qs_variable_t *qs_variable_get_execute (qs_execute_t *exe, char *name)
       for (v = exe->variable_list_back; v != NULL; v = v->prev)
          if (strcmp (v->name, name) == 0)
             return v;
+      if (exe->type_id == QS_EXE_RESOURCE)
+         break;
       exe = exe->parent;
    }
    return NULL;

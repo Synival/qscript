@@ -13,24 +13,27 @@ LFLAGS_MPC    =
 LIBMAJOR = 0
 LIBFULL  = 0.0.1
 
+CFLAGS =
+LFLAGS =
+
 default: all
 
 all: $(LIB) $(PARSER) example
 
 $(PARSER): $(OBJ_PARSER)
-	$(CC) -Wl,-R,'$$ORIGIN' $(OBJ_PARSER) -o $(PARSER) $(LFLAGS_PARSER)
+	$(CC) -Wl,-R,'$$ORIGIN' $(OBJ_PARSER) -o $(PARSER) $(LFLAGS_PARSER) $(LFLAGS)
 
 $(LIB): $(OBJ_LIB) $(OBJ_MPC)
-	$(CC) -fPIC -shared -Wl,-soname,$(LIB).$(LIBMAJOR) $(OBJ_LIB) $(OBJ_MPC) -o $(LIB).$(LIBFULL) $(LFLAGS_LIB)
+	$(CC) -fPIC -shared -Wl,-soname,$(LIB).$(LIBMAJOR) $(OBJ_LIB) $(OBJ_MPC) -o $(LIB).$(LIBFULL) $(LFLAGS_LIB) $(LFLAGS)
 	ln -fs ./$(LIB).$(LIBFULL) ./$(LIB).$(LIBMAJOR)
 	ln -fs ./$(LIB).$(LIBFULL) ./$(LIB)
 
 src/%.o: src/%.c
-	$(CC) $(CFLAGS_LIB) -o $@ -c $<
+	$(CC) $(CFLAGS_LIB) $(CFLAGS) -o $@ -c $<
 parser/%.o: parser/%.c
-	$(CC) $(CFLAGS_PARSER) -o $@ -c $<
+	$(CC) $(CFLAGS_PARSER) $(CFLAGS) -o $@ -c $<
 mpc/%.o: mpc/%.c
-	$(CC) $(CFLAGS_MPC) -o $@ -c $<
+	$(CC) $(CFLAGS_MPC) $(CFLAGS) -o $@ -c $<
 
 .FORCE:
 example: .FORCE
