@@ -99,7 +99,7 @@ inline qs_value_t *qs_func_run (qs_execute_t *exe, qs_func_t *func)
 {
    /* are there enough arguments for this function? */
    if (exe->list->value_count < func->min_args) {
-      qs_func_error (exe, func->name, (exe->action) ? exe->action->value->node
+      qs_func_error (exe, func->name, (exe->action) ? exe->action->node
          : NULL, "at least %d args required, only %d given.\n",
          func->min_args, exe->list->value_count);
       return QSV_NOT_ENOUGH_ARGS;

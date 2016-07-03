@@ -1,6 +1,6 @@
 # *qscript*
 
-This library is designed to create a persistent-state world of generic objects with arbitrary code injection/ejection via scripts, complex inter-object relationships, and a sensible interface between the scripting environment and the project.  A script's purpose is twofold: to 1) non-destructively modify object properties and 2) apply scripts onto other objects matching specified criteria.  The qscript language is functional, small, flexible, and grammatically minimal.
+This library is designed to create a persistent-state world of generic objects with arbitrary code injection/ejection via scripts, complex inter-object relationships, and a sensible interface between the scripting environment and the project.  Each script's purpose is twofold: to 1) non-destructively modify object properties and 2) apply scripts onto other objects matching specified criteria.  The qscript language is functional, small, flexible, and grammatically minimal.
 
 ---
 
@@ -23,7 +23,7 @@ This library is designed to create a persistent-state world of generic objects w
 
 ## What's not:
 
-1. Fully implemented and testing resource unwinding and rewinding
+1. Fully implemented and tested resource unwinding and rewinding
 2. Value "influences" from external sources
 3. Object list search functions
 4. Object relationship management
@@ -35,10 +35,10 @@ This library is designed to create a persistent-state world of generic objects w
 10. "Instant" execution scripts
 11. Evaluated value caching for uninfluenced values
 12. Function flags for "only when first activated", "instant-only"
-13. `qs_rlink_t` action queues for `qs_scheme_update()`.
+13. Action queues from `qs_rlink_t` for `qs_scheme_update()`.
 14. qfunc `free()`, `spawn()`, and more object manipulation.
 15. More list-manipulating functions.
-16. This documention.
+16. This documentation.
 17. Non-game example... Minimal web browser?
 
 ---
@@ -47,13 +47,13 @@ This library is designed to create a persistent-state world of generic objects w
 
 ## Problems to Solve
 
-If your project's world contains objects with properties that are either modified from more than one part of your program or influenced by other objects, the world will become more difficult to manage as your project grows more complex and you have more objects to manage.  Elements in a web page, for example, have a complex set of positional relationships to each other that must update accurately and efficiently when the browser is resized or additional content loads.  Rather than completely recalculating all positions of those elements on every update - which is slow - it would be faster to make a single transformation concerning the exact thing that changed.  Unfortunately, considering all the variables involved, such a transformation is difficult to determine and, if done incorrectly, would break the formatting permenantly.
+If a world contains objects with properties that are either 1) modified from more than one part of its program or 2) influenced by other objects, that world could become more difficult to manage as the program grows more complex and there are more objects to manage.  Elements in a web page, for example, have a complex set of positional relationships to each other that must update accurately and efficiently when the browser is resized or additional content is loaded.  Rather than completely recalculating all positions of those elements on every update - which is slow - it would be faster to make a single transformation derived from the precise variable(s) that changed.  Unfortunately, for a such a system with so many factors that determine position, such a transformation is difficult to determine and, if done incorrectly, would break the formatting permanently.
 
 ## *qscript's* Solution
 
-*qscript* aims to solve these potential problems and make object management easier by tracking all object property modifications and their outside influences in their proper order.  All modifications are executed from object scripts that can be dynamically inserted, removed, and re-ordered.  Modifications influenced by the properties of other objects are tracked and updated as those properties change, eliminating the need to constantly check for such updates manually.
+*qscript* aims to solve these potential problems and make object management easier by tracking all object property modifications and their outside influences in their order of execution.  All modifications are executed from object scripts that can be dynamically inserted, removed, and re-ordered.  Modifications influenced by the properties of other objects are tracked and updated as those properties change, eliminating the need to constantly check for such updates manually.
 
-When an object update is necessary, the affects objects of the world are *unwound* to their state before the modification occurred.  The update is then performed and any scripts that were previously unwound are then *rewound* in their original order.  The result is a world that can be easily and efficiently modified without fear of corrupting its state.
+When an object update is necessary, the affected objects of the world are *unwound* to their state before the modification occurred.  The update is then performed and any scripts that were previously unwound are then *rewound* in their original order.  The result is a world that can be easily and efficiently modified without fear of corrupting its state.
 
 ## Game Development Example
 
@@ -68,26 +68,28 @@ Let's say you're designing a small role-playing game in which a character can ch
  5. Quad Damage (10 sec remaining):  | `str *= 4`          | 200
  6. Well-Fed (50 sec remaining):     | `str += 5`          | 205
 
-There are a few ways the *STR* stat can be stored.  It could be calculated each time it is referenced using an internal formula, accounting for base stats, levels, class bonuses, equipment, buffs, debuffs, and any other factors that may develop later.  This works, but a hard-coded calculation isn't very flexible and could get cumbersome as more abilities get tacked-on.  Another downside to this method is that each stat would need its own similar function to be maintained.
+There are a few ways that the *STR* stat can be stored.  It could be calculated each time it is referenced using an internal formula, accounting for base stats, levels, class bonuses, equipment, buffs, debuffs, and any other factors that may develop later.  This certainly works, but a hard-coded calculation isn't very flexible and could get cumbersome as more abilities get tacked-on.  Another downside to this method is that each stat would need its own similar function to be maintained.
 
-Another option would be to destructively transform *STR* for each modifier and revert the transformation when the modifier is disabled.  This creates some obvious problems if the operations aren't communicative; if changes aren't reverted in their proper order, the value will be corrupted.  When the "Quad Damage" and "Well-Fed" buffs wear off, *STR* should return to the previous value of 50.  However, "Quad Damage" is set to wear off before "Well-Fed" will.  The reverting transformations would result in `str /= 4` followed by `str -= 5`, which results in 46.25, corrupting *STR* forever.
+Another option would be to destructively transform *STR* for each modifier and revert the transformation when the modifier is disabled.  This creates some obvious problems if the operations aren't communicative; if changes aren't reverted in their proper order, the value will be corrupted.  When the "Quad Damage" and "Well-Fed" buffs wear off, *STR* should return to the previous value of 50.  However, "Quad Damage" is set to wear off before "Well-Fed" will.  Reverting their transformations in that order would result in `str /= 4` followed by `str -= 5`, which results in 46.25, permanently changing the *STR* of the character.
 
 ## Resource winding, unwinding, and rewinding
 
-The solution offered by *qscript* to the problem above is to apply *resource* scripts to objects at arbitrary *priorities* that push new values to properties via modification stack.  This is called *injecting*, and resources injected onto objects are called *rlinks*.  The rlinks are executed from lowest priority to highest.  Execution of an rlink is called *winding*.
+The solution offered by *qscript* to solve the problem above is to apply *resource* scripts to objects at arbitrary *priorities* that push property transformations which are tracked in a modification stack.  The process of applying scripts is called *injecting* and the link between the object and resource is called an *rlink*.  The rlinks are executed from lowest priority to highest.  The process of executing an rlink is called *winding*.
 
-Here is the list of rlinks applied to our character:
+Using this model, here is the list of rlinks applied to the character described earlier:
 
- Priority | Resource
-----------|-----------------------
- 0.       | `character_base`
- 10.      | `character_level(10)`
- 20.      | `class_berserker`
- 30.      | `weapon_sword`
- 40.      | `buff_quad_damage`
- 41.      | `buff_well_fed`
+ Priority | Resource              | Time Remaining
+----------|-----------------------|--------------------
+ 0.       | `character_base`      | n/a
+ 10.      | `character_level(10)` | n/a
+ 20.      | `class_berserker`     | n/a
+ 30.      | `weapon_sword`        | n/a
+ 40.      | `buff_quad_damage`    | 10 sec
+ 41.      | `buff_well_fed`       | 50 sec
 
-When "Quad Damage" wears off, the rlink `buff_quad_damage` must be *ejected*, or removed, from the object.  The first step is to undo all modifications made to *STR* from all rlinks at higher priorities as well as the rlink to be ejected.  This process is called `unwinding`.  In reverse order (high to low priority), `buff_well_fed` will be unwound, followed by `buff_quad_damage`.  At this point, `buff_quad_damage` is ejected.  All rlinks that were previously unwound now need to be `rewound`, or re-executed, from low to high priority.
+When "Quad Damage" wears off in 10 seconds, the rlink `buff_quad_damage` must be *ejected*, or removed, from the object.  The first step is to undo all modifications made to *STR* from all rlinks at higher priorities as well as the rlink to be ejected.  This process is called *unwinding*.  In reverse order (high to low priority), `buff_well_fed` will be unwound, followed by `buff_quad_damage`.  At this point, `buff_quad_damage` is ejected.  All rlinks that were previously unwound now need to be *rewound*, or re-executed, from low to high priority.  After `buff_well_fed` is rewound, *STR* is set to the proper value.
+
+This system allows an object model to be freely expanded without the need to manage its growing complexity.  In the RPG example, the game could conceivably have hundreds temporary buffs and debuff scripts, each which run a complex set of modifications, that can be safely applied to any object at any time without a single additional line of code in the program.
 
 ## Object Relationships
 
@@ -101,7 +103,43 @@ When "Quad Damage" wears off, the rlink `buff_quad_damage` must be *ejected*, or
 
 # Language:
 
-(mission statement)
+*qscript*'s scripting environment strives to stay as grammatically simple as possible while remaining flexible and powerful.  The language is used to define *resources* and their *scripts*  in the form of a single code *block*.  Each resource can be:
+
+1. instantiated as an *object*,
+2. *injected* into an object at a *priority* level as an *rlink*, or
+3. automatically instantiated immediately after compilation as a *global object*.
+
+At first glance, a simple resource definition resembles that of a C-family programming language:
+
+```
+main {
+   echo ("Hello, world!");
+   return (0);
+}
+```
+
+There are, however, some important distinctions.  There are no built-in procedures for code flow or math; each of these features are defined as functions that need to be invoked with the same syntax, like the `return (0);` line above.  Same same applies for `if()`, `for()`, `+()`, `=()`, and anything else that is typically not called as a function.
+
+## Values, Actions, and Function Calls:
+
+All code is composed of *values* followed by zero or more *actions*.  When a value is encountered, it is first *evaluated*, a process which dereferences variables, properties, and executes blocks until a non-internal *primitive* is found.  If a value has an action, the evaluation is inputted into that action whose evaluation is fed into the next action and so on.  The final evaluation is then returned to the value's caller.
+
+The most common action is a *function call*, which interprets its input as a function name and attempts to execute it.  Function calls are declared with a set a parentheses containing a comma-separated *list* of values that are passed to the function as *parameters*.  A function name can be any string matching either an internal function or a resource.
+
+The following are all valid function calls that produce the same result:
+
+```
+# Each evaluation will print "foo" followed by a newline.
+echo           ("foo");  # "echo" is a string matching a function.
+"echo"         ("foo");  # This is equally valid.
++ ("ec", "ho") ("foo");  # +() returns "echo" which is then called by the next action.
+{ "echo"; }    ("foo");  # This block will return "echo" which is also called.
+if (1, "echo") ("foo");  # if() returns the matching case, which is "echo".
+```
+
+## Non-Internal 
+
+
 
 ## Examples:
 
@@ -201,19 +239,18 @@ instantiated as an object named '@resource-name'.
 
 ```
 '{'
-   <value>1;
-   <value>2;
-   ...
-   <value>n;
+   <value>1;   # Examples:
+   <value>2;   #    = ($variable, 10);
+   ...         #    echo ("My variable is: ", $variable);
+   <value>n;   #    $variable;  <--- Last value is always returned
 '}'
 ```
 **Creates a series of zero or more values for evaluation.**
 
 Block contents are immediately evaluated whenever they are referenced by
-values or call actions.
-They return the last evaluation's return value, which includes the value
-passed to `return()`, `break()`, or `continue()`.  The the block contains
-zero values, `QSV_UNDEFINED` is returned.
+values or call actions.  They return the last evaluation, which includes the
+value passed to `return()`, `break()`, or `continue()`.  If the block
+contains zero values, `QSV_UNDEFINED` is returned.
 
 ### `<value>`:
 
@@ -387,14 +424,16 @@ safely cast to type `<char>`.
 
 ## Primitives:
 
-### Simple:
+### Real:
+
+#### Simple:
 
 1. undefined
 2. int
 3. float
 4. string
 
-### Complex:
+#### Complex:
 
 1. char
 2. list
@@ -405,7 +444,6 @@ safely cast to type `<char>`.
 1. block
 2. variable
 3. property
-4. action
 
 ## Enumerated Values:
 

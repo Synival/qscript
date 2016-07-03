@@ -724,7 +724,7 @@ QS_FUNC (qsf_args)
          return QSV_ZERO;
       /* otherwise, toss an error. */
       else {
-         qs_func_error (exe, func->name, action->value->node,
+         qs_func_error (exe, func->name, action->node,
                         "not a function call.\n");
          QS_RETURN ();
          return QSV_NOT_FUNC_CALL;
@@ -737,7 +737,7 @@ QS_FUNC (qsf_args)
 
    /* proper parameter count? */
    if (list->value_count < args) {
-      qs_func_error (exe, exe->name, action->value->node,
+      qs_func_error (exe, exe->name, action->node,
          "at least %d args required, only %d given.\n",
          args, list->value_count);
       QS_RETURN ();
@@ -772,7 +772,7 @@ QS_FUNC (qsf_arg)
     * of arguments passed to this function call. */
    if ((e = qs_execute_get_call (exe)) == NULL ||
        (list = e->list) == NULL) {
-      qs_func_error (exe, func->name, action->value->node,
+      qs_func_error (exe, func->name, action->node,
          "not a function call.\n");
       return QSV_NOT_FUNC_CALL;
    }
@@ -780,12 +780,12 @@ QS_FUNC (qsf_arg)
    /* what argument are we executing? */
    int i = QS_ARGI(0);
    if (i < 0) {
-      qs_func_error (exe, exe->name, action->value->node,
+      qs_func_error (exe, exe->name, action->node,
          "illegal argument index %d.\n", i);
       return QSV_INVALID_INDEX;
    }
    else if (i >= list->value_count) {
-      qs_func_error (exe, exe->name, action->value->node,
+      qs_func_error (exe, exe->name, action->node,
          "index %d is out of bounds (max: %d).\n", i,
             list->value_count - 1);
       return QSV_INVALID_INDEX;
@@ -804,7 +804,7 @@ QS_FUNC (qsf_arg_list)
     * of arguments passed to this function call. */
    if ((e = qs_execute_get_call (exe)) == NULL ||
        (list = e->list) == NULL) {
-      qs_func_error (exe, func->name, action->value->node,
+      qs_func_error (exe, func->name, action->node,
          "not a function call.\n");
       return QSV_NOT_FUNC_CALL;
    }
@@ -905,6 +905,9 @@ QS_FUNC (qsf_run)
    /* TODO: this function shouldn't be allocating and defining these
     * structures itself!! */
 
+   /* get the function name from argument zero. */
+   qs_value_t *func_v = QS_ARGV (0);
+
    /* create a temporary list referencing parameters 1+ (not 0). */
    qs_list_t *l = malloc (sizeof (qs_list_t));
    l->value_count = args - 1;
@@ -915,10 +918,11 @@ QS_FUNC (qsf_run)
    memset (a, 0, sizeof (qs_action_t));
    a->type_id = QS_ACTION_CALL;
    a->data_p = l;
-   a->value = action->value;
+   a->parent_value = action->parent_value;
+   a->node = func_v->node;
 
    /* run our action. */
-   qs_value_t *rval = qs_action_call (exe, QS_ARGV (0), a);
+   qs_value_t *rval = qs_action_call (exe, func_v, a);
 
    /* clean up memory we used and return whatever our call returned. */
    free (a);
@@ -1152,7 +1156,7 @@ QS_FUNC (qsf_cast)
 
       /* dunno what to cast! */
       default:
-         qs_func_error (exe, func->name, action->value->node,
+         qs_func_error (exe, func->name, action->node,
             "unknown function '%s'.\n", func->name);
          return QSV_INVALID_SUB_FUNC;
    }

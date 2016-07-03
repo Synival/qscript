@@ -58,6 +58,7 @@
       qs_value_contains;
       qs_value_copy;
       qs_value_copy_const;
+      qs_value_evaluate;
       qs_value_init;
       qs_value_length;
       qs_value_list;
@@ -65,7 +66,6 @@
       qs_value_lvalue;
       qs_value_object;
       qs_value_property;
-      qs_value_read;
       qs_value_restring;
       qs_value_truth;
       qs_value_type;

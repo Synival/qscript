@@ -90,6 +90,7 @@ enum qscript_tag_e {
 #define QS_VALUE_UNWRAP          0x01
 #define QS_VALUE_MUTABLE         0x02
 #define QS_VALUE_HEAP            0x04
+#define QS_VALUE_FREE_ACTIONS    0x08
 
 /* value link types. */
 #define QS_LINK_LITERAL          0

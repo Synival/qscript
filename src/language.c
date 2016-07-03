@@ -120,7 +120,8 @@ P_FUNC (qs_language_qstring)
 
 P_FUNC (qs_language_value)
 {
-   qs_value_t *v, *v_next;
+   qs_value_t *v;
+   qs_action_t *a = NULL;
 
    /* link an empty value. */
    v = malloc (sizeof (qs_value_t));
@@ -129,7 +130,6 @@ P_FUNC (qs_language_value)
    node->data = v;
 
    /* process the rest of our arguments. */
-   v_next = v;
    p_node_t *vn;
    for (vn = node->first_child; vn != NULL; vn = vn->next) {
       switch (vn->type_id) {
@@ -209,8 +209,17 @@ P_FUNC (qs_language_value)
 
          /* any actions to be performed on the value. */
          case QSCRIPT_ACTION:
-            v_next->child = vn->data;
-            v_next = v_next->child;
+            if (a) {
+               a->next = vn->data;
+               a->next->prev = a;
+               a = a->next;
+            }
+            else {
+               v->flags |= QS_VALUE_FREE_ACTIONS;
+               v->action_list = vn->data;
+               a = v->action_list;
+            }
+            a->parent_value = v;
             break;
       }
    }
@@ -287,20 +296,11 @@ P_FUNC (qs_language_list_f)
 
 P_FUNC (qs_language_action)
 {
-   /* create a value for this node. */
-   qs_value_t *v = malloc (sizeof (qs_value_t));;
-   memset (v, 0, sizeof (qs_value_t));
-   v->type_id = QSCRIPT_ACTION;
-   v->node = node;
-   node->data = v;
-
-   /* make this value of type 'action'. */
-   qs_value_restring (v, "<action>");
+   /* allocate a simple action type. */
    qs_action_t *a = malloc (sizeof (qs_action_t));
    memset (a, 0, sizeof (qs_action_t));
-   a->value = v;
-   v->data  = a;
-   v->val_p = a;
+   a->node = node;
+   node->data = a;
 
    /* what kind of action is it? */
    p_node_t *n;
@@ -322,7 +322,7 @@ P_FUNC (qs_language_action)
    }
 }
 P_FUNC (qs_language_action_f)
-   { if (node->data) qs_value_free (node->data); }
+   { if (node->data) qs_action_free (node->data); }
 
 P_FUNC (qs_language_resource)
 {

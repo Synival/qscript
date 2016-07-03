@@ -65,7 +65,7 @@ int qs_value_copy_real (qs_execute_t *exe, qs_value_t *dest, qs_value_t *src,
 
    /* make sure it's modifiable. */
    if (!force && !qs_value_can_modify (exe, dest)) {
-      p_error (exe->action ? exe->action->value->node : NULL,
+      p_error (exe->action ? exe->action->node : NULL,
          "attempted to modify immutable value '%s'.\n", dest->val_s);
       return 0;
    }
@@ -108,9 +108,8 @@ int qs_value_copy_real (qs_execute_t *exe, qs_value_t *dest, qs_value_t *src,
          break;
    }
 
-   /* keep a reference to children. */
-   if (src->child)
-      dest->child = src->child;
+   /* keep a reference to actions. */
+   dest->action_list = src->action_list;
 
    /* return success. */
    return 1;
@@ -119,18 +118,24 @@ int qs_value_copy_real (qs_execute_t *exe, qs_value_t *dest, qs_value_t *src,
 char *qs_value_type (qs_value_t *val)
 {
    switch (val->type_id) {
+      /* real primitives:
+       * ---simple: */
       case QSCRIPT_UNDEFINED: return "undefined";
-      case QSCRIPT_STRING:    return "string";
-      case QSCRIPT_FLOAT:     return "float";
       case QSCRIPT_INT:       return "int";
-      case QSCRIPT_VARIABLE:  return "variable";
-      case QSCRIPT_LIST:      return "list";
-      case QSCRIPT_BLOCK:     return "block";
-      case QSCRIPT_INDEX:     return "index";
+      case QSCRIPT_FLOAT:     return "float";
+      case QSCRIPT_STRING:    return "string";
+
+      /* ---complex: */
       case QSCRIPT_CHAR:      return "char";
-      case QSCRIPT_ACTION:    return "action";
+      case QSCRIPT_LIST:      return "list";
       case QSCRIPT_OBJECT:    return "object";
+
+      /* abstract primitives: */
+      case QSCRIPT_BLOCK:     return "block";
+      case QSCRIPT_VARIABLE:  return "variable";
       case QSCRIPT_PROPERTY:  return "property";
+
+      /* who knows! */
       default:                return "unknown";
    }
 }
@@ -168,17 +173,16 @@ qs_property_t *qs_value_property (qs_execute_t *exe, qs_value_t *v)
 int qs_value_cleanup (qs_value_t *value)
 {
    /* free children... */
-   if (value->child_data) {
-      qs_value_free (value->child_data);
-      value->child_data = NULL;
-   }
-   value->child = NULL;
+   if (value->flags & QS_VALUE_FREE_ACTIONS)
+      while (value->action_list)
+         qs_action_free (value->action_list);
+   value->action_list = NULL;
 
    /* ...and free ourselves. */
-   return qs_value_cleanup_self (value);
+   return qs_value_cleanup_base (value);
 }
 
-int qs_value_cleanup_self (qs_value_t *value)
+int qs_value_cleanup_base (qs_value_t *value)
 {
    /* if there's some type-specific data, free it. */
    if (value->data) {
@@ -301,55 +305,63 @@ qs_value_t *qs_value_evaluate_block (qs_execute_t *exe, qs_list_t *list)
    return rval;
 }
 
-qs_value_t *qs_value_read (qs_execute_t *exe, qs_value_t *val)
+qs_value_t *qs_value_evaluate (qs_execute_t *exe, qs_value_t *val)
 {
    qs_value_t *rval = QSV_CANNOT_EXECUTE;
-   while (val) {
-      switch (val->type_id) {
-         case QSCRIPT_STRING:
-         case QSCRIPT_INT:
-         case QSCRIPT_FLOAT:
-         case QSCRIPT_CHAR:
-         case QSCRIPT_LIST:
-         case QSCRIPT_OBJECT:
-         case QSCRIPT_UNDEFINED:
-            rval = val;
-            break;
-         case QSCRIPT_BLOCK:
-            rval = qs_value_evaluate_block (exe, val->val_p);
-            break;
-         case QSCRIPT_ACTION:
-            rval = qs_action_run (exe, rval, val->val_p);
-            break;
-         case QSCRIPT_VARIABLE: {
-            qs_variable_t *var = qs_value_variable (exe, val);
-            if (var == NULL) {
-               p_error (val->node, "cannot get variable for '%s'.\n",
-                  val->val_s);
-               rval = QSV_NOT_VARIABLE;
-            }
-            else
-               rval = qs_variable_value (var);
-            break;
+
+   /* is this a real primitive or an abstract one? */
+   switch (val->type_id) {
+      /* real primitives: */
+      case QSCRIPT_STRING:
+      case QSCRIPT_INT:
+      case QSCRIPT_FLOAT:
+      case QSCRIPT_CHAR:
+      case QSCRIPT_LIST:
+      case QSCRIPT_OBJECT:
+      case QSCRIPT_UNDEFINED:
+         rval = val;
+         break;
+
+      /* abstract primitives: */
+      case QSCRIPT_BLOCK:
+         rval = qs_value_evaluate_block (exe, val->val_p);
+         break;
+      case QSCRIPT_VARIABLE: {
+         qs_variable_t *var = qs_value_variable (exe, val);
+         if (var == NULL) {
+            p_error (val->node, "cannot get variable for '%s'.\n",
+               val->val_s);
+            rval = QSV_NOT_VARIABLE;
          }
-         case QSCRIPT_PROPERTY: {
-            qs_property_t *p = qs_value_property (exe, val);
-            if (p == NULL) {
-               p_error (val->node, "cannot get property for '%s'.\n",
-                  val->val_s);
-               rval = QSV_NOT_PROPERTY;
-            }
-            else
-               rval = qs_property_value (p);
-            break;
-         }
-         default:
-            p_error (val->node, "cannot process value of type '%s' (%d).\n",
-               qs_value_type (val));
-            return QSV_CANNOT_EXECUTE;
+         else
+            rval = qs_variable_value (var);
+         break;
       }
-      val = val->child;
+      case QSCRIPT_PROPERTY: {
+         qs_property_t *p = qs_value_property (exe, val);
+         if (p == NULL) {
+            p_error (val->node, "cannot get property for '%s'.\n",
+               val->val_s);
+            rval = QSV_NOT_PROPERTY;
+         }
+         else
+            rval = qs_property_value (p);
+         break;
+      }
+
+      /* unhandled: */
+      default:
+         p_error (val->node, "cannot process value of type '%s' (%d).\n",
+            qs_value_type (val));
+         return QSV_CANNOT_EXECUTE;
    }
+
+   /* run all actions. */
+   qs_action_t *a;
+   for (a = val->action_list; a != NULL; a = a->next)
+      rval = qs_action_run (exe, rval, a);
+
+   /* return the evaluation. */
    return rval;
 }
 
@@ -526,7 +538,7 @@ int qs_value_init (qs_value_t *val, int type, ...)
    int rval = 1;
 
    /* reset variable to our type. */
-   qs_value_cleanup_self (val);
+   qs_value_cleanup_base (val);
    val->type_id = type;
 
    /* assign parameters based on type. */

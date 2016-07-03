@@ -106,7 +106,7 @@ inline qs_value_t *qs_action_run (qs_execute_t *exe, qs_value_t *val,
       case QS_ACTION_PROPERTY:
          return qs_action_property (exe, val, action);
       default:
-         p_error (action->value->node, "unknown action type '%d'.\n",
+         p_error (action->node, "unknown action type '%d'.\n",
                   action->type_id);
          return QSV_CANNOT_EXECUTE;
    }
@@ -115,14 +115,14 @@ inline qs_value_t *qs_action_run (qs_execute_t *exe, qs_value_t *val,
 qs_value_t *qs_action_call (qs_execute_t *exe, qs_value_t *val,
    qs_action_t *action)
 {
-   qs_scheme_t *scheme = action->value->node->parse_data;
+   qs_scheme_t *scheme = action->node->parse_data;
    qs_func_t *func;
    qs_resource_t *r;
    qs_execute_t *e;
 
    /* we can only execute strings and lists. */
    if (val->type_id != QSCRIPT_STRING && val->type_id != QSCRIPT_LIST) {
-      p_error (action->value->node, "cannot execute call action for value of "
+      p_error (action->node, "cannot execute call action for value of "
          "type '%s'.\n", qs_value_type (val));
       return QSV_CANNOT_EXECUTE;
    }
@@ -161,7 +161,7 @@ qs_value_t *qs_action_call (qs_execute_t *exe, qs_value_t *val,
    }
    /* couldn't find anything. return an error. */
    else {
-      p_error (action->value->node, "invalid function '%s'\n", val->val_s);
+      p_error (action->node, "invalid function '%s'\n", val->val_s);
       rval = QSV_INVALID_FUNC;
    }
 
@@ -179,17 +179,17 @@ qs_value_t *qs_action_index (qs_execute_t *exe, qs_value_t *val,
 
    /* complain if our value is not a valid type. */
    if ((length = qs_value_length (val)) < 0) {
-      p_error (action->value->node, "cannot index value '%s' of type '%s'.\n",
+      p_error (action->node, "cannot index value '%s' of type '%s'.\n",
          val->val_s, qs_value_type (val));
       return QSV_INVALID_INDEX;
    }
    else if (length == 0) {
       switch (val->type_id) {
          case QSCRIPT_LIST:
-            p_error (action->value->node, "cannot index empty list.\n");
+            p_error (action->node, "cannot index empty list.\n");
             break;
          case QSCRIPT_STRING:
-            p_error (action->value->node, "cannot index blank string.\n");
+            p_error (action->node, "cannot index blank string.\n");
             break;
       }
       return QSV_INVALID_INDEX;
@@ -200,7 +200,7 @@ qs_value_t *qs_action_index (qs_execute_t *exe, qs_value_t *val,
 
    /* enforce type 'int'. */
    if (ival->type_id != QSCRIPT_INT) {
-      p_error (action->value->node, "cannot index using type '%s' (must be "
+      p_error (action->node, "cannot index using type '%s' (must be "
          "'int').\n", qs_value_type (ival));
       return QSV_INVALID_INDEX;
    }
@@ -208,12 +208,12 @@ qs_value_t *qs_action_index (qs_execute_t *exe, qs_value_t *val,
    /* valid index? */
    int index = ival->val_i;
    if (index < 0) {
-      p_error (action->value->node, "index value '%d' cannot be negative.\n",
+      p_error (action->node, "index value '%d' cannot be negative.\n",
          index);
       return QSV_INVALID_INDEX;
    }
    if (index >= length) {
-      p_error (action->value->node, "index value '%d' is too high "
+      p_error (action->node, "index value '%d' is too high "
          "(max = '%d')\n", index, length - 1);
       return QSV_INVALID_INDEX;
    }
@@ -262,7 +262,7 @@ qs_value_t *qs_action_property (qs_execute_t *exe, qs_value_t *val,
 {
    /* complain if val isn't of type 'object'. */
    if (val->type_id != QSCRIPT_OBJECT) {
-      p_error (action->value->node, "cannot get member value from "
+      p_error (action->node, "cannot get member value from "
                "non-object (type is '%s'). \n", qs_value_type (val));
       return QSV_INVALID_TYPE;
    }
@@ -270,7 +270,7 @@ qs_value_t *qs_action_property (qs_execute_t *exe, qs_value_t *val,
    /* get our object. */
    qs_object_t *obj;
    if ((obj = qs_value_object (exe, val)) == NULL) {
-      p_error (action->value->node, "cannot get object from object reference "
+      p_error (action->node, "cannot get object from object reference "
          "'%s' (#%d).\n", (char *) val->data, val->val_i);
       return QSV_NO_OBJECT;
    }
@@ -281,7 +281,7 @@ qs_value_t *qs_action_property (qs_execute_t *exe, qs_value_t *val,
    /* try to get it. */
    qs_property_t *p;
    if ((p = qs_property_get (obj, aval->val_s)) == NULL) {
-      p_error (action->value->node, "cannot get property '%s' from object "
+      p_error (action->node, "cannot get property '%s' from object "
          "'%s' (#%d).\n", aval->val_s, obj->name, obj->id);
       return QSV_INVALID_PROPERTY;
    }
@@ -290,9 +290,18 @@ qs_value_t *qs_action_property (qs_execute_t *exe, qs_value_t *val,
 
 int qs_action_free (qs_action_t *a)
 {
+   /* detach from node. */
+   if (a->node)
+      a->node->data = NULL;
+
    /* TODO: free data based on action type. */
    if (a->data)
-      p_error (a->value->node, "not method for freeing action data.\n");
+      p_error (a->node, "not method for freeing action data.\n");
+
+   /* unlink from the value. */
+   if (a->next) a->next->prev = a->prev;
+   if (a->prev) a->prev->next = a->next;
+   else a->parent_value->action_list = a->next;
 
    /* free remaining data and return success. */
    free (a);

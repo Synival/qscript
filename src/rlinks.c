@@ -100,7 +100,7 @@ qs_value_t *qs_rlink_wind (qs_rlink_t *rlink, qs_execute_t *exe)
 {
    /* can't wind what's already wound. */
    if (rlink->flags & QS_RLINK_ON) {
-      p_node_t *node = (exe->action) ? exe->action->value->node : NULL;
+      p_node_t *node = (exe->action) ? exe->action->node : NULL;
       p_error (node, "attempted to wind already-wound resource '%s'@%d "
          "on object '%s' (#%d).\n", rlink->resource->name, rlink->priority,
          rlink->object->name);

@@ -136,7 +136,7 @@ main {
    = (~ptr_func2 (), "Test 3");
    echo ("   $a       = ", $a, " (was ", $b, ")");
    = ($a, "Test 4");
-   echo ("   variable ('$a'): ", variable ("$a"));
+   echo ('   variable ("a"): ', variable ("a"));
    echo ();
 
    # This function should add arg(0) to $$counter, store into $$counter,

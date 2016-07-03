@@ -26,7 +26,7 @@ struct _qs_value_t {
    int link_id;
    void *link;
    qs_list_t *list;
-   qs_value_t *child, *child_data;
+   qs_action_t *action_list;
    p_node_t *node;
    qs_scheme_t *scheme;
 };
@@ -40,12 +40,12 @@ char *qs_value_type (qs_value_t *val);
 qs_variable_t *qs_value_variable (qs_execute_t *exe, qs_value_t *v);
 qs_property_t *qs_value_property (qs_execute_t *exe, qs_value_t *v);
 int qs_value_cleanup (qs_value_t *value);
-int qs_value_cleanup_self (qs_value_t *value);
+int qs_value_cleanup_base (qs_value_t *value);
 int qs_value_free (qs_value_t *value);
 int qs_value_truth (qs_execute_t *exe, qs_value_t *val);
 int qs_value_length (qs_value_t *v);
 qs_value_t *qs_value_evaluate_block (qs_execute_t *exe, qs_list_t *list);
-qs_value_t *qs_value_read (qs_execute_t *exe, qs_value_t *val);
+qs_value_t *qs_value_evaluate (qs_execute_t *exe, qs_value_t *val);
 int qs_value_restring (qs_value_t *v, char *str);
 int qs_value_can_modify (qs_execute_t *exe, qs_value_t *val);
 qs_value_t *qs_value_lvalue (qs_execute_t *exe, qs_value_t *val);
@@ -59,6 +59,10 @@ int qs_value_contains (qs_value_t *haystack, qs_value_t *needle);
 int qs_value_init (qs_value_t *val, int type, ...);
 int qs_value_list_internalize (qs_value_t *value);
 qs_list_t *qs_value_list (qs_value_t *value);
+
+/* macros. */
+#define qs_value_read(x,y) \
+   qs_value_evaluate (x, y)
 
 /* internal, constant return values. */
 extern qs_value_t *QSV_ZERO;
