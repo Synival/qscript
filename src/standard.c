@@ -919,7 +919,7 @@ QS_FUNC (qsf_run)
    a->type_id = QS_ACTION_CALL;
    a->data_p = l;
    a->parent_value = action->parent_value;
-   a->node = func_v->node;
+   a->node = action->node;
 
    /* run our action. */
    qs_value_t *rval = qs_action_call (exe, func_v, a);
