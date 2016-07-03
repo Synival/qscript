@@ -60,7 +60,7 @@ static p_symbol_t static_qs_symbols[] = {
    {QSCRIPT_OBJECT,     "object",
       "/[@]+" QSCRIPT_VARIABLE_PATTERN "/",
       qs_language_copy_contents},
-   {QSCRIPT_PROPERTY,   "property", "'.' <value> /[`]?/"},
+   {QSCRIPT_PROPERTY,   "property", "'.' <value> /[']?/"},
    {QSCRIPT_ACTION,     "action",
       "<comment>* (<call> | <index> | <property>)",
       qs_language_action, qs_language_action_f},

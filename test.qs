@@ -304,8 +304,8 @@ main {
    echo ("--------------------------------------------------");
    echo ("   @@myobject.+ (str, ing)     = ", @@my_object.+ (str, ing));
    echo ("   @@myobject.+ (fun, c)       = ", @@my_object.+ (fun, c));
-   echo ("   @@myobject.func` (one)      = ", @@my_object.func` (one));
-   echo ("   @@myobject.+ (fun, c)`(two) = ", @@my_object.+ (fun, c)`(two));
+   echo ("   @@myobject.func'(one)       = ", @@my_object.func'(one));
+   echo ("   @@myobject.+ (fun, c)'(two) = ", @@my_object.+ (fun, c)'(two));
    echo ();
 
    # Do as many wacky casts as we can.

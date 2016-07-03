@@ -122,7 +122,7 @@ There are, however, some important distinctions.  There are no built-in procedur
 
 ## Values, Actions, and Function Calls:
 
-All code is composed of *values* followed by zero or more *actions*.  When a value is encountered, it is first *evaluated*, a process which dereferences variables, properties, and executes blocks until a non-internal *primitive* is found.  If a value has an action, the evaluation is inputted into that action whose evaluation is fed into the next action and so on.  The final evaluation is then returned to the value's caller.
+All code is composed of *values* followed by zero or more *actions*.  When a value is encountered, it is first *evaluated*, a process which dereferences variables, properties, and executes blocks until a *real primitive* is found.  If a value has an action, the evaluation is inputted into that action whose evaluation is fed into the next action and so on.  The final evaluation is then returned to the value's caller.
 
 The most common action is a *function call*, which interprets its input as a function name and attempts to execute it.  Function calls are declared with a set a parentheses containing a comma-separated *list* of values that are passed to the function as *parameters*.  A function name can be any string matching either an internal function or a resource.
 
@@ -137,24 +137,39 @@ echo           ("foo");  # "echo" is a string matching a function.
 if (1, "echo") ("foo");  # if() returns the matching case, which is "echo".
 ```
 
-## Non-Internal 
+## Real Primitives:
 
+(write this!)
 
+## Abstract Primitives:
+
+Values can also contain primitives that require execution or referencing during evaluation.  These are called *abstract primitives*.
+(continue writing this)
 
 ## Examples:
 
-### Transformation scripts:
+### Injection:
+
+Resources injected into objects will typically modify properties.  The conditions of those modifications can 
 
 ```
 # Multiply strength by 4.
 buff_quad_damage {
-   *= (str, 4);
+   *= (.str, 4);
 }
 
 # Make left-handed people right-handed and vice-versa.
 switch_handedness {
    if (==(.handed, "left"),  =(.handed, "right"), # left  ==> right
        ==(.handed, "right"), =(.handed, "left")); # right ==> left
+}
+
+# Change our color to match the color of the room.
+buff_chameleon {
+   # Property '.room' refers to an object such as:
+   #    @room_jungle_entrance
+
+   = (.color, .room'.color);
 }
 ```
 
@@ -310,14 +325,14 @@ If the variable is not found in the current scope, it will be created.
 #### `<property>`:
 
 ```
-.<value>[`]
+.<value>[']
 ```
 
 **Creates a reference to a property belonging to the current object's.
 Can be used as an `<action>`, in which case it creates a reference to a property
 belonging to the evaluated parent value.**
 
-The optional `(backquote)` acts as a closing parenthesis, allowing actions to
+The optional quote acts as a closing parenthesis, allowing actions to
 be called on the evaluation of the property.
 If omitted, all proceeding actions will be considered belonging to `<value>`.
 
@@ -439,7 +454,7 @@ safely cast to type `<char>`.
 2. list
 3. object
 
-### Internal:
+### Abstract:
 
 1. block
 2. variable
