@@ -1,6 +1,6 @@
 # Test a lot of stuff!
 main {
-   print_resource ();
+   # print_resource ();
 
    # Proper echo() behavior with some strings, numbers, and statements.
    echo ("Numbers and addition vs. concatenation tests:");
@@ -53,7 +53,6 @@ main {
    echo ();
 
    echo ("Logic / math tests:");
-   echo ($expr);
    = ($logic_func, [{
       args ($expr);
       if ($expr, "true", "false");
@@ -79,7 +78,7 @@ main {
    = ($d, [{+ (1, 2, 3);}]);
    # intentionally leaving $e undefined.
 
-   echo ("   1 = 1 (", scope (1), ")");
+   echo ("    1 = 1 (", scope (1), ")");
    echo ("   $a = ", $a, " (", scope ($a), ")");
    echo ("   $b = ", $b, " (", scope ($b), ")");
    echo ("   $c = ", $c, " (", scope ($c), ")");
@@ -334,15 +333,22 @@ main {
 
    # A complicated (and ridiculously slow) recursive test.
    echo ("Recursive function test:");
-   echo ("   First 8 numbers in the Fibonacci sequence:");
-   print ("   ");
-   = ($limit, 8);
-   for (= ($i, 1), <= ($i, $limit), ++ ($i), {
-      print (fibonacci_recurse ($i));
-      if (== ($i, $limit),
-         echo (),
-         print (", "));
-   });
+   = ($count, 12);
+   echo ("   First ", $count, " numbers in the Fibonacci sequence:");
+   = ($recurse, [{
+      = ($limit, arg (0));
+      print ("   ");
+      for (= ($i, 1), <= ($i, $limit), ++ ($i), {
+         print (arg (1) ($i));
+         if (== ($i, $limit),
+            echo (),
+            print (", "));
+      });
+   }]);
+
+   $recurse ($count, fibonacci_recurse_1);
+   $recurse ($count, fibonacci_recurse_2);
+   $recurse ($count, fibonacci_recurse_3);
    echo ();
 
    # Everything here should call an error!  Use lambda for convenience.
@@ -439,7 +445,7 @@ fancy_string {
 }
 
 # comment outside of resource
-@comment_test {
+comment_test {
    # comment inside block
    [a, #comment inside list
     b,
@@ -449,14 +455,30 @@ fancy_string {
 }
 
 
-# fibonacci_recurse (n)
-#    Calculate and return Fibonacci number n using recursion.
-fibonacci_recurse {
+# fibonacci_recurse_1,2,3 (n)
+#    Various recursive methods to calculate and return
+#    Fibonacci number n using recursion.
+fibonacci_recurse_1 {
    args ($n);
-   if (<= ($n, 0), return (0));      # Stop at zero.
-   if (== ($n, 1), return (1));      # Stop at one.
-   + (                               # Automatically returns:
-      fibonacci_recurse (- ($n, 1)), #  f(n-1) + f(n-2)
-      fibonacci_recurse (- ($n, 2))
+   if (<= ($n, 1),
+      return ($n));
+   = ($a, fibonacci_recurse_1 (- ($n, 1)));
+   = ($b, fibonacci_recurse_1 (- ($n, 2)));
+   + ($a, $b);
+}
+fibonacci_recurse_2 {
+   args ($n);
+   if (<= ($n, 1),
+      return ($n));
+    = ($r, fibonacci_recurse_1 (- ($n, 1)));
+   += ($r, fibonacci_recurse_1 (- ($n, 2)));
+}
+fibonacci_recurse_3 {
+   args ($n);
+   if (<= ($n, 1), $n,                    # Stop at zero and one.
+      + (                                 # Otherwise, return:
+         fibonacci_recurse_2 (- ($n, 1)), #  f(n-1) + f(n-2)
+         fibonacci_recurse_2 (- ($n, 2))
+      )
    );
 }

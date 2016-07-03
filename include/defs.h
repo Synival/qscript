@@ -89,6 +89,7 @@ enum qscript_tag_e {
 /* flags for values. */
 #define QS_VALUE_UNWRAP          0x01
 #define QS_VALUE_MUTABLE         0x02
+#define QS_VALUE_HEAP            0x04
 
 /* value link types. */
 #define QS_LINK_LITERAL          0
@@ -129,7 +130,7 @@ typedef QS_FUNC(qs_func);
 #define QS_STACK_FUNC(x) int x (qs_stack_t *stack, void *data)
 typedef QS_STACK_FUNC(qs_stack_func);
 
-#define QS_ARGV(x) (qs_arg_value    (exe, arg[x]))
+#define QS_ARGV(x) (qs_value_read   (exe, arg[x]))
 #define QS_ARGS(x) (qs_arg_string   (exe, arg[x]))
 #define QS_ARGF(x) (qs_arg_float    (exe, arg[x]))
 #define QS_ARGI(x) (qs_arg_int      (exe, arg[x]))

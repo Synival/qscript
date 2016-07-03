@@ -143,7 +143,7 @@ qs_value_t *qs_action_call (qs_execute_t *exe, qs_value_t *val,
    if (val->type_id == QSCRIPT_LIST) {
       l = val->val_p;
       e->type_id = QS_EXE_LAMBDA;
-      rval = qs_value_evaluate_block (e, val);
+      rval = qs_value_evaluate_block (e, val->val_p);
    }
    /* if there's a resource, run it. */
    else if ((r = qs_resource_get (scheme, val->val_s)) != NULL) {
@@ -155,7 +155,9 @@ qs_value_t *qs_action_call (qs_execute_t *exe, qs_value_t *val,
    /* if there's a built-in function, run it. */
    else if ((func = qs_scheme_get_func (scheme, val->val_s)) != NULL) {
       e->type_id = QS_EXE_FUNC;
+      qs_value_t *last = qs_stack_get (scheme->stack_values);
       rval = qs_func_run (e, func);
+      qs_stack_pop_to_except (scheme->stack_values, last, rval);
    }
    /* couldn't find anything. return an error. */
    else {

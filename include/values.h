@@ -44,7 +44,7 @@ int qs_value_cleanup_self (qs_value_t *value);
 int qs_value_free (qs_value_t *value);
 int qs_value_truth (qs_execute_t *exe, qs_value_t *val);
 int qs_value_length (qs_value_t *v);
-qs_value_t *qs_value_evaluate_block (qs_execute_t *exe, qs_value_t *val);
+qs_value_t *qs_value_evaluate_block (qs_execute_t *exe, qs_list_t *list);
 qs_value_t *qs_value_read (qs_execute_t *exe, qs_value_t *val);
 int qs_value_restring (qs_value_t *v, char *str);
 int qs_value_can_modify (qs_execute_t *exe, qs_value_t *val);

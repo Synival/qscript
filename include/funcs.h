@@ -18,9 +18,6 @@ struct _qs_func_t {
 /* function execution. */
 inline qs_value_t *qs_func_run (qs_execute_t *exe, qs_func_t *func);
 
-/* utility functions used inside qscript functions. */
-inline qs_value_t *qs_arg_value (qs_execute_t *exe, qs_value_t *val);
-
 /* arg processing functions. */
 inline char *qs_arg_string (qs_execute_t *exe, qs_value_t *val);
 inline float qs_arg_float  (qs_execute_t *exe, qs_value_t *val);

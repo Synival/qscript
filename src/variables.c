@@ -168,9 +168,9 @@ int qs_variable_free_after (qs_execute_t *exe, qs_variable_t *v,
 
       /* if a return value is the value of a local variable we're about to
        * free, make a copy of it on the heap and return that instead. */
-      if (*return_val && qs_variable_contains (v, *return_val)) {
+      if (return_val && *return_val && qs_variable_contains (v, *return_val)) {
          qs_value_t *new;
-         new = qs_return_value_new (exe->rlink->scheme);
+         new = qs_scheme_heap_value (exe->rlink->scheme);
          qs_value_copy_const (exe, new, *return_val);
          *return_val = new;
       }

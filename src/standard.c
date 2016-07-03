@@ -636,9 +636,9 @@ QS_FUNC (qsf_while)
       func->name, 0, NULL);
 
    /* execute argument 1 until we can't anymore. */
-   while (qs_value_truth (e, qs_arg_value (e, arg[0])) &&
+   while (qs_value_truth (e, qs_value_read (e, arg[0])) &&
           !(e->flags & QS_EXE_BREAK))
-      r = qs_arg_value (e, arg[1]);
+      r = qs_value_read (e, arg[1]);
    qs_execute_pop (e);
 
    /* return our last return value (or QSV_UNDEFINED for none). */
@@ -654,13 +654,13 @@ QS_FUNC (qsf_for)
 
    /* c-style for() loop wrapped around a single execution state (exited
     * by break(). */
-   qs_arg_value (e, arg[0]);
-   while (qs_value_truth (e, qs_arg_value (e, arg[1])) &&
+   qs_value_read (e, arg[0]);
+   while (qs_value_truth (e, qs_value_read (e, arg[1])) &&
           !(e->flags & QS_EXE_BREAK)) {
-      r = qs_arg_value (e, arg[3]);
+      r = qs_value_read (e, arg[3]);
       if (e->flags & QS_EXE_BREAK)
          break;
-      qs_arg_value (e, arg[2]);
+      qs_value_read (e, arg[2]);
    }
    qs_execute_pop (e);
 
@@ -701,7 +701,7 @@ QS_FUNC (qsf_for_each)
    int i;
    for (i = 0; !(e->flags & QS_EXE_BREAK) && i < length; i++) {
       qs_value_copy (e, lval, list->values[i]);
-      rval = qs_arg_value (e, arg[2]);
+      rval = qs_value_read (e, arg[2]);
    }
 
    /* pop our loop execution state and return the last processed value. */
@@ -755,7 +755,7 @@ QS_FUNC (qsf_args)
          QS_RETURN ();
          return QSV_CANNOT_MODIFY;
       }
-      qs_value_copy (e, lval, qs_arg_value (e->parent, list->values[i]));
+      qs_value_copy (e, lval, qs_value_read (e->parent, list->values[i]));
       count++;
    }
 
@@ -792,7 +792,7 @@ QS_FUNC (qsf_arg)
    }
 
    /* execute our argument in our current scope. */
-   return qs_arg_value (e->parent, list->values[i]);
+   return qs_value_read (e->parent, list->values[i]);
 }
 
 QS_FUNC (qsf_arg_list)

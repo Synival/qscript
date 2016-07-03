@@ -30,9 +30,12 @@ void *qs_stack_last (qs_stack_t *stack);
 void *qs_stack_last_n (qs_stack_t *stack, int n);
 int qs_stack_push (qs_stack_t *stack, void *data, qs_stack_func *free_func);
 int qs_stack_pop (qs_stack_t *stack);
+int qs_stack_pop_to (qs_stack_t *stack, void *data);
 int qs_stack_empty (qs_stack_t *stack);
 int qs_stack_free (qs_stack_t *stack);
 int qs_stack_data (qs_stack_t *stack, void *data, qs_stack_func *free_func);
 int qs_stack_pop_get (qs_stack_t *stack, void **data, qs_stack_func **func);
+void *qs_stack_get (qs_stack_t *stack);
+int qs_stack_pop_to_except (qs_stack_t *stack, void *to, void *except);
 
 #endif

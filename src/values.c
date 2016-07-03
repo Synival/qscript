@@ -15,6 +15,7 @@
 #include "properties.h"
 #include "rlinks.h"
 #include "schemes.h"
+#include "stacks.h"
 #include "variables.h"
 
 #include "values.h"
@@ -110,16 +111,6 @@ int qs_value_copy_real (qs_execute_t *exe, qs_value_t *dest, qs_value_t *src,
    /* keep a reference to children. */
    if (src->child)
       dest->child = src->child;
-#if 0
-   /* copy children. */
-   if (src->child) {
-      dest->child = malloc (sizeof (qs_value_t));
-      memset (dest->child, 0, sizeof (qs_value_t));
-      dest->child->parent = dest;
-      dest->child->flags = QS_VALUE_MUTABLE;
-      qs_value_copy (exe, dest->child, src->child);
-   }
-#endif
 
    /* return success. */
    return 1;
@@ -269,26 +260,38 @@ int qs_value_truth (qs_execute_t *exe, qs_value_t *val)
       return 0;
 }
 
-qs_value_t *qs_value_evaluate_block (qs_execute_t *exe, qs_value_t *val)
+qs_value_t *qs_value_evaluate_block (qs_execute_t *exe, qs_list_t *list)
 {
-   qs_list_t *list = val->val_p;
-   qs_value_t *rval = QSV_UNDEFINED;
    qs_execute_t *new_exe = NULL;
    int i;
 
+   /* don't bother executing empty blocks. */
+   if (list->value_count < 1)
+      return QSV_UNDEFINED;
+
    /* remember where to pop variables after we're done executing this block. */
-   /* evaluate all parameters and return the result of the final one. */
    if (list->type_id == QSCRIPT_BLOCK) {
       new_exe = qs_execute_push (QS_EXE_BLOCK, exe->rlink, exe, exe->action,
          exe->name, 0, NULL);
       exe = new_exe;
    }
 
-   /* execute everything in our block. */
-   for (i = 0; i < list->value_count && !(exe->flags & QS_EXE_BREAK); i++)
-      rval = qs_value_read (exe, list->values[i]);
+   /* remember the last value we pushed to the stack so we know where to
+    * revert to. */
+   qs_value_t *last = qs_stack_get (exe->scheme->stack_values);
 
-   /* for blocks, get all of all variables declared in this scope. */
+   /* get the first value.  if there are any more, roll everything on
+    * the heap back (it's useless after this point). */
+   qs_value_t *rval = qs_value_read (exe, list->values[0]);
+   for (i = 1; i < list->value_count && !(exe->flags & QS_EXE_BREAK); i++) {
+      qs_stack_pop_to (exe->scheme->stack_values, last);
+      rval = qs_value_read (exe, list->values[i]);
+   }
+
+   /* clear everything on the heap but our return value. */
+   qs_stack_pop_to_except (exe->scheme->stack_values, last, rval);
+
+   /* for blocks, free all variables declared here. */
    if (new_exe) {
       qs_variable_free_after (new_exe, NULL, &rval);
       qs_execute_pop (new_exe);
@@ -313,7 +316,7 @@ qs_value_t *qs_value_read (qs_execute_t *exe, qs_value_t *val)
             rval = val;
             break;
          case QSCRIPT_BLOCK:
-            rval = qs_value_evaluate_block (exe, val);
+            rval = qs_value_evaluate_block (exe, val->val_p);
             break;
          case QSCRIPT_ACTION:
             rval = qs_action_run (exe, rval, val->val_p);

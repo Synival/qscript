@@ -12,6 +12,7 @@
 #include "parser.h"
 #include "rlinks.h"
 #include "schemes.h"
+#include "stacks.h"
 #include "values.h"
 #include "variables.h"
 
@@ -21,10 +22,6 @@
    qs_value_t *v; \
    if ((v = qs_value_read (exe, val)) == NULL) \
       return x;
-
-/* */
-inline qs_value_t *qs_arg_value (qs_execute_t *exe, qs_value_t *val)
-   { return qs_value_read (exe, val); }
 
 /* simple primitives. */
 inline char *qs_arg_string (qs_execute_t *exe, qs_value_t *val)

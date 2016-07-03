@@ -114,14 +114,8 @@ qs_value_t *qs_rlink_wind (qs_rlink_t *rlink, qs_execute_t *exe)
       exe = new_exe = qs_execute_push (QS_EXE_RESOURCE, rlink, NULL, NULL,
          rlink->resource->name, 0, NULL);
 
-   /* create a new value on the heap to return. */
-   qs_value_t *val = qs_scheme_heap_value (exe->scheme);
-
-   /* turn it into a block and get its evaluation. */
-   val->type_id = QSCRIPT_BLOCK;
-   qs_value_restring (val, "<block>");
-   val->val_p = rlink->resource->block;
-   qs_value_t *rval = qs_value_read (exe, val);
+   /* evaluate our rlink's block. */
+   qs_value_t *rval = qs_value_evaluate_block (exe, rlink->resource->block);
 
    /* if we pushed a new execution state, pop it. */
    if (new_exe)

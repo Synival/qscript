@@ -42,13 +42,20 @@ int qs_stack_push (qs_stack_t *stack, void *data, qs_stack_func *free_func)
    return 1;
 }
 
+void *qs_stack_get (qs_stack_t *stack)
+{
+   if (stack->count == 0)
+      return NULL;
+   return stack->data[stack->count - 1];
+}
+
 int qs_stack_pop_get (qs_stack_t *stack, void **data, qs_stack_func **func)
 {
    if (stack->count <= 0)
       return 0;
    int i = stack->count - 1;
-   *data = stack->data[i];
-   *func = stack->func[i];
+   if (data) *data = stack->data[i];
+   if (func) *func = stack->func[i];
    stack->count--;
    return 1;
 }
@@ -63,6 +70,14 @@ int qs_stack_pop (qs_stack_t *stack)
          return 0;
    stack->count--;
    return 1;
+}
+
+int qs_stack_pop_to (qs_stack_t *stack, void *data)
+{
+   int count = 0;
+   while (stack->count > 0 && stack->data[stack->count - 1] != data)
+      count += qs_stack_pop (stack);
+   return count;
 }
 
 int qs_stack_empty (qs_stack_t *stack)
@@ -95,4 +110,32 @@ int qs_stack_data (qs_stack_t *stack, void *data, qs_stack_func *free_func)
    stack->s_data = data;
    stack->s_func = free_func;
    return 1;
+}
+
+int qs_stack_pop_to_except (qs_stack_t *stack, void *to, void *except)
+{
+   void *pop_data = NULL;
+   qs_stack_func *pop_func;
+   int count = 0,  i;
+
+   /* pop everything until we reach 'to'.  if we encounter 'except',
+    * get its value to push back later. */
+   while (stack->count > 0) {
+      i = stack->count - 1;
+      if (stack->data[i] == to)
+         break;
+      else if (stack->data[i] == except)
+         qs_stack_pop_get (stack, &pop_data, &pop_func);
+      else {
+         qs_stack_pop (stack);
+         count++;
+      }
+   }
+
+   /* did we find 'except'?  if so, push it back. */
+   if (pop_data)
+      qs_stack_push (stack, pop_data, pop_func);
+
+   /* return the number of elements popped. */
+   return count;
 }

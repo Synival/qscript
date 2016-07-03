@@ -115,8 +115,8 @@ qs_value_t *qs_scheme_heap_value (qs_scheme_t *scheme)
    qs_value_t *new = malloc (sizeof (qs_value_t));
    memset (new, 0, sizeof (qs_value_t));
    new->scheme = scheme;
+   new->flags |= QS_VALUE_HEAP;
    qs_value_init (new, QSCRIPT_UNDEFINED, NULL);
-   //new->flags = QS_VALUE_MUTABLE;
 
    /* push onto our heap and return it. */
    qs_stack_push (scheme->stack_values, new, qs_scheme_sf_values);
