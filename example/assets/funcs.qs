@@ -29,13 +29,13 @@ capitalize_var {
    for (= ($i, 0), < ($i, $len), ++($i), {
       = ($ch, $strp[0][$i]);
       if ($cap, {
-         if (&& (>= ($ch, 'a'), <= ($ch, 'z')),
-            -= ($strp[0][$i], 32));
-         = ($cap, 0);
-      },
-      if (== ($ch, ' '), {
-         = ($cap, 1);
-      }));
+             if (&& (>= ($ch, 'a'), <= ($ch, 'z')),
+                -= ($strp[0][$i], 32));
+             = ($cap, 0);
+          }, == ($ch, ' '), {
+             = ($cap, 1);
+          }
+      );
    });
 
    # Return a pointer to the string.
@@ -55,13 +55,13 @@ capitalize {
    for (= ($i, 0), < ($i, $len), ++($i), {
       = ($ch, $str[$i]);
       if ($cap, {
-         if (&& (>= ($ch, 'a'), <= ($ch, 'z')),
-            -= ($str[$i], 32));
-         = ($cap, 0);
-      },
-      if (== ($ch, ' '), {
-         = ($cap, 1);
-      }));
+            if (&& (>= ($ch, 'a'), <= ($ch, 'z')),
+               -= ($str[$i], 32));
+            = ($cap, 0);
+          }, == ($ch, ' '), {
+             = ($cap, 1);
+          }
+      );
    });
 
    # Return the string we just made.

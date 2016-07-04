@@ -44,13 +44,13 @@ main {
          run (~$run);
       },
       # Is there a general command?
-      if (func_exists ($run[0]), {
+      func_exists ($run[0]), {
          run (~$run);
       },
       # Else: Toss an error.
       {
          echo ("You cannot '", $cmd, "' in this room.");
-      }));
+      });
       echo ();
    });
 
