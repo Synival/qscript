@@ -15,7 +15,7 @@ struct _qs_scheme_t {
    qs_func_t **funcs;
 
    /* some stacks to be regularly cleaned-up. */
-   qs_stack_t *stack_values;
+   qs_stack_t *stack_values, *stack_executes;
    qs_id_manager_t exe_ids;
    qs_execute_t *exe_list_front, *exe_list_back;
    int exe_count;

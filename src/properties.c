@@ -93,7 +93,9 @@ qs_value_t *qs_property_value (qs_property_t *p)
 qs_modify_t *qs_property_push (qs_property_t *p, qs_rlink_t *rlink)
 {
    /* initialize an empty modification. */
-   qs_modify_t *new = malloc (sizeof (qs_modify_t));
+   qs_modify_t *last = qs_stack_last (rlink->stack_modify);
+   qs_modify_t *new  = qs_stack_push (rlink->stack_modify,
+      qs_property_sf_modify);
    memset (new, 0, sizeof (qs_modify_t));
 
    /* initialize the value.  make it a mutable property, with the same value
@@ -114,10 +116,9 @@ qs_modify_t *qs_property_push (qs_property_t *p, qs_rlink_t *rlink)
    new->property = p;
 
    /* ...link to the rlink... */
-   new->r_prev = qs_stack_last (rlink->stack_modify);
+   new->r_prev = last;
    if (new->r_prev)
       new->r_prev->r_next = new;
-   qs_stack_push (rlink->stack_modify, new, qs_property_sf_modify);
    new->rlink = rlink;
 
    /* ...and link to the object. */
@@ -131,7 +132,7 @@ qs_modify_t *qs_property_push (qs_property_t *p, qs_rlink_t *rlink)
    return new;
 }
 
-int qs_property_modify_free (qs_modify_t *m)
+int qs_property_modify_cleanup (qs_modify_t *m)
 {
    /* this should never, ever happen, but potentially could if programs get
     * crazy enough with unforeseen circumstances.  toss a big error, do nothing
@@ -161,8 +162,7 @@ int qs_property_modify_free (qs_modify_t *m)
    if (m->o_next) m->o_next->o_prev = m->o_prev;
    else m->object->last_modify      = m->o_prev;
 
-   /* free ourselves and return success. */
-   free (m);
+   /* return success. */
    return 1;
 }
 
@@ -204,6 +204,6 @@ QS_STACK_FUNC (qs_property_sf_modify)
       qs_stack_pop (last->rlink->stack_modify);
    }
 
-   qs_property_modify_free (m);
-   return 1;
+   /* finally do some cleanup. */
+   return qs_property_modify_cleanup (m);
 }

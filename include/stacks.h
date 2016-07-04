@@ -16,8 +16,9 @@ struct _qs_stack_t {
    qs_stack_func *s_func;
 
    /* globs of data. */
-   void **data;
+   void **data, **pages;
    qs_stack_func **func;
+   int page_count;
 
    /* storage sizes. */
    size_t type_size;
@@ -25,17 +26,18 @@ struct _qs_stack_t {
 };
 
 /* functions for stack management. */
-qs_stack_t *qs_stack_new (size_t type_size);
-void *qs_stack_last (qs_stack_t *stack);
+#define qs_stack_new(type) \
+   qs_stack_new_real (sizeof (type))
+qs_stack_t *qs_stack_new_real (size_t type_size);
+inline void *qs_stack_last (qs_stack_t *stack);
 void *qs_stack_last_n (qs_stack_t *stack, int n);
-int qs_stack_push (qs_stack_t *stack, void *data, qs_stack_func *free_func);
+void *qs_stack_push (qs_stack_t *stack, qs_stack_func *free_func);
 int qs_stack_pop (qs_stack_t *stack);
 int qs_stack_pop_to (qs_stack_t *stack, void *data);
 int qs_stack_empty (qs_stack_t *stack);
 int qs_stack_free (qs_stack_t *stack);
 int qs_stack_data (qs_stack_t *stack, void *data, qs_stack_func *free_func);
-int qs_stack_pop_get (qs_stack_t *stack, void **data, qs_stack_func **func);
-void *qs_stack_get (qs_stack_t *stack);
+void *qs_stack_pop_get (qs_stack_t *stack, qs_stack_func **func);
 int qs_stack_pop_to_except (qs_stack_t *stack, void *to, void *except);
 
 #endif

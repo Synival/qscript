@@ -13,6 +13,7 @@
 #include "link.h"
 #include "objects.h"
 #include "parser.h"
+#include "properties.h"
 #include "resources.h"
 #include "schemes.h"
 #include "stacks.h"
@@ -55,7 +56,7 @@ qs_rlink_t *qs_rlink_push_at (qs_object_t *obj, qs_resource_t *resource,
    new->scheme   = resource->scheme;
 
    /* create a new stack for property modifications. */
-   new->stack_modify = qs_stack_new (sizeof (qs_modify_t *));
+   new->stack_modify = qs_stack_new (qs_modify_t);
    qs_stack_data (new->stack_modify, new, NULL);
 
    /* add to our parent. */

@@ -195,9 +195,6 @@ int qs_value_cleanup_base (qs_value_t *value)
          case QSCRIPT_OBJECT:
             free (value->data);
             break;
-         case QSCRIPT_ACTION:
-            qs_action_free (value->data);
-            break;
          default:
             p_error (value->node, "no method for data clean-up for value "
                "of type '%s' (%s).\n", qs_value_type (value), value->val_s);
@@ -227,7 +224,8 @@ int qs_value_free (qs_value_t *value)
 
    /* clean up other stuff and return true. */
    qs_value_cleanup (value);
-   free (value);
+   if (!(value->flags & QS_VALUE_HEAP))
+      free (value);
    return 1;
 }
 
@@ -275,14 +273,16 @@ qs_value_t *qs_value_evaluate_block (qs_execute_t *exe, qs_list_t *list)
 
    /* remember where to pop variables after we're done executing this block. */
    if (list->type_id == QSCRIPT_BLOCK) {
+      if (exe == NULL)
+         return QSV_UNDEFINED;
       new_exe = qs_execute_push (QS_EXE_BLOCK, exe->rlink, exe, exe->action,
-         exe->name, 0, NULL);
+         exe->name_p, 0, NULL);
       exe = new_exe;
    }
 
    /* remember the last value we pushed to the stack so we know where to
     * revert to. */
-   qs_value_t *last = qs_stack_get (exe->scheme->stack_values);
+   qs_value_t *last = qs_stack_last (exe->scheme->stack_values);
 
    /* get the first value.  if there are any more, roll everything on
     * the heap back (it's useless after this point). */

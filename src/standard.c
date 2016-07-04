@@ -109,8 +109,10 @@ QS_FUNC (qsf_print)
 
    /* build our print string and print it out. */
    buf[0] = '\0';
-   for (i = 0; i < args; i++)
-      len += snprintf (buf + len, sizeof (buf) - len, "%s", QS_ARGS (i));
+   for (i = 0; i < args; i++) {
+      qs_value_t *v = QS_ARGV (i);
+      len += snprintf (buf + len, sizeof (buf) - len, "%s", v->val_s);
+   }
 
    /* 'print': no newline
     * 'echo':  newline */
@@ -569,18 +571,16 @@ QS_FUNC (qsf_let)
                char buf[256];
                lval->val_i += sub_func;
                lval->val_f = lval->val_i;
-               free (lval->val_s);
                snprintf (buf, sizeof (buf), "%d", lval->val_i);
-               lval->val_s = strdup (buf);
+               qs_value_restring (lval, buf);
                break;
             }
             case QSCRIPT_FLOAT: {
                char buf[256];
                lval->val_f += (float) sub_func;
                lval->val_i = (int) lval->val_f;
-               free (lval->val_s);
                snprintf (buf, sizeof (buf), "%g", lval->val_f);
-               lval->val_s = strdup (buf);
+               qs_value_restring (lval, buf);
                break;
             }
             default:
@@ -743,7 +743,7 @@ QS_FUNC (qsf_args)
 
    /* proper parameter count? */
    if (list->value_count < args) {
-      qs_func_error (exe, exe->name, action->node,
+      qs_func_error (exe, exe->name_p, action->node,
          "at least %d args required, only %d given.\n",
          args, list->value_count);
       QS_RETURN ();
@@ -786,12 +786,12 @@ QS_FUNC (qsf_arg)
    /* what argument are we executing? */
    int i = QS_ARGI(0);
    if (i < 0) {
-      qs_func_error (exe, exe->name, action->node,
+      qs_func_error (exe, exe->name_p, action->node,
          "illegal argument index %d.\n", i);
       return QSV_INVALID_INDEX;
    }
    else if (i >= list->value_count) {
-      qs_func_error (exe, exe->name, action->node,
+      qs_func_error (exe, exe->name_p, action->node,
          "index %d is out of bounds (max: %d).\n", i,
             list->value_count - 1);
       return QSV_INVALID_INDEX;

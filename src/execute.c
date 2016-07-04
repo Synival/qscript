@@ -9,9 +9,11 @@
 #include "language.h"
 #include "link.h"
 #include "lists.h"
+#include "parser.h"
 #include "rlinks.h"
 #include "resources.h"
 #include "schemes.h"
+#include "stacks.h"
 #include "values.h"
 #include "variables.h"
 
@@ -20,8 +22,10 @@
 qs_execute_t *qs_execute_push (int type, qs_rlink_t *rlink, qs_execute_t *exe,
    qs_action_t *action, char *name, int flags, qs_list_t *list)
 {
+
    /* allocate and initialize our new execution state. */
-   qs_execute_t *new = malloc (sizeof (qs_execute_t));
+   qs_execute_t *new = qs_stack_push (rlink->scheme->stack_executes,
+      qs_execute_sf);
    memset (new, 0, sizeof (qs_execute_t));
    new->scheme  = rlink->scheme;
    new->object  = rlink->object;
@@ -29,7 +33,7 @@ qs_execute_t *qs_execute_push (int type, qs_rlink_t *rlink, qs_execute_t *exe,
    new->rlink   = rlink;
    new->action  = action;
    new->flags   = flags;
-   new->name    = strdup (name);
+   new->name_p  = name;
    new->list    = list;
 
    /* link to parent. */
@@ -39,19 +43,24 @@ qs_execute_t *qs_execute_push (int type, qs_rlink_t *rlink, qs_execute_t *exe,
    if (exe)
       new->flags |= (exe->flags & QS_EXE_READ_ONLY);
 
-   /* link to our scheme. */
-   QS_LINK_BACK (new->scheme, new, exe);
-
    /* return our new execution state. */
    return new;
 }
 
 int qs_execute_pop (qs_execute_t *exe)
 {
-   /* free allocated data. */
-   if (exe->name)
-      free (exe->name);
+   qs_execute_t *e = qs_stack_last (exe->scheme->stack_executes);
+   if (exe != e) {
+      p_error (exe->action ? exe->action->node : NULL,
+         "attempted to execution state that wasn't on top.\n");
+      return 0;
+   }
+   qs_stack_pop (exe->scheme->stack_executes);
+   return 1;
+}
 
+int qs_execute_cleanup (qs_execute_t *exe)
+{
    /* should we free our list? */
    if (exe->flags & QS_EXE_FREE_LIST)
       qs_list_free (exe->list);
@@ -60,13 +69,12 @@ int qs_execute_pop (qs_execute_t *exe)
    while (exe->variable_list_back)
       qs_variable_free (exe->variable_list_back);
 
-   /* unlink. */
-   QS_UNLINK (exe->scheme, exe, exe);
-
-   /* free ourselves and return success. */
-   free (exe);
+   /* return success. */
    return 1;
 }
+
+QS_STACK_FUNC (qs_execute_sf)
+   { return qs_execute_cleanup (data); }
 
 qs_execute_t *qs_execute_get_call (qs_execute_t *exe)
 {

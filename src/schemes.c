@@ -34,7 +34,8 @@ qs_scheme_t *qs_scheme_new (void)
    qs_scheme_funcs (new, qs_func_list_standard);
 
    /* create some stacks. */
-   new->stack_values = qs_stack_new (sizeof (qs_value_t *));
+   new->stack_values   = qs_stack_new (qs_value_t);
+   new->stack_executes = qs_stack_new (qs_execute_t);
 
    /* return our new scheme. */
    return new;
@@ -99,6 +100,8 @@ int qs_scheme_free (qs_scheme_t *scheme)
    /* deallocate our heap. */
    if (scheme->stack_values)
       qs_stack_free (scheme->stack_values);
+   if (scheme->stack_executes)
+      qs_stack_free (scheme->stack_executes);
 
    /* free our own information. */
    if (scheme->funcs)
@@ -111,15 +114,14 @@ int qs_scheme_free (qs_scheme_t *scheme)
 
 qs_value_t *qs_scheme_heap_value (qs_scheme_t *scheme)
 {
-   /* allocate a zero'd-out value. */
-   qs_value_t *new = malloc (sizeof (qs_value_t));
+   /* push a new value onto our stack. */
+   qs_value_t *new = qs_stack_push (scheme->stack_values, qs_scheme_sf_values);
    memset (new, 0, sizeof (qs_value_t));
    new->scheme = scheme;
    new->flags |= QS_VALUE_HEAP;
    qs_value_init (new, QSCRIPT_UNDEFINED, NULL);
 
-   /* push onto our heap and return it. */
-   qs_stack_push (scheme->stack_values, new, qs_scheme_sf_values);
+   /* return our new value. */
    return new;
 }
 
@@ -127,6 +129,7 @@ int qs_scheme_cleanup (qs_scheme_t *scheme)
 {
    int count = 0;
    count += qs_stack_empty (scheme->stack_values);
+   count += qs_stack_empty (scheme->stack_executes);
    while (scheme->exe_list_back)
       count += qs_execute_pop (scheme->exe_list_back);
    return count;

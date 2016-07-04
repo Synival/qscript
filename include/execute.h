@@ -11,12 +11,12 @@
 struct _qs_execute_t {
    qs_id_t id;
    int flags, type_id;
-   char *name;
+   char *name_p;
    qs_action_t *action;
    qs_list_t *list;
    qs_rlink_t *rlink;
    qs_object_t *object;
-   qs_execute_t *parent, *prev, *next;
+   qs_execute_t *parent;
    qs_scheme_t *scheme;
 
    /* variables. */
@@ -28,6 +28,8 @@ struct _qs_execute_t {
 qs_execute_t *qs_execute_push (int type, qs_rlink_t *rlink, qs_execute_t *exe,
    qs_action_t *action, char *name, int flags, qs_list_t *list);
 int qs_execute_pop (qs_execute_t *exe);
+int qs_execute_cleanup (qs_execute_t *exe);
+QS_STACK_FUNC (qs_execute_sf);
 qs_execute_t *qs_execute_get_call (qs_execute_t *exe);
 qs_execute_t *qs_execute_get_block (qs_execute_t *exe);
 

@@ -43,7 +43,7 @@ qs_property_t *qs_property_get (qs_object_t *obj, char *name);
 int qs_property_free (qs_property_t *prop);
 qs_value_t *qs_property_value (qs_property_t *p);
 qs_modify_t *qs_property_push (qs_property_t *p, qs_rlink_t *rlink);
-int qs_property_modify_free (qs_modify_t *m);
+int qs_property_modify_cleanup (qs_modify_t *m);
 QS_STACK_FUNC (qs_property_sf_modify);
 
 #endif

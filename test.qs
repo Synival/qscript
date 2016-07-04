@@ -350,7 +350,6 @@ main {
    $recurse ($count, fibonacci_recurse_2);
    $recurse ($count, fibonacci_recurse_3);
    echo ();
-   return ();
 
    # Everything here should call an error!  Use lambda for convenience.
    echo ("Error tests: ");
