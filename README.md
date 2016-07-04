@@ -265,19 +265,8 @@ fibonacci_for {
    });
 }
 
-# fibonacci_recurse (n)
-#    Calculate and return the nth Fibonacci number using recursion.
-fibonacci_recurse {
-   args ($n);
-   if (<= ($n, 0), return (0));      # Stop at zero.
-   if (== ($n, 1), return (1));      # Stop at one.
-   + (                               # Automatically returns:
-      fibonacci_recurse (- ($n, 1)), #  f(n-1) + f(n-2)
-      fibonacci_recurse (- ($n, 2))
-   );
-}
-
-# Echo a string with preceeding spaces.
+# echo_indented (space_count, string):
+#    Echo a string with preceeding spaces.
 echo_indented {                                   # Takes (int, string).
    args ($indent, $string);                       # Assign arguments to variables.
    = ($istr, "");                                 # Initialize indented spaces.
@@ -286,7 +275,8 @@ echo_indented {                                   # Takes (int, string).
    return (echo ($istr, $string));                # Echo/return string w/ indents.
 }
 
-# Echo a meme, more nicely-formatted than it deserves to be.
+# echo_doge ():
+#    Echo a meme, more nicely-formatted than it deserves to be.
 echo_doge {
    = ($my_string, "so string, very tokens, wow"); # Let's tokenize a meme.
    = ($count, 0);                                 # Keep track of indentation.
@@ -296,10 +286,23 @@ echo_doge {
       ++ ($count);                                # Increment counter.
    });
 }
+
+# fibonacci_recurse (n):
+#    Calculate and return the nth Fibonacci number using recursion.
+fibonacci_recurse {
+   args ($n);
+   if (<= ($n, 1), $n,                    # Stop at zero and one.
+      + (                                 # Otherwise, return:
+         fibonacci_recurse (- ($n, 1)),   #   f(n-1) + f(n-2)
+         fibonacci_recurse (- ($n, 2))
+      )
+   );
+}
 ```
 
 ## Objects:
 
+```
 # Base object used for instantiation of characters.
 character_base {
    # Base values modified by class and level later.
@@ -337,6 +340,7 @@ character_base {
           < ($time, 22.00), "dusk",
                             "night"));
 }
+```
 
 ## Grammar:
 
@@ -544,29 +548,6 @@ safely cast to type `<char>`.
 12. `qs_property_t`
 13. `qs_modify_t`
 
-## Primitives:
-
-### Real:
-
-#### Simple:
-
-1. undefined
-2. int
-3. float
-4. string
-
-#### Complex:
-
-1. char
-2. list
-3. object
-
-### Abstract:
-
-1. block
-2. variable
-3. property
-
 ## Enumerated Values:
 
 ### Tags:
@@ -619,13 +600,6 @@ safely cast to type `<char>`.
 3. `QS_EXE_RESOURCE`
 4. `QS_EXE_BLOCK`
 5. `QS_EXE_LOOP`
-
-## Variable scopes:
-
-1. block
-2. rLink
-3. object
-4. global
 
 ## Action types:
 
@@ -862,13 +836,12 @@ safely cast to type `<char>`.
 
 # Implementation:
 
-1. Your first qscript
-2. Example of a simple parser.
+1. Example of a simple parser.
+2. Instantiating and freeing objects.
 3. More complex qscript with multiple objects.
-4. Instantiating and freeing objects.
-5. Reading properties from objects.
-6. Reading and writing object variables.
-7. Internal cross-object access.
-8. External pushing / popping resources onto objects.
-9. Internal pushing / popping.
-10. Priorities, winding, unwinding, rewinding
+4. Reading properties from objects.
+5. Reading and writing object variables.
+6. Internal cross-object access.
+7. External pushing / popping resources onto objects.
+8. Internal pushing / popping.
+9. Priorities, winding, unwinding, rewinding
