@@ -391,9 +391,9 @@ int qs_value_restring (qs_value_t *v, char *str)
    return 1;
 }
 
-int qs_value_can_modify (qs_execute_t *exe, qs_value_t *val)
+inline int qs_value_can_modify (qs_execute_t *exe, qs_value_t *val)
    { return (qs_value_lvalue_real (exe, val, 0)) ? 1 : 0; }
-qs_value_t *qs_value_lvalue (qs_execute_t *exe, qs_value_t *val)
+inline qs_value_t *qs_value_lvalue (qs_execute_t *exe, qs_value_t *val)
    { return qs_value_lvalue_real (exe, val, 1); }
 
 qs_value_t *qs_value_lvalue_real (qs_execute_t *exe, qs_value_t *val,

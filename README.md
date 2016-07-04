@@ -130,6 +130,7 @@ The following are all valid function calls that produce the same result:
 
 ```
 # Each evaluation will print "foo" followed by a newline.
+
 echo           ("foo");  # "echo" is a string matching a function.
 "echo"         ("foo");  # This is equally valid.
 + ("ec", "ho") ("foo");  # +() returns "echo" which is then called by the next action.
@@ -137,13 +138,83 @@ echo           ("foo");  # "echo" is a string matching a function.
 if (1, "echo") ("foo");  # if() returns the matching case, which is "echo".
 ```
 
-## Real Primitives:
+## Simple Real Primitives:
 
-(write this!)
+All values are ultimately stored as *real primitives*.  Real primitives are classified as either *simple* or *complex*.  Simple primitives contain all their data directly in the value structure `qs_value_t` and require no extra processing.
+
+ Type          | Description                                              | Declaration
+---------------|----------------------------------------------------------|-------------
+ **undefined** | Placeholder type for uninitialized variables and errors. | `undefined`
+ **string**    | Any text value.                    | `string`, `"string"`, `'string'`
+ **int**       | Integer value.                                           | `[+/-]123456`
+ **float**     | Floating-point decimal value.                            | `[+/-]123456.789`
+
+**Note:** Single or double-quoted strings can be combined into a single string thusly:
+
+```
+echo ("This " "is " "one " 'big ' 'string ');
+```
+
+## Complex Real Primitives:
+
+Complex primitives have unique characteristics that may contain additional processing or memory allocation.
+
+ Type       | Description                                                | Declaration
+------------|------------------------------------------------------------|-------------
+ **char**   | Single character.                                          | `'a'`
+ **list**   | Zero or more values that can be indexed.                   | `[]`, `[1, 2, 3]`
+ **object** | Reference to an instantiated object for property look-ups. | `@object`, ``@@global-object``
+
+### char:
+
+The *char* primitive can be modified by mathematical operations as if it's ASCII character value.  They can also refer to a character belonging to a string indexed by `[<value>]` just like a C-string.  In that case, modifying the value will update the string it belongs to.
+
+```
++ ('a', 1);          # evaluates to 'b'
+- ('a', 32);         # evaluates to 'A'
+
+= ($string, "wow");  # define a string 'wow'...
+= ($string[0], 'c'); # ...and turn it into 'cow'
+```
+
+### list:
+
+The *list* primitive can be indexed by `[<value>]` in the same way as a string.  In that case, modifying the value will update the list it belongs to.  Lists can also have their contents used as function call parameters with a preceding `~` character.  This is called *unfolding*.
+
+```
+= ($list, [1, 2, 3]);      # A list with three numbers.
+= ($math, + (~$list));     # Same as `= ($math, + (1, 2, 3));`
+echo ($math);              # prints '6'
+
+= ($list[2], 30);          # List becomes `[1, 2, 30]`
+echo (+ (~$list));         # prints '33'
+```
+
+### object:
+
+The *object* primitive points to an object by either its name or unique ID.  When evaluated, no lookup is performed directly - only by the action that requires it.  If the object cannot be found, the action will typically return the `<no object>` error.
+
+The primary purpose of interacting with objects is to read their *properties*.  Properties can only be read from other objects, not modified.  For more information on properties, refer to **Abstract Primitives** -> **properties**.
+
+```
+@my_object {               # Instantiate resource with the name '@my_object'.
+   = (.color, "blue");     # Set property 'color' to 'blue'.
+   = (.shape, "sphere");   # Set property 'shape' to 'sphere'.
+}
+
+copy_object {              # This script, when injected, will copy properties from @my_object.
+   = ($obj, @@my_object);  # The '@' refers to an object named '@my_object'.
+   = (.color, $obj.color); # Match color of object.
+   = (.shape, $obj.shape); # Also match our shape.
+
+   = ($obj.shape, "box");  # @my_object.shape is read-only; this will report an error.
+}
+```
 
 ## Abstract Primitives:
 
 Values can also contain primitives that require execution or referencing during evaluation.  These are called *abstract primitives*.
+
 (continue writing this)
 
 ## Examples:
@@ -173,7 +244,7 @@ buff_chameleon {
 }
 ```
 
-### Code flow:
+### Utility Functions:
 
 These examples are designed to showcase various forms of loops.
 
@@ -205,11 +276,7 @@ fibonacci_recurse {
       fibonacci_recurse (- ($n, 2))
    );
 }
-```
 
-### Misc. utility functions:
-
-```
 # Echo a string with preceeding spaces.
 echo_indented {                                   # Takes (int, string).
    args ($indent, $string);                       # Assign arguments to variables.
@@ -230,6 +297,46 @@ echo_doge {
    });
 }
 ```
+
+## Objects:
+
+# Base object used for instantiation of characters.
+character_base {
+   # Base values modified by class and level later.
+   = (.str,    10);
+   = (.def,    10);
+   = (.agi,    10);
+   = (.max_hp, 50);
+
+   # Some default values that will need additional scripts.
+   = (.class,  "Unemployed");
+   = (.race,   "Being");
+   = (.gender, "Neutral");
+
+   # Variables assigned by an object variable so they can be modified permanently.
+   = (.level,  %level);
+   = (.exp,    %exp);
+   = (.gold,   %gold);
+}
+
+# Global object that stores useful information.
+@world {
+   # Get our global time (in hours).
+   = ($time, %%time);
+
+   # Set a "time of day" phrase for everything to use.
+   = (.time_of_day,
+      if (< ($time,  1.00), "midnight",
+          < ($time,  5.00), "late night",
+          < ($time,  6.00), "dawn",
+          < ($time,  9.00), "morning",
+          < ($time, 12.00), "forenoon",
+          < ($time, 13.00), "noon",
+          < ($time, 16.00), "afternoon",
+          < ($time, 19.00), "evening",
+          < ($time, 22.00), "dusk",
+                            "night"));
+}
 
 ## Grammar:
 

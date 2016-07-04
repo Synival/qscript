@@ -134,7 +134,7 @@ QS_FUNC (qsf_math)
    if (sub_func >= 20) {
       /* get our lvalue.  can we modify it? */
       if ((lval = qs_value_lvalue (exe, aval)) == NULL) {
-         QS_ARG_ERROR (0, "argument '%s' cannot be modified.\n", aval->val_s);
+         QS_ARG_ERROR (0, "value '%s' cannot be modified.\n", aval->val_s);
          return QSV_CANNOT_MODIFY;
       }
       if (lval->type_id == QSCRIPT_UNDEFINED) {
@@ -311,11 +311,17 @@ QS_FUNC (qsf_math)
 
 QS_FUNC (qsf_if)
 {
-   qs_value_t *val = QS_ARGV (0);
-   if (qs_value_truth (exe, val))
-      return QS_ARGV (1);
-   else if (args >= 3)
-      return QS_ARGV (2);
+   int i;
+
+   /* evaluate all '<condition> <then>' pairs until <condition> is true. */
+   for (i = 0; i < args - 1; i+= 2)
+      if (qs_value_truth (exe, QS_ARGV (i)))
+         return QS_ARGV (i + 1);
+
+   /* none of them were true.  is there an '<else>'? */
+   if (i < args)
+      return QS_ARGV (i);
+   /* nope.  undefined result. */
    else
       return QSV_UNDEFINED;
 }
@@ -489,7 +495,7 @@ QS_FUNC (qsf_let)
    /* get our variable. */
    qs_value_t *aval = QS_ARGV(0);
    if ((lval = qs_value_lvalue (exe, aval)) == NULL) {
-      QS_ARG_ERROR (0, "argument '%s' cannot be modified.\n", aval->val_s);
+      QS_ARG_ERROR (0, "value '%s' cannot be modified.\n", aval->val_s);
       return QSV_CANNOT_MODIFY;
    }
 
@@ -683,7 +689,7 @@ QS_FUNC (qsf_for_each)
    qs_value_t *aval = QS_ARGV(1),
               *lval = qs_value_lvalue (exe, QS_ARGV (1));
    if (lval == NULL) {
-      QS_ARG_ERROR (1, "argument '%s' cannot be modified.\n", aval->val_s);
+      QS_ARG_ERROR (1, "value '%s' cannot be modified.\n", aval->val_s);
       return QSV_CANNOT_MODIFY;
    }
 
@@ -751,7 +757,7 @@ QS_FUNC (qsf_args)
    for (i = 0; i < args; i++) {
       aval = QS_ARGV(i);
       if ((lval = qs_value_lvalue (exe, aval)) == NULL) {
-         QS_ARG_ERROR (i, "argument '%s' cannot be modified.\n", aval->val_s);
+         QS_ARG_ERROR (i, "value '%s' cannot be modified.\n", aval->val_s);
          QS_RETURN ();
          return QSV_CANNOT_MODIFY;
       }
