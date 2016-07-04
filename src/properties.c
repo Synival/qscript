@@ -92,6 +92,12 @@ qs_value_t *qs_property_value (qs_property_t *p)
 
 qs_modify_t *qs_property_push (qs_property_t *p, qs_rlink_t *rlink)
 {
+   /* create our stack when we need to. */
+   if (rlink->stack_modify == NULL) {
+      rlink->stack_modify = qs_stack_new (qs_modify_t);
+      qs_stack_data (rlink->stack_modify, rlink, NULL);
+   }
+
    /* initialize an empty modification. */
    qs_modify_t *last = qs_stack_last (rlink->stack_modify);
    qs_modify_t *new  = qs_stack_push (rlink->stack_modify,

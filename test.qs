@@ -333,7 +333,7 @@ main {
 
    # A complicated (and ridiculously slow) recursive test.
    echo ("Recursive function test:");
-   = ($count, 8);
+   = ($count, 10);
    echo ("   First ", $count, " numbers in the Fibonacci sequence:");
    = ($recurse, [{
       = ($limit, arg (0));

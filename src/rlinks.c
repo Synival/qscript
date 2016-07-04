@@ -55,10 +55,6 @@ qs_rlink_t *qs_rlink_push_at (qs_object_t *obj, qs_resource_t *resource,
    new->object   = obj;
    new->scheme   = resource->scheme;
 
-   /* create a new stack for property modifications. */
-   new->stack_modify = qs_stack_new (qs_modify_t);
-   qs_stack_data (new->stack_modify, new, NULL);
-
    /* add to our parent. */
    new->parent = parent;
    new->prev   = prev;
@@ -140,7 +136,8 @@ int qs_rlink_unwind (qs_rlink_t *rlink)
       qs_rlink_unwind (r);
 
    /* pop everything in our property modify stack. */
-   qs_stack_empty (rlink->stack_modify);
+   if (rlink->stack_modify)
+      qs_stack_empty (rlink->stack_modify);
 
    /* return success. */
    return 1;
@@ -150,7 +147,8 @@ int qs_rlink_pop (qs_rlink_t *rlink)
 {
    /* unwind before anything else, and free modification stack. */
    qs_rlink_unwind (rlink);
-   qs_stack_free (rlink->stack_modify);
+   if (rlink->stack_modify)
+      qs_stack_free (rlink->stack_modify);
 
    /* free children first. */
    while (rlink->child_back)
