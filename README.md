@@ -4,7 +4,7 @@
 
 ---
 
-##Table of Contents:
+**Contents:**
 
 - [What is *qscript*?](#what-is-qscript)
 - [How *qscript* works](#how-qscript-works)
@@ -46,6 +46,8 @@ The *world* tracks all object *influences* (properties/variables read from anyth
 ---
 
 # Using *qscript*:
+
+**Contents:**
 
 - [Sample object "player"](#sample-object-player)
 - [Player's scripts](#players-scripts)
@@ -204,6 +206,8 @@ Let's assume the first behavior is desired.  To make sure this happens, each scr
 
 # Scripting language:
 
+**Contents:**
+
 - [Values, actions, and function calls](#values-actions-and-function-calls)
 - [Simple real primitives](#simple-real-primitives)
 - [Complex real primitives](#complex-real-primitives)
@@ -263,6 +267,8 @@ echo ("This " "is " "one " 'big ' 'string ');
 ```
 
 ## Complex real primitives:
+
+**Contents:**
 
 - [char](#char)
 - [list](#list)
@@ -329,6 +335,8 @@ Values can also contain primitives that require execution or referencing during 
 (continue writing this)
 
 ## Examples:
+
+**Contents:**
 
 - [Injection](#injection)
 - [Utility functions](#utility-functions)
@@ -461,6 +469,8 @@ character_base {
 
 # *qscript* standard library:
 
+**Contents:**
+
 - [Text output](#text-output)
 - [Math / logical](#math--logical)
 - [Informative](#informative)
@@ -570,6 +580,8 @@ character_base {
 ---
 
 # Public macros:
+
+**Contents:**
 
 - [Definitions](#definitions)
 - [Inside `qs_func` call](#inside-qs_func-call)
