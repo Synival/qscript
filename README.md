@@ -14,14 +14,31 @@
 - - [Implementation](#implementation)
 - - [Running *objdump*](#running-objdump)
 - [Why make this?](#why-make-this)
-- [Scripting Language](#scripting-language)
-- - [Values, Actions, and Function Calls](#values-actions-and-function-calls)
+- [Scripting language](#scripting-language)
+- - [Values, actions, and function calls](#values-actions-and-function-calls)
 - - [Simple real primitives](#simple-real-primitives)
 - - [Complex real primitives](#complex-real-primitives)
 - - - [char](#char)
 - - - [list](#list)
 - - - [object](#object)
 - - [Abstract primitives](#abstract-primitives)
+- - [Examples](#examples)
+- - - [Injection](#injection)
+- - - [Utility functions](#utility-functions)
+- - - [Objects](#objects)
+- [`qscript` standard library](#qscript-standard-library)
+- - [Text output](#text-output)
+- - [Math / logical](#math-logical)
+- - [Informative](#informative)
+- - [Assigning / modifying](#assigning-modifying)
+- - [Code flow](#code-flow)
+- - [Argument processing](#argument-processing)
+- - [Casting](#casting)
+- - [Object manipulation](#object-manipulation)
+- [Formal grammar](#formal-grammar)
+- [Internal stuff](#internal-stuff)
+- [Pre-defined values](#pre-defined-values)
+- [Glossary of terms](#glossary-of-terms)
 
 ---
 
@@ -444,272 +461,11 @@ character_base {
 }
 ```
 
-## Grammar:
+---
 
-(table of contents)
+# *qscript* standard library:
 
-### Comments:
-
-The character `#` can be used when any value, resource, or action is expected.
-All text following `#` will be ignored by the parser.
-
-### `<resource>`:
-
-```
-[@]<string> <block>
-```
-**Defines a resource named `<string>` containing code `<block>`.**
-
-The '@' character indicates that the resource is to be automatically
-instantiated as an object named '@resource-name'.
-
-### `<block>`:
-
-```
-'{'
-   <value>1;   # Examples:
-   <value>2;   #    = ($variable, 10);
-   ...         #    echo ("My variable is: ", $variable);
-   <value>n;   #    $variable;  <--- Last value is always returned
-'}'
-```
-**Creates a series of zero or more values for evaluation.**
-
-Block contents are immediately evaluated whenever they are referenced by
-values or call actions.  They return the last evaluation, which includes the
-value passed to `return()`, `break()`, or `continue()`.  If the block
-contains zero values, `QSV_UNDEFINED` is returned.
-
-### `<value>`:
-
-```
-[~]<primitive> <action>1 ... <action>n
-```
-**Universal symbol for literal primitives, function calls, and other actions.**
-
-The '~' indicates that the result is to be *unfolded* into the action from
-which it is called.  This requires the evaluation to be of type `list`,
-otherwise it will report an error.  The contents of the list will be inserted
-into the parameter list of the action from which it was called.
-
-### `<primitive>`:
-
-*Matches the first of the following, starting from the top:*
-```
-<int>
-<float>
-<variable>
-<property>
-<list>
-<block>
-<char>
-<object>
-<undefined>
-<string>
-```
-
-#### `<int>`:
-
-*Regular expression*: `[-+]?[0-9]+` 
-(One or more digits optionally preceded by '-' or '+'.)
-
-**Creates an integer value.**
-
-#### `<float>`:
-
-*Regular expression*: `[-+]?[0-9]+\.[0-9]+` 
-(One or more digits optionally preceded by '-' or '+', followed by a decimal
-point and one or more digits.)
-
-**Creates a floating-point value.**
-
-#### `<variable>`:
-
-*Regular expression*: `[\\$]+[a-zA-Z0-9_]+` 
-(One or more `$` characters followed by one or more alphanumeric/underscore
-characters.)
-
-**Creates a reference to a block- or rlink-scope variable.**
-
-A single `$` refers to a *block scope* variable.  Two (`$$`) characters refers
-to an *rlink scope* variable.
-If the variable is not found in the current scope, it will be created.
-
-#### `<property>`:
-
-```
-.<value>[']
-```
-
-**Creates a reference to a property belonging to the current object's.
-Can be used as an `<action>`, in which case it creates a reference to a property
-belonging to the evaluated parent value.**
-
-The optional quote acts as a closing parenthesis, allowing actions to
-be called on the evaluation of the property.
-If omitted, all proceeding actions will be considered belonging to `<value>`.
-
-If called as an action, an error will be reported if the evaluation of the
-parent value is not of type `<object>`.
-
-#### `<list>`:
-
-```
-'[' <value>1, <value>2, ... <value>n ']'
-```
-
-**Creates a list of zero or more values.**
-
-Values contained in the list are not evaluated until they are indexed.
-
-#### `<char>`:
-
-*Regular expression*: `'.'` 
-(Any single character surrounded by single quotes.)
-
-#### `<object>`:
-
-*Regular expression*: `[@]+[a-zA-Z_]+` 
-(One or more `@` characters followed by one or more alphanumeric/underscore
-characters.)
-A single `@` refers to externally instantiated objects.  Two (`@@`) refers to
-an auto-instantiated object from a resource.
-
-#### `<undefined>`:
-
-*Exact string match*: `undefined`
-
-**Evaluates to **`QSV_UNDEFINED`**.  Does not create a new value.**
-
-#### `<string>`:
-
-### `<action>`:
-
-*Matches the first of the following, starting from the top:*
-
-```
-<call>
-<index>
-<property>
-```
-
-#### `<call>`:
-
-```
-(<value>1, <value>2, ... <value>n)
-```
-
-**Executes a resource, function, or list, supplying zero or more parameters.**
-
-Resources are attempted to be evaluated first.  Any resource can be executed,
-including auto-instantiated resources.  Parameters are read as arguments via
-the `arg()`, `args()`, and `arg_list()` qfuncs.
-
-Any function supplied by the scheme, including the standard, will then be
-executed.
-
-If the parent evaluation is type `<list>`, it is considered a *lambda
-functions* and all list elements will be evaluated as if they are a resource.
-Internal calls to `arg()`, `args()`, and `arg_list()` will pull arguments from
-the lambda function's parameter list.  It is recommended that list elements be
-defined as `<block>`s for the sake of formatting consistency.
-
-#### `<index>`:
-
-```
-'[' <value> ']'
-```
-
-**Returns an element of a **`<list>`** or a single character in a **`<string>`
-**.**
-
-Indexes are considered *lvalues* and can be assigned with any assignment
-function.  However, indexing `<string>`s is very strict; the indexed value
-will always be of type `<char>` and only values valid for assignment must
-safely cast to type `<char>`.
-
-#### `<property>`:
-
-(See `<property>` definition under `<primitive>`.)
-
-# Internal Workings:
-
-## Structures:
-
-1. `qs_object_t`
-2. `qs_value_t`
-3. `qs_resource_t`
-4. `qs_rlink_t`
-5. `qs_scheme_t`
-6. `qs_func_t`
-7. `qs_variable_t`
-8. `qs_execute_t`
-9. `qs_list_t`
-10. `qs_action_t`
-11. `qs_stack_t`
-12. `qs_property_t`
-13. `qs_modify_t`
-
-## Enumerated Values:
-
-### Tags:
-
-1. `QSCRIPT_INVALID`
-2. `QSCRIPT_UNDEFINED`
-3. `QSCRIPT_ROOT`
-4. `QSCRIPT_COMMENT`
-5. `QSCRIPT_RESOURCE`
-6. `QSCRIPT_RFLAGS`
-7. `QSCRIPT_RNAME`
-8. `QSCRIPT_BLOCK`
-9. `QSCRIPT_LIST`
-10. `QSCRIPT_OUTER_LIST`
-11. `QSCRIPT_VALUE`
-12. `QSCRIPT_VFLAGS`
-13. `QSCRIPT_PRIMITIVE`
-14. `QSCRIPT_OUTER_BLOCK`
-15. `QSCRIPT_SEPARATOR`
-16. `QSCRIPT_STRING`
-17. `QSCRIPT_SIMPLE_STRING`
-18. `QSCRIPT_COMPLEX_STRING`
-19. `QSCRIPT_NUMBER`
-20. `QSCRIPT_FLOAT`
-21. `QSCRIPT_INT`
-22. `QSCRIPT_VARIABLE`
-23. `QSCRIPT_ACTION`
-24. `QSCRIPT_CALL`
-25. `QSCRIPT_INDEX`
-26. `QSCRIPT_CHAR`
-27. `QSCRIPT_OBJECT`
-28. `QSCRIPT_PROPERTY`
-
-### Action Types:
-
-1. `QS_ACTION_CALL`
-2. `QS_ACTION_INDEX`
-3. `QS_ACTION_PROPERTY`
-
-### Variable Scopes:
-
-1. `QS_SCOPE_AUTO`
-2. `QS_SCOPE_RLINK`
-3. `QS_SCOPE_BLOCK`
-
-### Execution State Types:
-
-1. `QS_EXE_LAMBDA`
-2. `QS_EXE_FUNC`
-3. `QS_EXE_RESOURCE`
-4. `QS_EXE_BLOCK`
-5. `QS_EXE_LOOP`
-
-## Action types:
-
-1. call
-2. index
-3. property
-
-# *qscript* Standard library:
+(coming later!)
 
 ## Text output:
 
@@ -718,7 +474,7 @@ safely cast to type `<char>`.
 3. `print_resource`
 4. `print_value`
 
-## Functional:
+## Math / logical:
 
 1. `+`
 2. `-`
@@ -757,7 +513,7 @@ safely cast to type `<char>`.
 10. `func_exists`
 11. `tokenize`
 
-## Assigning / Modifying:
+## Assigning / modifying:
 
 1. `+=`
 2. `-=`
@@ -773,7 +529,7 @@ safely cast to type `<char>`.
 12. `--`
 13. `vars`
 
-## Code Flow:
+## Code flow:
 
 1. `if`
 2. `return`
@@ -786,7 +542,7 @@ safely cast to type `<char>`.
 9. `eval`
 10. `for_each`
 
-## Argument Processing:
+## Argument processing:
 
 1. `args`
 2. `arg`
@@ -802,7 +558,15 @@ safely cast to type `<char>`.
 6. `variable`
 7. `property`
 
-# Public Macros:
+## Object manipulation:
+
+1. `new`
+
+---
+
+# Public macros:
+
+(coming later!)
 
 ## Definitions:
 
@@ -829,7 +593,9 @@ safely cast to type `<char>`.
 
 ---
 
-# Public Functions:
+# Public functions:
+
+(coming later!)
 
 1. `qs_arg_float`
 2. `qs_arg_int`
@@ -909,36 +675,307 @@ safely cast to type `<char>`.
 
 ---
 
-# Pre-defined Values:
+# Formal Grammar:
 
-1. `QSV_ZERO`
-2. `QSV_ONE`
-3. `QSV_INVALID_TYPE`
-4. `QSV_NOT_VARIABLE`
-5. `QSV_NOT_PROPERTY`
-6. `QSV_CANNOT_MODIFY`
-7. `QSV_NOT_FUNC_CALL`
-8. `QSV_INVALID_INDEX`
-9. `QSV_NO_INDEX`
-10. `QSV_INVALID_SUB_FUNC`
-11. `QSV_NOT_ENOUGH_ARGS`
-12. `QSV_INVALID_FUNC`
-13. `QSV_INVALID_OPER`
-14. `QSV_DIVISION_BY_ZERO`
-15. `QSV_MOD_BY_ZERO`
-16. `QSV_INVALID_RESOURCE`
-17. `QSV_CANNOT_EXECUTE`
-18. `QSV_CANNOT_UNWRAP`
-19. `QSV_SCOPE_LITERAL`
-20. `QSV_SCOPE_RLINK`
-21. `QSV_SCOPE_BLOCK`
-22. `QSV_SCOPE_PROPERTY`
-23. `QSV_SCOPE_UNKNOWN`
-24. `QSV_UNDEFINED`
-25. `QSV_INVALID_VALUE`
-26. `QSV_NO_OBJECT`
-27. `QSV_ALREADY_WOUND`
-28. `QSV_INVALID_PROPERTY`
+## Root:
+
+```
+(<resource>)*
+```
+
+## Comments:
+
+The character `#` can be used when any value, resource, or action is expected.
+All text following `#` will be ignored by the parser.
+
+## `<resource>`:
+
+```
+[@]<string> <block>
+```
+**Defines a resource named `<string>` containing code `<block>`.**
+
+The '@' character indicates that the resource is to be automatically
+instantiated as an object named '@resource-name'.
+
+## `<block>`:
+
+```
+'{'
+   <value>1;   # Examples:
+   <value>2;   #    = ($variable, 10);
+   ...         #    echo ("My variable is: ", $variable);
+   <value>n;   #    $variable;  <--- Last value is always returned
+'}'
+```
+**Creates a series of zero or more values for evaluation.**
+
+Block contents are immediately evaluated whenever they are referenced by
+values or call actions.  They return the last evaluation, which includes the
+value passed to `return()`, `break()`, or `continue()`.  If the block
+contains zero values, `QSV_UNDEFINED` is returned.
+
+## `<value>`:
+
+```
+[~]<primitive> <action>1 ... <action>n
+```
+**Universal symbol for literal primitives, function calls, and other actions.**
+
+The '~' indicates that the result is to be *unfolded* into the action from
+which it is called.  This requires the evaluation to be of type `list`,
+otherwise it will report an error.  The contents of the list will be inserted
+into the parameter list of the action from which it was called.
+
+## `<primitive>`:
+
+*Matches the first of the following, starting from the top:*
+```
+<int>
+<float>
+<variable>
+<property>
+<list>
+<block>
+<char>
+<object>
+<undefined>
+<string>
+```
+
+### `<int>`:
+
+*Regular expression*: `[-+]?[0-9]+` 
+(One or more digits optionally preceded by '-' or '+'.)
+
+**Creates an integer value.**
+
+### `<float>`:
+
+*Regular expression*: `[-+]?[0-9]+\.[0-9]+` 
+(One or more digits optionally preceded by '-' or '+', followed by a decimal
+point and one or more digits.)
+
+**Creates a floating-point value.**
+
+### `<variable>`:
+
+*Regular expression*: `[\\$]+[a-zA-Z0-9_]+` 
+(One or more `$` characters followed by one or more alphanumeric/underscore
+characters.)
+
+**Creates a reference to a block- or rlink-scope variable.**
+
+A single `$` refers to a *block scope* variable.  Two (`$$`) characters refers
+to an *rlink scope* variable.
+If the variable is not found in the current scope, it will be created.
+
+### `<property>`:
+
+```
+.<value>[']
+```
+
+**Creates a reference to a property belonging to the current object's.
+Can be used as an `<action>`, in which case it creates a reference to a property
+belonging to the evaluated parent value.**
+
+The optional quote acts as a closing parenthesis, allowing actions to
+be called on the evaluation of the property.
+If omitted, all proceeding actions will be considered belonging to `<value>`.
+
+If called as an action, an error will be reported if the evaluation of the
+parent value is not of type `<object>`.
+
+### `<list>`:
+
+```
+'[' <value>1, <value>2, ... <value>n ']'
+```
+
+**Creates a list of zero or more values.**
+
+Values contained in the list are not evaluated until they are indexed.
+
+### `<char>`:
+
+*Regular expression*: `'.'` 
+(Any single character surrounded by single quotes.)
+
+### `<object>`:
+
+*Regular expression*: `[@]+[a-zA-Z_]+` 
+(One or more `@` characters followed by one or more alphanumeric/underscore
+characters.)
+A single `@` refers to externally instantiated objects.  Two (`@@`) refers to
+an auto-instantiated object from a resource.
+
+### `<undefined>`:
+
+*Exact string match*: `undefined`
+
+**Evaluates to **`QSV_UNDEFINED`**.  Does not create a new value.**
+
+### `<string>`:
+
+## `<action>`:
+
+*Matches the first of the following, starting from the top:*
+
+```
+<call>
+<index>
+<property>
+```
+
+### `<call>`:
+
+```
+(<value>1, <value>2, ... <value>n)
+```
+
+**Executes a resource, function, or list, supplying zero or more parameters.**
+
+Resources are attempted to be evaluated first.  Any resource can be executed,
+including auto-instantiated resources.  Parameters are read as arguments via
+the `arg()`, `args()`, and `arg_list()` qfuncs.
+
+Any function supplied by the scheme, including the standard, will then be
+executed.
+
+If the parent evaluation is type `<list>`, it is considered a *lambda
+functions* and all list elements will be evaluated as if they are a resource.
+Internal calls to `arg()`, `args()`, and `arg_list()` will pull arguments from
+the lambda function's parameter list.  It is recommended that list elements be
+defined as `<block>`s for the sake of formatting consistency.
+
+### `<index>`:
+
+```
+'[' <value> ']'
+```
+
+**Returns an element of a **`<list>`** or a single character in a **`<string>`
+**.**
+
+Indexes are considered *lvalues* and can be assigned with any assignment
+function.  However, indexing `<string>`s is very strict; the indexed value
+will always be of type `<char>` and only values valid for assignment must
+safely cast to type `<char>`.
+
+### `<property>`:
+
+(See `<property>` definition under `<primitive>`.)
+
+---
+
+# Internal stuff:
+
+(coming later!)
+
+## Structures:
+
+1. `qs_object_t`
+2. `qs_value_t`
+3. `qs_resource_t`
+4. `qs_rlink_t`
+5. `qs_scheme_t`
+6. `qs_func_t`
+7. `qs_variable_t`
+8. `qs_execute_t`
+9. `qs_list_t`
+10. `qs_action_t`
+11. `qs_stack_t`
+12. `qs_property_t`
+13. `qs_modify_t`
+
+## Enumerated values:
+
+### Tags:
+
+1. `QSCRIPT_INVALID`
+2. `QSCRIPT_UNDEFINED`
+3. `QSCRIPT_ROOT`
+4. `QSCRIPT_COMMENT`
+5. `QSCRIPT_RESOURCE`
+6. `QSCRIPT_RFLAGS`
+7. `QSCRIPT_RNAME`
+8. `QSCRIPT_BLOCK`
+9. `QSCRIPT_LIST`
+10. `QSCRIPT_OUTER_LIST`
+11. `QSCRIPT_VALUE`
+12. `QSCRIPT_VFLAGS`
+13. `QSCRIPT_PRIMITIVE`
+14. `QSCRIPT_OUTER_BLOCK`
+15. `QSCRIPT_SEPARATOR`
+16. `QSCRIPT_STRING`
+17. `QSCRIPT_SIMPLE_STRING`
+18. `QSCRIPT_COMPLEX_STRING`
+19. `QSCRIPT_NUMBER`
+20. `QSCRIPT_FLOAT`
+21. `QSCRIPT_INT`
+22. `QSCRIPT_VARIABLE`
+23. `QSCRIPT_ACTION`
+24. `QSCRIPT_CALL`
+25. `QSCRIPT_INDEX`
+26. `QSCRIPT_CHAR`
+27. `QSCRIPT_OBJECT`
+28. `QSCRIPT_PROPERTY`
+
+### Action types:
+
+1. `QS_ACTION_CALL`
+2. `QS_ACTION_INDEX`
+3. `QS_ACTION_PROPERTY`
+
+### Variable scopes:
+
+1. `QS_SCOPE_AUTO`
+2. `QS_SCOPE_RLINK`
+3. `QS_SCOPE_BLOCK`
+
+### Execution state types:
+
+1. `QS_EXE_LAMBDA`
+2. `QS_EXE_FUNC`
+3. `QS_EXE_RESOURCE`
+4. `QS_EXE_BLOCK`
+5. `QS_EXE_LOOP`
+
+---
+
+# Pre-defined values:
+
+ Name                   | Type              | Value
+------------------------|-------------------|-----------------------
+`QSV_ZERO`              | int               | `0`
+`QSV_ONE`               | int               | `1`
+`QSV_INVALID_TYPE`      | undefined         | `"<invalid_type>"`
+`QSV_NOT_VARIABLE`      | undefined         | `"<not_variable>"`
+`QSV_NOT_PROPERTY`      | undefined         | `"<not_property>"`
+`QSV_CANNOT_MODIFY`     | undefined         | `"<cannot_modify>"`
+`QSV_NOT_FUNC_CALL`     | undefined         | `"<not_func_call>"`
+`QSV_INVALID_INDEX`     | undefined         | `"<invalid_index>"`
+`QSV_NO_INDEX`          | undefined         | `"<no_index>"`
+`QSV_INVALID_SUB_FUNC`  | undefined         | `"<invalid_sub_func>"`
+`QSV_NOT_ENOUGH_ARGS`   | undefined         | `"<not_enough_args>"`
+`QSV_INVALID_FUNC`      | undefined         | `"<invalid_func>"`
+`QSV_INVALID_OPER`      | undefined         | `"<invalid_oper>"`
+`QSV_DIVISION_BY_ZERO`  | undefined         | `"<division_by_zero>"`
+`QSV_MOD_BY_ZERO`       | undefined         | `"<mod_by_zero>"`
+`QSV_INVALID_RESOURCE`  | undefined         | `"<invalid_resource>"`
+`QSV_CANNOT_EXECUTE`    | undefined         | `"<cannot_execute>"`
+`QSV_CANNOT_UNWRAP`     | undefined         | `"<cannot_unwrap>"`
+`QSV_SCOPE_LITERAL`     | string            | `"literal"`
+`QSV_SCOPE_RLINK`       | string            | `"rlink"`
+`QSV_SCOPE_BLOCK`       | string            | `"block"`
+`QSV_SCOPE_PROPERTY`    | string            | `"property"`
+`QSV_SCOPE_UNKNOWN`     | string            | `"unknown"`
+`QSV_UNDEFINED`         | undefined         | `"<undefined>"`
+`QSV_INVALID_VALUE`     | undefined         | `"<invalid_value>"`
+`QSV_NO_OBJECT`         | undefined         | `"<no_object>"`
+`QSV_ALREADY_WOUND`     | undefined         | `"<already_wound>"`
+`QSV_INVALID_PROPERTY`  | undefined         | `"<invalid_property>"`
 
 ---
 
