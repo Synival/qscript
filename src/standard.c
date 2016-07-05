@@ -1333,6 +1333,10 @@ QS_FUNC (qsf_new)
          qs_rlink_push (new, rsrc, priority);
    }
 
+   /* if there's an extra argument, toss a warning. */
+   if (i < args)
+      QS_ARG_ERROR (i, "extra argument - not evaluating.\n");
+
    /* TODO: this should be handled by the scheme in a different way. */
    /* wind all unwound rlinks. */
    qs_rlink_t *r;
