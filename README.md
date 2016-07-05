@@ -9,32 +9,9 @@
 - [What is *qscript*?](#what-is-qscript)
 - [How *qscript* works](#how-qscript-works)
 - [Using *qscript*](#using-qscript)
-- - [Sample object "player"](#sample-object-player)
-- - [Player's scripts](#players-scripts)
-- - [Implementation](#implementation)
-- - [Running *objdump*](#running-objdump)
 - [Why make this?](#why-make-this)
 - [Scripting language](#scripting-language)
-- - [Values, actions, and function calls](#values-actions-and-function-calls)
-- - [Simple real primitives](#simple-real-primitives)
-- - [Complex real primitives](#complex-real-primitives)
-- - - [char](#char)
-- - - [list](#list)
-- - - [object](#object)
-- - [Abstract primitives](#abstract-primitives)
-- - [Examples](#examples)
-- - - [Injection](#injection)
-- - - [Utility functions](#utility-functions)
-- - - [Objects](#objects)
 - [`qscript` standard library](#qscript-standard-library)
-- - [Text output](#text-output)
-- - [Math / logical](#math-logical)
-- - [Informative](#informative)
-- - [Assigning / modifying](#assigning-modifying)
-- - [Code flow](#code-flow)
-- - [Argument processing](#argument-processing)
-- - [Casting](#casting)
-- - [Object manipulation](#object-manipulation)
 - [Formal grammar](#formal-grammar)
 - [Internal stuff](#internal-stuff)
 - [Pre-defined values](#pre-defined-values)
@@ -69,6 +46,11 @@ The *world* tracks all object *influences* (properties/variables read from anyth
 ---
 
 # Using *qscript*:
+
+- [Sample object "player"](#sample-object-player)
+- [Player's scripts](#players-scripts)
+- [Implementation](#implementation)
+- [Running *objdump*](#running-objdump)
 
 **The resources and C code below can be found in the example program "examples/objdump" in this repository.**
 
@@ -222,6 +204,12 @@ Let's assume the first behavior is desired.  To make sure this happens, each scr
 
 # Scripting language:
 
+- [Values, actions, and function calls](#values-actions-and-function-calls)
+- [Simple real primitives](#simple-real-primitives)
+- [Complex real primitives](#complex-real-primitives)
+- [Abstract primitives](#abstract-primitives)
+- [Examples](#examples)
+
 *qscript*'s scripting environment strives to stay as grammatically simple as possible while remaining flexible and powerful.  The language is used to define *resources* and their *scripts* in the form of a single code *block*.  Each resource can be:
 
 1. instantiated as the base of an *object*,
@@ -275,6 +263,10 @@ echo ("This " "is " "one " 'big ' 'string ');
 ```
 
 ## Complex real primitives:
+
+- [char](#char)
+- [list](#list)
+- [object](#object)
 
 Complex primitives have unique characteristics that may contain additional processing or memory allocation.
 
@@ -337,6 +329,10 @@ Values can also contain primitives that require execution or referencing during 
 (continue writing this)
 
 ## Examples:
+
+- [Injection](#injection)
+- [Utility functions](#utility-functions)
+- [Objects](#objects)
 
 ### Injection:
 
@@ -465,6 +461,15 @@ character_base {
 
 # *qscript* standard library:
 
+- [Text output](#text-output)
+- [Math / logical](#math--logical)
+- [Informative](#informative)
+- [Assigning / modifying](#assigning--modifying)
+- [Code flow](#code-flow)
+- [Argument processing](#argument-processing)
+- [Casting](#casting)
+- [Object manipulation](#object-manipulation)
+
 (coming later!)
 
 ## Text output:
@@ -566,6 +571,9 @@ character_base {
 
 # Public macros:
 
+- [Definitions](#definitions)
+- [Inside `qs_func` call](#inside-qs_func-call)
+
 (coming later!)
 
 ## Definitions:
@@ -597,81 +605,83 @@ character_base {
 
 (coming later!)
 
-1. `qs_arg_float`
-2. `qs_arg_int`
-3. `qs_arg_string`
-4. `qs_arg_value`
-5. `qs_arg_list`
-6. `qs_arg_value`
-7. `qs_execute_get_block`
-8. `qs_execute_get_call`
-9. `qs_execute_pop`
-10. `qs_execute_push`
-11. `qs_func_break`
-12. `qs_func_continue`
-13. `qs_func_error`
-14. `qs_func_return`
-15. `qs_func_run`
-16. `qs_list_copy`
-17. `qs_list_free`
-18. `qs_list_new`
-19. `qs_list_value`
-20. `qs_object_free`
-21. `qs_object_get`
-22. `qs_object_get_by_id`
-23. `qs_object_new`
-24. `qs_parse_content`
-25. `qs_parse_init`
-26. `qs_parse_file`
-27. `qs_print_action`
-28. `qs_print_list`
-29. `qs_print_resource`
-30. `qs_print_value`
-31. `qs_property_get`
-32. `qs_property_value`
-33. `qs_resource_get`
-34. `qs_resource_get_auto_instance`
-35. `qs_resource_get_by_id`
-36. `qs_return_char`
-37. `qs_return_float`
-38. `qs_return_int`
-39. `qs_return_string`
-40. `qs_return_value_new`
-41. `qs_rlink_is_child_of`
-42. `qs_rlink_pop`
-43. `qs_rlink_push`
-44. `qs_rlink_push_at`
-45. `qs_rlink_unwind`
-46. `qs_rlink_wind`
-47. `qs_scheme_cleanup`
-48. `qs_scheme_free`
-49. `qs_scheme_funcs`
-50. `qs_scheme_get_func`
-51. `qs_scheme_heap_value`
-52. `qs_scheme_new`
-53. `qs_scheme_update`
-54. `qs_value_can_modify`
-55. `qs_value_cleanup`
-56. `qs_value_cleanup_self`
-57. `qs_value_contains`
-58. `qs_value_copy`
-59. `qs_value_copy_const`
-60. `qs_value_init`
-61. `qs_value_length`
-62. `qs_value_list`
-63. `qs_value_list_internalize`
-64. `qs_value_lvalue`
-65. `qs_value_object`
-66. `qs_value_property`
-67. `qs_value_read`
-68. `qs_value_restring`
-69. `qs_value_truth`
-70. `qs_value_type`
-71. `qs_value_update_from_string`
-72. `qs_value_variable`
-73. `qs_variable_contains`
-74. `qs_variable_get`
-75. `qs_variable_value`
+- `qs_arg_float`
+- `qs_arg_int`
+- `qs_arg_string`
+- `qs_arg_value`
+- `qs_arg_list`
+- `qs_arg_value`
+- `qs_execute_get_block`
+- `qs_execute_get_call`
+- `qs_execute_pop`
+- `qs_execute_push`
+- `qs_func_break`
+- `qs_func_continue`
+- `qs_func_error`
+- `qs_func_return`
+- `qs_func_run`
+- `qs_list_copy`
+- `qs_list_free`
+- `qs_list_internalize`
+- `qs_list_new`
+- `qs_list_value`
+- `qs_object_free`
+- `qs_object_get`
+- `qs_object_get_by_id`
+- `qs_object_instantiate`
+- `qs_object_new`
+- `qs_parse_content`
+- `qs_parse_init`
+- `qs_parse_file`
+- `qs_print_action`
+- `qs_print_list`
+- `qs_print_resource`
+- `qs_print_value`
+- `qs_property_get`
+- `qs_property_value`
+- `qs_resource_get`
+- `qs_resource_get_auto_instance`
+- `qs_resource_get_by_id`
+- `qs_return_char`
+- `qs_return_float`
+- `qs_return_int`
+- `qs_return_string`
+- `qs_return_value_new`
+- `qs_rlink_is_child_of`
+- `qs_rlink_pop`
+- `qs_rlink_push`
+- `qs_rlink_push_at`
+- `qs_rlink_unwind`
+- `qs_rlink_wind`
+- `qs_scheme_cleanup`
+- `qs_scheme_free`
+- `qs_scheme_funcs`
+- `qs_scheme_get_func`
+- `qs_scheme_heap_value`
+- `qs_scheme_new`
+- `qs_scheme_update`
+- `qs_value_can_modify`
+- `qs_value_cleanup`
+- `qs_value_cleanup_self`
+- `qs_value_contains`
+- `qs_value_copy`
+- `qs_value_copy_const`
+- `qs_value_init`
+- `qs_value_length`
+- `qs_value_list`
+- `qs_value_list_internalize`
+- `qs_value_lvalue`
+- `qs_value_object`
+- `qs_value_property`
+- `qs_value_read`
+- `qs_value_restring`
+- `qs_value_truth`
+- `qs_value_type`
+- `qs_value_update_from_string`
+- `qs_value_variable`
+- `qs_variable_contains`
+- `qs_variable_get`
+- `qs_variable_value`
 
 ---
 
