@@ -11,7 +11,7 @@
 - [Using *qscript*](#using-qscript)
 - [Why make this?](#why-make-this)
 - [Scripting language](#scripting-language)
-- [`qscript` standard library](#qscript-standard-library)
+- [*qscript* standard library](#qscript-standard-library)
 - [Formal grammar](#formal-grammar)
 - [Internal stuff](#internal-stuff)
 - [Pre-defined values](#pre-defined-values)
