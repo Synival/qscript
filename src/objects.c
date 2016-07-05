@@ -20,7 +20,7 @@
 inline qs_object_t *qs_object_new (qs_scheme_t *scheme, char *name)
    { return qs_object_new_base (scheme, name); }
 
-qs_object_t *qs_object_instantiate (qs_resource_t *rsrc)
+qs_object_t *qs_object_instantiate (qs_resource_t *rsrc, char *name)
 {
    qs_object_t *new;
 
@@ -29,7 +29,7 @@ qs_object_t *qs_object_instantiate (qs_resource_t *rsrc)
       p_error (NULL, "attempted to instantiate object with no resource.\n");
       return NULL;
    }
-   if ((new = qs_object_new_base (rsrc->scheme, rsrc->name)) == NULL)
+   if ((new = qs_object_new_base (rsrc->scheme, name)) == NULL)
       return NULL;
 
    /* finish and return our new object. */

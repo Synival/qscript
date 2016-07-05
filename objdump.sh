@@ -1,5 +1,5 @@
 #!/bin/sh
 SCRIPT=$(readlink -f "$0")
 SCRIPTPATH=$(dirname "$SCRIPT")
-cd "$SCRIPTPATH"/examples/qmaze
-./qmaze
+cd "$SCRIPTPATH"/examples/objdump
+./objdump

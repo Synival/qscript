@@ -1,18 +1,42 @@
-# *qscript*
+# *qscript*:
+
+***(qscript is currently under development.  Not all features listed in this document may be currently implemented.  To see project status, please read 'STATUS.md'.)***
+
+Table of Contents:
+
+1. [What is *qscript*?](#what-is-qscript)
+
+## What is *qscript*?
 
 This library is designed to create a persistent-state world of generic objects with arbitrary code injection/ejection, inter-object relationships that automatically update, and a sensible interface between the scripting environment and your project.
 
-*qscript* is useful for projects that need to:
+***qscript* is useful for projects that need to do things like:**
 
-1. accurately and efficiently maintain element positions in a web document with a complex stylesheet,
-2. preserve a persistent world in a game with thousands of objects over an indefinite amount of time with guaranteed data consistency, and
-3. create objects with no strict definition and dynamic polymorphism.
+1. Create a persistent game world with thousands of objects over an indefinite amount of time with guaranteed data consistency
+2. Accurately and efficiently maintain the positions of elements in a web document using a complex stylesheet
+3. Create dynamic polymorphic objects with no strict definition
 
-Objects are defined as a series of *rlinks* (links to resource scripts) in a chain that can be modified and re-arranged at runtime.  All object property modifications are non-destructive and pushed onto a stack so they can be safely reverted.  Chains are modified by *unwinding* (rolling back) to the point of modification, *injecting* (inserting) or *ejecting* (removing) the desired script, then *rewinding* (re-executing scripts that have been unwound).
+## How *qscript* works:
 
-Sample object "player" with rlink chain:
+To use *qscript*, your project must first define a *scheme* that will create a *world* which contains *resources* and *objects*.
 
- Priority | Script           | Effect
+*Resources* are scripts defined by files using the ".qs" extension.  *qscript* uses its own scripting language designed specifically to accomplish the project's goals.  It strives to be a functional language to ensure consistent results and employ a minimal set of grammatical rules to maintain simplicity.
+
+*Objects* are containers for *properties* and are instantiated at runtime.  Their properties are defined through a chain of *rlinks* (links to resources) that can be modified and rearranged dynamically.
+
+All object property modifications are non-destructive and pushed onto a stack so they can be safely reverted.  Rlink chains are modified by *unwinding* (rolling back) to the point of modification, *injecting* (inserting) or *ejecting* (removing) the desired script, then *rewinding* (re-executing scripts that have been unwound).  Rlinks in the *rlink chain* are ordered by their *priority* (an arbitrary integer value) from lowest to highest.
+
+The *world* tracks all object *influences* (properties/variables read from anything other than itself) and ensures that influenced objects update properly when the external value is changed.
+
+## Using *qscript*:
+
+**The resources and C code below can be found in the example program "examples/objdump" in this repository.**
+
+In the following tutorial, we'll be creating a program that instantiates a player object as the groundwork for a tiny RPG.  The player will have some base stats, a class, some equipment, and some buffs/debuffs attached from the start.
+
+**Sample object "player" with rlink chain:**
+
+ Priority | Resource         | Effect
 ----------|------------------|----------------------------------------
  0        | `player_base`    | Define base values for all properties
  10       | `class_wizard`   | Modify stats and abilities to turn this character into a wizard
@@ -21,12 +45,9 @@ Sample object "player" with rlink chain:
  30       | `buff_invisible` | (Temporary) modify appearance and increase sneaking to 100%
  40       | `too_hot`        | (Applied from environment) Character is slower and dumber
 
-*qscript* uses its own scripting language designed specifically to accomplish these tasks in a flexible way that conforms to the object model's restrictions.  It strives to:
+Before implementing *qscript* in your project, let's define all of the resources listed above.
 
-1. be a functional language to ensure object consistency, and
-2. have a minimal set of grammatical rules to maintain simplicity.
-
-Sample scripts:
+**Sample scripts (from 'examples/objdump/my_resources.qs'):**
 
 ```
 player_base {
@@ -41,7 +62,7 @@ player_base {
    = (.sneak, 0.00);     # we're not very sneaky.
 }
 
-class_wizard {  
+class_wizard {
     = (.class, "wizard");       # define our class:
    *= (.str, 0.50);             # weak,
    *= (.def, 0.50);             # fragile,
@@ -49,7 +70,7 @@ class_wizard {
    += (.skills, "spell_fire");  # and with a spell.
 }
 
-purple_robe_on {  
+purple_robe_on {
     = (.color, "purple");  # we're purple now.
    += (.def, 5.00);        # small buff to defense,
    += (.int, 10.00);       # and a big one to intelligence.
@@ -67,15 +88,22 @@ buff_invisible {
 }
 
 too_hot {
-   *= (.agi, 0.75)  # 75% agility
-   *= (.int, 0.75)  # 75% intelligence
+   *= (.agi, 0.75);  # 75% agility
+   *= (.int, 0.75);  # 75% intelligence
 }
 ```
 
-(write basic implementation description)
+To create this object, we'll need to:
+
+1. create a scheme for our qscript world,
+2. instantiate a blank object,
+3. inject rlinks into the object's rlink chain, and
+4. update our world to finish our object.
+
+**Sample implementation (from 'examples/objdump/main.c'):**
 
 ```
-/* create our scheme, load its resources, and propagate changes. */
+/* create our scheme, load its resources, and update changes. */
 qs_scheme_t *scheme = qs_scheme_new ();
 qs_parse_file (scheme, "my_resources.qs");
 qs_scheme_update (scheme);
@@ -97,114 +125,57 @@ qs_scheme_update (scheme);
 
 /* clean-up time!  free all objects, resources, and the scheme itself. */
 qs_scheme_free (scheme);
-
 ```
 
----
+Executing the test program 'objdump' via 'objdump.sh' will describe the resulting object like so:
 
-# Project Status:
+**> ./objdump.sh**
 
-## What's in This Project:
-
-1. Source for *libqscript* (contains [mpc](https://github.com/orangeduck/mpc))
-2. qscript parser that instantiates object `main`.
-3. qscript *test.qs* script to test various functions.
-4. Example project *QMaze*.
-
-## What's done:
-
-1. Complete qscript language definition.
-2. Parser implementation.
-3. Runtime execution.
-4. Ongoing feature test script (test.qs)
-5. Ongoing test game (qmaze)
-
-## What's not:
-
-1. Fully implemented and tested resource unwinding and rewinding
-2. Value "influences" from external sources
-3. Object list search functions
-4. Object relationship management
-5. Object modification from inside qscript via resource pushing/popping
-6. Object-scoped variables
-7. Globally-scoped variables
-8. Reading object properties / variables from external environment
-9. External modification of object variables
-10. "Instant" execution scripts
-11. Evaluated value caching for uninfluenced values
-12. Function flags for "only when first activated", "instant-only"
-13. Action queues from `qs_rlink_t` for `qs_scheme_update()`.
-14. qfunc `free()`, `spawn()`, and more object manipulation.
-15. More list-manipulating functions.
-16. This documentation.
-17. Non-game example... Minimal web browser?
+```
+player:
+   str    (float)  = 8
+   def    (float)  = 10
+   int    (float)  = 22.5
+   agi    (float)  = 7.5
+   class  (string) = "wizard"
+   color  (string) = "clear"
+   skills (list)   = ["spell_fire", "spell_invisible"]
+   sneak  (float)  = 100
+```
 
 ---
 
 # Why *qscript*?
 
-## Problems to Solve
+One of my favorite type of games to make are text-based multiplayer RPGs called MUDs (multi-user dungeons), which are early forerunners to MMOs.  These are reasonable projects to tackle because you don't need to make a million assets and the game runs 100% server-side.  For one MUD I was working on, my goal was to have a persistent world with as many of its resources put into text files as possible so I could define new monsters, classes, and abilities without hard-coding anything in.  The purpose of that was to make edits quick and easy without recompilation and allow hot-loading so the server would never have to reboot.  If I wanted to add stuff in or make changes, I could log into the server, load the new files, and play right away.  Neat!
 
-If a world contains objects with properties that are either 1) modified from more than one part of its program or 2) influenced by other objects, that world could become more difficult to manage as the program grows more complex and there are more objects to manage.  Elements in a web page, for example, have a complex set of positional relationships to each other that must update accurately and efficiently when the browser is resized or additional content is loaded.  Rather than completely recalculating all positions of those elements on every update - which is slow - it would be faster to make a single transformation derived from the precise variable(s) that changed.  Unfortunately, for a such a system with so many factors that determine position, such a transformation is difficult to determine and, if done incorrectly, would break the formatting permanently.
+Now, if the server was going to run potentially for months at a time, small bugs here and there would break objects, maps, and (worst of all) players, requiring some hands-on fixes when the world state gets corrupted.  MMOs are very complex and only get bigger over time, so as the world and player base grows, the likelihood that something will get bugged-out is off the charts and such bugs would be difficult if not impossible to track.  There are too many examples to list, but here are a few anyway:
 
-## *qscript's* Solution
+1. Buffs/debuffs not turning themselves off properly,
+2. Temporary stat modifiers not reverting correctly,
+3. Triggers for quests not activating or deactivating,
+4. Puzzles not resetting properly,
+5. Item duplication or destruction bugs,
 
-*qscript* aims to solve these potential problems and make object management easier by tracking all object property modifications and their outside influences in their order of execution.  All modifications are executed from object scripts that can be dynamically inserted, removed, and re-ordered.  Modifications influenced by the properties of other objects are tracked and updated as those properties change, eliminating the need to constantly check for such updates manually.
+...and so on.
 
-When an object update is necessary, the affected objects of the world are *unwound* to their state before the modification occurred.  The update is then performed and any scripts that were previously unwound are then *rewound* in their original order.  The result is a world that can be easily and efficiently modified without fear of corrupting its state.
+*qscript* aims to avoid these potential problems by developing a layer of object management that only performs non-destructive object modifications, eliminating the possibility of object state corruption.  Any change made to an object must be guaranteed to be revertible, which means all property modifications must be pushed onto a stack that can be safely popped later.  It works like this: If a player acquires a *Quad Damage* buff, it will push a small script that multiplies damage output by 4.  When *Quad Damage* wears off, that script and its modifications are popped, reverting damage output back to normal.
 
-## Game Development Example
+In addition to preventing state corruption, *qscript* also strives to ensure that multiple buffs would applied in a consistent, predictable order.  Let's say there's a buff called *Extra Damage* that adds 10 to your character's damage output.  If *Quad Damage* is also applied, which executes first?  For a character that inflicts 25 damage per hit, the script order makes a big difference for the resulting damage:
 
-Let's say you're designing a small role-playing game in which a character can change equipment and modify stats through temporary buffs and debuffs.  At one point in the game, the character's *STR* is affected by the following transformations:
+1. *Quad Damage*, then *Extra Damage*: `damage = ((25 * 4) + 10) = 110`
+2. *Extra Damage*, then *Quad Damage*: `damage = ((25 + 10) * 4) = 140`
 
- Modifier                            | Transformation      | *STR* Value
--------------------------------------|---------------------|--------------
- 1. Base stat:                       | `str = 10`          | 10
- 2. Level 10 stat increase:          | `str += level * 2`  | 30
- 3. Berserker class bonus:           | `str *= 1.5`        | 45
- 4. Sword weapon bonus:              | `str += 5`          | 50
- 5. Quad Damage (10 sec remaining):  | `str *= 4`          | 200
- 6. Well-Fed (50 sec remaining):     | `str += 5`          | 205
-
-There are a few ways that the *STR* stat can be stored.  It could be calculated each time it is referenced using an internal formula, accounting for base stats, levels, class bonuses, equipment, buffs, debuffs, and any other factors that may develop later.  This certainly works, but a hard-coded calculation isn't very flexible and could get cumbersome as more abilities get tacked-on.  Another downside to this method is that each stat would need its own similar function to be maintained.
-
-Another option would be to destructively transform *STR* for each modifier and revert the transformation when the modifier is disabled.  This creates some obvious problems if the operations aren't communicative; if changes aren't reverted in their proper order, the value will be corrupted.  When the "Quad Damage" and "Well-Fed" buffs wear off, *STR* should return to the previous value of 50.  However, "Quad Damage" is set to wear off before "Well-Fed" will.  Reverting their transformations in that order would result in `str /= 4` followed by `str -= 5`, which results in 46.25, permanently changing the *STR* of the character.
-
-## Resource winding, unwinding, and rewinding
-
-The solution offered by *qscript* to solve the problem above is to apply *resource* scripts to objects at arbitrary *priorities* that push property transformations which are tracked in a modification stack.  The process of applying scripts is called *injecting* and the link between the object and resource is called an *rlink*.  The rlinks are executed from lowest priority to highest.  The process of executing an rlink is called *winding*.
-
-Using this model, here is the list of rlinks applied to the character described earlier:
-
- Priority | Resource              | Time Remaining
-----------|-----------------------|--------------------
- 0.       | `character_base`      | n/a
- 10.      | `character_level(10)` | n/a
- 20.      | `class_berserker`     | n/a
- 30.      | `weapon_sword`        | n/a
- 40.      | `buff_quad_damage`    | 10 sec
- 41.      | `buff_well_fed`       | 50 sec
-
-When "Quad Damage" wears off in 10 seconds, the rlink `buff_quad_damage` must be *ejected*, or removed, from the object.  The first step is to undo all modifications made to *STR* from all rlinks at higher priorities as well as the rlink to be ejected.  This process is called *unwinding*.  In reverse order (high to low priority), `buff_well_fed` will be unwound, followed by `buff_quad_damage`.  At this point, `buff_quad_damage` is ejected.  All rlinks that were previously unwound now need to be *rewound*, or re-executed, from low to high priority.  After `buff_well_fed` is rewound, *STR* is set to the proper value.
-
-This system allows an object model to be freely expanded without the need to manage its growing complexity.  In the RPG example, the game could conceivably have hundreds temporary buffs and debuff scripts, each which run a complex set of modifications, that can be safely applied to any object at any time without a single additional line of code in the program.
-
-## Object Relationships
-
-(feature unfinished)
-
-## Object- and Global-scope Variables
-
-(feature unfinished)
+Let's assume the first behavior is desired.  To make sure this happens, each script is given a number called a *priority* that determines its order of execution.  *Quad Damage* has a lower priority than *Extra Damage* which means its effects are always applied first.
 
 ---
 
-# Language:
+# Scripting Language:
 
-*qscript*'s scripting environment strives to stay as grammatically simple as possible while remaining flexible and powerful.  The language is used to define *resources* and their *scripts*  in the form of a single code *block*.  Each resource can be:
+*qscript*'s scripting environment strives to stay as grammatically simple as possible while remaining flexible and powerful.  The language is used to define *resources* and their *scripts* in the form of a single code *block*.  Each resource can be:
 
-1. instantiated as an *object*,
-2. *injected* into an object at a *priority* level as an *rlink*, or
+1. instantiated as the base of an *object*,
+2. *injected* into an object's *rlink chain* as an *rlink*, or
 3. automatically instantiated immediately after compilation as a *global object*.
 
 At first glance, a simple resource definition resembles that of a C-family programming language:
@@ -216,7 +187,7 @@ main {
 }
 ```
 
-There are, however, some important distinctions.  There are no built-in procedures for code flow or math; each of these features are defined as functions that need to be invoked with the same syntax, like the `return (0);` line above.  Same same applies for `if()`, `for()`, `+()`, `=()`, and anything else that is typically not called as a function.
+There are, however, some important distinctions.  There are no built-in procedures for code flow or math; each of these features are defined as functions that need to be invoked with a typical function's syntax.  Notice the `return (0);` line above.  Same same applies for functions like `if()`, `for()`, `+()`, `==()`, and `=()`.  For specific usage on these functions, please refer to the ***qscript* standard library** section.
 
 ## Values, Actions, and Function Calls:
 
@@ -823,6 +794,8 @@ safely cast to type `<char>`.
 13. `QS_BREAK`
 14. `QS_CONTINUE`
 
+---
+
 # Public Functions:
 
 1. `qs_arg_float`
@@ -901,6 +874,8 @@ safely cast to type `<char>`.
 74. `qs_variable_get`
 75. `qs_variable_value`
 
+---
+
 # Pre-defined Values:
 
 1. `QSV_ZERO`
@@ -932,14 +907,32 @@ safely cast to type `<char>`.
 27. `QSV_ALREADY_WOUND`
 28. `QSV_INVALID_PROPERTY`
 
-# Implementation:
+---
 
-1. Example of a simple parser.
-2. Instantiating and freeing objects.
-3. More complex qscript with multiple objects.
-4. Reading properties from objects.
-5. Reading and writing object variables.
-6. Internal cross-object access.
-7. External pushing / popping resources onto objects.
-8. Internal pushing / popping.
-9. Priorities, winding, unwinding, rewinding
+# Glossary of Terms:
+
+***scheme***:
+
+***world***:
+
+***resource***:
+
+***object***:
+
+***rlink***:
+
+***rlink chain***:
+
+***priority***:
+
+***injecting***:
+
+***ejecting***:
+
+***winding***:
+
+***unwinding***:
+
+***rewinding***:
+
+***influence***:

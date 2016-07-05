@@ -42,4 +42,4 @@ examples: .FORCE
 clean:
 	find . -name "*.o" -exec rm {} \;
 	rm -f $(LIB) $(LIB).$(LIBMAJOR) $(LIB).$(LIBFULL) $(PARSER)
-	cd example && make clean
+	cd examples && make clean

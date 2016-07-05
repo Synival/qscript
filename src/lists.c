@@ -50,6 +50,7 @@ int qs_list_internalize (qs_list_t *list)
 
       /* ...and copy external data to it.  use that instead from now on. */
       qs_value_copy_const (NULL, list->values_data[i], list->values[i]);
+      list->values_data[i]->flags |= QS_VALUE_MUTABLE;
       list->values[i] = list->values_data[i];
       count++;
    }

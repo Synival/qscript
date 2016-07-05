@@ -49,7 +49,7 @@ int main (void)
    /* instantiate main. */
    qs_resource_t *rsrc = qs_resource_get (scheme, ("main"));
    if (rsrc)
-      qs_object_instantiate (rsrc);
+      qs_object_instantiate (rsrc, "main");
 
    /* thorough, (hopefully) bug-free clean-up. */
    qs_scheme_free (scheme);

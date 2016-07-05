@@ -28,7 +28,7 @@ struct _qs_object_t {
 
 /* function declarations. */
 inline qs_object_t *qs_object_new (qs_scheme_t *scheme, char *name);
-qs_object_t *qs_object_instantiate (qs_resource_t *rsrc);
+qs_object_t *qs_object_instantiate (qs_resource_t *rsrc, char *name);
 qs_object_t *qs_object_instantiate_auto (qs_resource_t *rsrc);
 qs_object_t *qs_object_new_base (qs_scheme_t *scheme, char *name);
 qs_object_t *qs_object_get_by_id (qs_scheme_t *scheme, qs_id_t id);

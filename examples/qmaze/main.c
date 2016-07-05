@@ -117,7 +117,7 @@ int main (void)
    clear_screen ();
 
    /* instantiate an object of type 'main'. */
-   qs_object_instantiate (qs_resource_get (g_scheme, "main"));
+   qs_object_instantiate (qs_resource_get (g_scheme, "main"), "main");
 
    /* exit nicely. */
    printf ("\n(Game done. Press enter to end.)");

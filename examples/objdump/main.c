@@ -9,7 +9,7 @@
 
 int main (void)
 {
-   /* create our scheme, load its resources, and propagate changes. */
+   /* create our scheme, load its resources, and update changes. */
    qs_scheme_t *scheme = qs_scheme_new ();
    qs_parse_file (scheme, "my_resources.qs");
    qs_scheme_update (scheme);
