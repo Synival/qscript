@@ -29,6 +29,9 @@ This library is designed to create a persistent-state world of generic objects w
 2. Accurately and efficiently maintain the positions of elements in a web document using a complex stylesheet
 3. Create dynamic polymorphic objects with no strict definition
 
+*Q. What does the 'q' in 'qscript' stand for?*  
+*A. *qscript*.*
+
 ---
 
 # How *qscript* works:
@@ -1028,3 +1031,7 @@ safely cast to type `<char>`.
 ***rewinding***:
 
 ***influence***:
+
+***value***:
+
+***action***:
