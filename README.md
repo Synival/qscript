@@ -30,7 +30,7 @@ This library is designed to create a persistent-state world of generic objects w
 3. Create dynamic polymorphic objects with no strict definition
 
 *Q. What does the 'q' in 'qscript' stand for?*  
-*A. *qscript*.*
+*A.* qscript.
 
 ---
 
