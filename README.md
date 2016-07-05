@@ -2,11 +2,30 @@
 
 ***(qscript is currently under development.  Not all features listed in this document may be currently implemented.  To see project status, please read 'STATUS.md'.)***
 
-Table of Contents:
+---
 
-1. [What is *qscript*?](#what-is-qscript)
+##Table of Contents:
 
-## What is *qscript*?
+- [What is *qscript*?](#what-is-qscript)
+- [How *qscript* works](#how-qscript-works)
+- [Using *qscript*](#using-qscript)
+- - [Sample object "player"](#sample-object-player)
+- - [Player's scripts](#players-scripts)
+- - [Implementation](#implementation)
+- - [Running *objdump*](#running-objdump)
+- [Why make this?](#why-make-this)
+- [Scripting Language](#scripting-language)
+- - [Values, Actions, and Function Calls](#values-actions-and-function-calls)
+- - [Simple real primitives](#simple-real-primitives)
+- - [Complex real primitives](#complex-real-primitives)
+- - - [char](#char)
+- - - [list](#list)
+- - - [object](#object)
+- - [Abstract primitives](#abstract-primitives)
+
+---
+
+# What is *qscript*?
 
 This library is designed to create a persistent-state world of generic objects with arbitrary code injection/ejection, inter-object relationships that automatically update, and a sensible interface between the scripting environment and your project.
 
@@ -16,7 +35,9 @@ This library is designed to create a persistent-state world of generic objects w
 2. Accurately and efficiently maintain the positions of elements in a web document using a complex stylesheet
 3. Create dynamic polymorphic objects with no strict definition
 
-## How *qscript* works:
+---
+
+# How *qscript* works:
 
 To use *qscript*, your project must first define a *scheme* that will create a *world* which contains *resources* and *objects*.
 
@@ -28,13 +49,17 @@ All object property modifications are non-destructive and pushed onto a stack so
 
 The *world* tracks all object *influences* (properties/variables read from anything other than itself) and ensures that influenced objects update properly when the external value is changed.
 
-## Using *qscript*:
+---
+
+# Using *qscript*:
 
 **The resources and C code below can be found in the example program "examples/objdump" in this repository.**
 
 In the following tutorial, we'll be creating a program that instantiates a player object as the groundwork for a tiny RPG.  The player will have some base stats, a class, some equipment, and some buffs/debuffs attached from the start.
 
-**Sample object "player" with rlink chain:**
+## Sample object "player":
+
+Here is our desired rlink chain:
 
  Priority | Resource         | Effect
 ----------|------------------|----------------------------------------
@@ -47,7 +72,9 @@ In the following tutorial, we'll be creating a program that instantiates a playe
 
 Before implementing *qscript* in your project, let's define all of the resources listed above.
 
-**Sample scripts (from 'examples/objdump/my_resources.qs'):**
+## Player's scripts:
+
+(from 'examples/objdump/my_resources.qs'):
 
 ```
 player_base {
@@ -100,7 +127,9 @@ To create this object, we'll need to:
 3. inject rlinks into the object's rlink chain, and
 4. update our world to finish our object.
 
-**Sample implementation (from 'examples/objdump/main.c'):**
+## Implementation:
+
+(from 'examples/objdump/main.c'):
 
 ```
 /* create our scheme, load its resources, and update changes. */
@@ -129,9 +158,11 @@ qs_scheme_free (scheme);
 
 Executing the test program 'objdump' via 'objdump.sh' will describe the resulting object like so:
 
-**> ./objdump.sh**
+## Running *objdump*:
 
 ```
+> ./objdump.sh
+
 player:
    str    (float)  = 8
    def    (float)  = 10
@@ -145,7 +176,7 @@ player:
 
 ---
 
-# Why *qscript*?
+# Why make this?
 
 One of my favorite type of games to make are text-based multiplayer RPGs called MUDs (multi-user dungeons), which are early forerunners to MMOs.  These are reasonable projects to tackle because you don't need to make a million assets and the game runs 100% server-side.  For one MUD I was working on, my goal was to have a persistent world with as many of its resources put into text files as possible so I could define new monsters, classes, and abilities without hard-coding anything in.  The purpose of that was to make edits quick and easy without recompilation and allow hot-loading so the server would never have to reboot.  If I wanted to add stuff in or make changes, I could log into the server, load the new files, and play right away.  Neat!
 
@@ -168,9 +199,11 @@ In addition to preventing state corruption, *qscript* also strives to ensure tha
 
 Let's assume the first behavior is desired.  To make sure this happens, each script is given a number called a *priority* that determines its order of execution.  *Quad Damage* has a lower priority than *Extra Damage* which means its effects are always applied first.
 
+(keep writing...)
+
 ---
 
-# Scripting Language:
+# Scripting language:
 
 *qscript*'s scripting environment strives to stay as grammatically simple as possible while remaining flexible and powerful.  The language is used to define *resources* and their *scripts* in the form of a single code *block*.  Each resource can be:
 
@@ -189,7 +222,7 @@ main {
 
 There are, however, some important distinctions.  There are no built-in procedures for code flow or math; each of these features are defined as functions that need to be invoked with a typical function's syntax.  Notice the `return (0);` line above.  Same same applies for functions like `if()`, `for()`, `+()`, `==()`, and `=()`.  For specific usage on these functions, please refer to the ***qscript* standard library** section.
 
-## Values, Actions, and Function Calls:
+## Values, actions, and function calls:
 
 All code is composed of *values* followed by zero or more *actions*.  When a value is encountered, it is first *evaluated*, a process which dereferences variables, properties, and executes blocks until a *real primitive* is found.  If a value has an action, the evaluation is inputted into that action whose evaluation is fed into the next action and so on.  The final evaluation is then returned to the value's caller.
 
@@ -207,7 +240,7 @@ echo           ("foo");  # "echo" is a string matching a function.
 if (1, "echo") ("foo");  # if() returns the matching case, which is "echo".
 ```
 
-## Simple Real Primitives:
+## Simple real primitives:
 
 All values are ultimately stored as *real primitives*.  Real primitives are classified as either *simple* or *complex*.  Simple primitives contain all their data directly in the value structure `qs_value_t` and require no extra processing.
 
@@ -224,7 +257,7 @@ All values are ultimately stored as *real primitives*.  Real primitives are clas
 echo ("This " "is " "one " 'big ' 'string ');
 ```
 
-## Complex Real Primitives:
+## Complex real primitives:
 
 Complex primitives have unique characteristics that may contain additional processing or memory allocation.
 
@@ -280,7 +313,7 @@ copy_object {              # This script, when injected, will copy properties fr
 }
 ```
 
-## Abstract Primitives:
+## Abstract primitives:
 
 Values can also contain primitives that require execution or referencing during evaluation.  These are called *abstract primitives*.
 
