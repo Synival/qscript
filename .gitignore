@@ -1,4 +1,5 @@
 *.o
 *.so*
 qscript
-example/qmaze
+examples/qmaze/qmaze
+examples/objdump/objdump
