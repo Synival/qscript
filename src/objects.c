@@ -86,7 +86,7 @@ int qs_object_new_finish (qs_object_t *obj, qs_resource_t *rsrc)
    /* run our rlink. */
    /* TODO: unwind! */
    if ((rl = qs_rlink_push (obj, rsrc, 0)) != NULL)
-      qs_rlink_wind (rl, NULL);
+      qs_rlink_wind (rl);
    /* TODO: rewind! */
 
    return 1;

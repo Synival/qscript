@@ -54,6 +54,7 @@ qs_rlink_t *qs_rlink_push_at (qs_object_t *obj, qs_resource_t *resource,
    new->resource = resource;
    new->object   = obj;
    new->scheme   = resource->scheme;
+   new->priority = priority;
 
    /* add to our parent. */
    new->parent = parent;
@@ -93,7 +94,12 @@ qs_rlink_t *qs_rlink_push_at (qs_object_t *obj, qs_resource_t *resource,
    return new;
 }
 
-qs_value_t *qs_rlink_wind (qs_rlink_t *rlink, qs_execute_t *exe)
+inline qs_value_t *qs_rlink_wind (qs_rlink_t *rlink)
+{
+   return (rlink->parent ? QSV_UNDEFINED : qs_rlink_wind_from (rlink, NULL));
+}
+
+qs_value_t *qs_rlink_wind_from (qs_rlink_t *rlink, qs_execute_t *exe)
 {
    /* can't wind what's already wound. */
    if (rlink->flags & QS_RLINK_ON) {

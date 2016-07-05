@@ -18,7 +18,7 @@ LFLAGS =
 
 default: all
 
-all: $(LIB) $(PARSER) example
+all: $(LIB) $(PARSER) examples
 
 $(PARSER): $(OBJ_PARSER)
 	$(CC) -Wl,-R,'$$ORIGIN' $(OBJ_PARSER) -o $(PARSER) $(LFLAGS_PARSER) $(LFLAGS)
@@ -36,8 +36,8 @@ mpc/%.o: mpc/%.c
 	$(CC) $(CFLAGS_MPC) $(CFLAGS) -o $@ -c $<
 
 .FORCE:
-example: .FORCE
-	cd example && make
+examples: .FORCE
+	cd examples && make
 
 clean:
 	find . -name "*.o" -exec rm {} \;

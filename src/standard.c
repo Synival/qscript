@@ -98,6 +98,8 @@ qs_func_t qs_func_list_standard[] = {
    { "tokenize","<value>",                 1, qsf_tokenize,0 },
    { "multi",   "<line1> [... <linen>]",   1, qsf_multi,   0 },
    { "for_each","<list> <storage> <action>",1,qsf_for_each,0 },
+   { "new", "<base> [<priority1> <resource1> ... [<priorityn> <resourcen>]",
+                                           1, qsf_new,     0 },
    { NULL },
 };
 
@@ -1295,4 +1297,49 @@ QS_FUNC (qsf_multi)
    /* clean up and return our new multi-line string. */
    free (strings);
    return rval;
+}
+
+QS_FUNC (qsf_new)
+{
+   /* make sure the base resource exists. */
+   char *rsrc_str = QS_ARGS (0);
+   qs_resource_t *rsrc = qs_resource_get (exe->scheme, rsrc_str);
+   if (rsrc == NULL) {
+      QS_ARG_ERROR (0, "cannot find resource '%s'.\n", rsrc_str);
+      return QSV_INVALID_RESOURCE;
+   }
+
+   /* instantiate the object. */
+   qs_object_t *new = qs_object_new (rsrc);
+   if (new == NULL) {
+      QS_ARG_ERROR (0, "unable to instantiate object '%s'.\n", rsrc_str);
+      return QSV_NO_OBJECT;
+   }
+
+   /* apply resources at priorities. */
+   int i, priority;
+   for (i = 1; i < args - 1; i += 2) {
+      /* get a priority + resource pair. */
+      priority = QS_ARGI (i);
+      rsrc_str = QS_ARGS (i + 1);
+
+      /* report an error if it didn't work - but don't abort. */
+      if ((rsrc = qs_resource_get (exe->scheme, rsrc_str)) == NULL) {
+         QS_ARG_ERROR (i + 1, "cannot find resource '%s' to make rlink on "
+            "object '%s' at priority %g.\n", rsrc_str, new->name, priority);
+      }
+      /* looks like it worked!  push rlink. */
+      else
+         qs_rlink_push (new, rsrc, priority);
+   }
+
+   /* TODO: this should be handled by the scheme in a different way. */
+   /* wind all unwound rlinks. */
+   qs_rlink_t *r;
+   for (r = new->rlink_list_front; r != NULL; r = r->next)
+      if (!(r->flags & QS_RLINK_ON))
+         qs_rlink_wind (r);
+
+   /* return the new object's id. */
+   return QS_RETI (new->id);
 }
