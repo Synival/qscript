@@ -62,36 +62,43 @@ inline int qs_func_error (qs_execute_t *exe, char *func_name, p_node_t *node,
    return p_error (node, "%s(): %s", func_name, buf);
 }
 
-inline qs_value_t *qs_return_value_new (qs_scheme_t *scheme)
+inline qs_value_t *qs_return_value (qs_scheme_t *scheme)
 {
    return qs_scheme_heap_value (scheme);
 }
 
 inline qs_value_t *qs_return_string (qs_scheme_t *scheme, char *s)
 {
-   qs_value_t *r = qs_return_value_new (scheme);
+   qs_value_t *r = qs_return_value (scheme);
    qs_value_init (r, QSCRIPT_STRING, s);
    return r;
 }
 
 inline qs_value_t *qs_return_int (qs_scheme_t *scheme, int i)
 {
-   qs_value_t *r = qs_return_value_new (scheme);
+   qs_value_t *r = qs_return_value (scheme);
    qs_value_init (r, QSCRIPT_INT, i);
    return r;
 }
 
 inline qs_value_t *qs_return_float (qs_scheme_t *scheme, float f)
 {
-   qs_value_t *r = qs_return_value_new (scheme);
+   qs_value_t *r = qs_return_value (scheme);
    qs_value_init (r, QSCRIPT_FLOAT, f);
    return r;
 }
 
 inline qs_value_t *qs_return_char (qs_scheme_t *scheme, char c)
 {
-   qs_value_t *r = qs_return_value_new (scheme);
+   qs_value_t *r = qs_return_value (scheme);
    qs_value_init (r, QSCRIPT_CHAR, c, NULL, NULL);
+   return r;
+}
+
+inline qs_value_t *qs_return_list (qs_scheme_t *scheme, int count)
+{
+   qs_value_t *r = qs_return_value (scheme);
+   qs_value_init (r, QSCRIPT_LIST, count);
    return r;
 }
 

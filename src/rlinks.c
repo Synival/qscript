@@ -21,7 +21,7 @@
 
 #include "rlinks.h"
 
-qs_rlink_t *qs_rlink_push (qs_object_t *obj, qs_resource_t *resource,
+qs_rlink_t *qs_rlink_inject (qs_object_t *obj, qs_resource_t *resource,
                            int priority)
 {
    qs_rlink_t *rl;
@@ -35,10 +35,10 @@ qs_rlink_t *qs_rlink_push (qs_object_t *obj, qs_resource_t *resource,
             break;
 
    /* create a new object and return it. */
-   return qs_rlink_push_at (obj, resource, priority, NULL, rl, NULL, NULL);
+   return qs_rlink_inject_at (obj, resource, priority, NULL, rl, NULL, NULL);
 }
 
-qs_rlink_t *qs_rlink_push_at (qs_object_t *obj, qs_resource_t *resource,
+qs_rlink_t *qs_rlink_inject_at (qs_object_t *obj, qs_resource_t *resource,
    int priority, qs_rlink_t *parent, qs_rlink_t *prev, qs_execute_t *exe,
    qs_action_t *action)
 {
@@ -149,7 +149,7 @@ int qs_rlink_unwind (qs_rlink_t *rlink)
    return 1;
 }
 
-int qs_rlink_pop (qs_rlink_t *rlink)
+int qs_rlink_eject (qs_rlink_t *rlink)
 {
    /* unwind before anything else, and free modification stack. */
    qs_rlink_unwind (rlink);
@@ -158,7 +158,7 @@ int qs_rlink_pop (qs_rlink_t *rlink)
 
    /* free children first. */
    while (rlink->child_back)
-      qs_rlink_pop (rlink->child_back);
+      qs_rlink_eject (rlink->child_back);
 
    /* free any remaining variables. */
    while (rlink->variable_list_back)

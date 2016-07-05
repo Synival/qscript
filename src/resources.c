@@ -44,7 +44,7 @@ qs_object_t *qs_resource_auto_instance (qs_resource_t *rsrc)
    if ((obj = qs_resource_get_auto_instance (rsrc)) != NULL)
       return obj;
    else if (rsrc->flags & QS_RSRC_AUTO_INSTANTIATE)
-      return qs_object_new_auto (rsrc);
+      return qs_object_instantiate_auto (rsrc);
    else
       return NULL;
 }

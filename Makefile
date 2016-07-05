@@ -13,7 +13,7 @@ LFLAGS_MPC    =
 LIBMAJOR = 0
 LIBFULL  = 0.0.1
 
-CFLAGS =
+CFLAGS = -g -O0
 LFLAGS =
 
 default: all

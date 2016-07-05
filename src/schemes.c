@@ -149,6 +149,15 @@ int qs_scheme_update (qs_scheme_t *scheme)
          count++;
    }
 
+   /* TODO: this is slow and temporary.  eventually, it will maintain a queue
+    * of rlinks to be updated. */
+   qs_object_t *o;
+   qs_rlink_t *rl;
+   for (o = scheme->object_list_front; o != NULL; o = o->next)
+      for (rl = o->rlink_list_front; rl != NULL; rl = rl->next)
+         if (!(rl->flags & QS_RLINK_ON))
+            qs_rlink_wind (rl);
+
    /* return the number of resources instantiated. */
    return count;
 }

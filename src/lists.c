@@ -32,6 +32,32 @@ qs_list_t *qs_list_new (qs_scheme_t *scheme, int size)
    return new;
 }
 
+int qs_list_internalize (qs_list_t *list)
+{
+   int i, count = 0;
+   for (i = 0; i < list->value_count; i++) {
+      /* if the data is already set properly, do nothing. */
+      if (list->values_data[i] == list->values[i])
+         continue;
+
+      /* otherwise, free internalized data. */
+      if (list->values_data[i])
+         qs_value_free (list->values_data[i]);
+
+      /* allocate our internal data... */
+      list->values_data[i] = malloc (sizeof (qs_value_t));
+      memset (list->values_data[i], 0, sizeof (qs_value_t));
+
+      /* ...and copy external data to it.  use that instead from now on. */
+      qs_value_copy_const (NULL, list->values_data[i], list->values[i]);
+      list->values[i] = list->values_data[i];
+      count++;
+   }
+
+   /* return the number of elements interanlized. */
+   return count;
+}
+
 int qs_list_free (qs_list_t *list)
 {
    if (list->node)
@@ -56,6 +82,11 @@ qs_list_t *qs_list_copy (qs_list_t *list)
 
    /* copy values over. */
    int i;
+   for (i = 0; i < list->value_count; i++)
+      new->values[i] = list->values[i];
+   qs_list_internalize (new);
+
+#if 0
    for (i = 0; i < list->value_count; i++) {
       /* assign to value pointer and value data lists. */
       new->values[i] = malloc (sizeof (qs_value_t));
@@ -67,6 +98,7 @@ qs_list_t *qs_list_copy (qs_list_t *list)
       new->values[i]->flags |= QS_VALUE_MUTABLE;
       qs_value_copy (NULL, new->values[i], list->values[i]);
    }
+#endif
 
    /* return our new list. */
    return new;

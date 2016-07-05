@@ -28,11 +28,12 @@ inline int qs_func_error (qs_execute_t *exe, char *func_name, p_node_t *node,
    char *format, ...);
 
 /* return value producing functions. */
-inline qs_value_t *qs_return_value_new (qs_scheme_t *scheme);
+inline qs_value_t *qs_return_value (qs_scheme_t *scheme);
 inline qs_value_t *qs_return_string (qs_scheme_t *scheme, char *s);
 inline qs_value_t *qs_return_int (qs_scheme_t *scheme, int i);
 inline qs_value_t *qs_return_float (qs_scheme_t *scheme, float f);
 inline qs_value_t *qs_return_char (qs_scheme_t *scheme, char c);
+inline qs_value_t *qs_return_list (qs_scheme_t *scheme, int count);
 
 /* code flow functions. */
 int qs_func_break    (qs_execute_t *e);

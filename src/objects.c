@@ -17,7 +17,10 @@
 
 #include "objects.h"
 
-qs_object_t *qs_object_new (qs_resource_t *rsrc)
+inline qs_object_t *qs_object_new (qs_scheme_t *scheme, char *name)
+   { return qs_object_new_base (scheme, name); }
+
+qs_object_t *qs_object_instantiate (qs_resource_t *rsrc)
 {
    qs_object_t *new;
 
@@ -30,11 +33,11 @@ qs_object_t *qs_object_new (qs_resource_t *rsrc)
       return NULL;
 
    /* finish and return our new object. */
-   qs_object_new_finish (new, rsrc);
+   qs_object_instantiate_finish (new, rsrc);
    return new;
 }
 
-qs_object_t *qs_object_new_auto (qs_resource_t *rsrc)
+qs_object_t *qs_object_instantiate_auto (qs_resource_t *rsrc)
 {
    char buf[256];
    qs_object_t *new;
@@ -56,7 +59,7 @@ qs_object_t *qs_object_new_auto (qs_resource_t *rsrc)
    rsrc->auto_id = new->id;
 
    /* finish and return our new object. */
-   qs_object_new_finish (new, rsrc);
+   qs_object_instantiate_finish (new, rsrc);
    return new;
 }
 
@@ -78,17 +81,20 @@ qs_object_t *qs_object_new_base (qs_scheme_t *scheme, char *name)
    return new;
 }
 
-int qs_object_new_finish (qs_object_t *obj, qs_resource_t *rsrc)
+int qs_object_instantiate_finish (qs_object_t *obj, qs_resource_t *rsrc)
 {
    /* link and run our resource. */
    qs_rlink_t *rl;
 
-   /* run our rlink. */
-   /* TODO: unwind! */
-   if ((rl = qs_rlink_push (obj, rsrc, 0)) != NULL)
-      qs_rlink_wind (rl);
-   /* TODO: rewind! */
+   /* add our rlink. */
+   if ((rl = qs_rlink_inject (obj, rsrc, 0)) == NULL)
+      return 0;
 
+   /* TODO: don't wind it here!! */
+   if (rl)
+      qs_rlink_wind (rl);
+
+   /* return success. */
    return 1;
 }
 
@@ -114,9 +120,9 @@ int qs_object_free (qs_object_t *object)
       object->resource = NULL;
    }
 
-   /* unwind and pop all rlinks. */
+   /* unwind and eject all rlinks. */
    while (object->rlink_list_back)
-      qs_rlink_pop (object->rlink_list_back);
+      qs_rlink_eject (object->rlink_list_back);
 
    /* free properties. */
    while (object->property_list_back)

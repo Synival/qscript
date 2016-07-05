@@ -596,6 +596,7 @@ int qs_value_init (qs_value_t *val, int type, ...)
          val->val_i = va_arg (va, qs_id_t);
          val->val_f = val->val_i;
          break;
+
       case QSCRIPT_VARIABLE: {
          val->val_i = va_arg (va, int);
          val->val_f = val->val_i;
@@ -614,9 +615,17 @@ int qs_value_init (qs_value_t *val, int type, ...)
             qs_value_restring (val, str);
          break;
       }
+
       case QSCRIPT_PROPERTY:
          qs_value_restring (val, va_arg (va, char *));
          break;
+
+      case QSCRIPT_LIST:
+         qs_value_restring (val, "<list>");
+         val->val_p = qs_list_new (val->scheme, va_arg (va, int));
+         val->data = val->val_p;
+         break;
+
       default:
          /* can't initialize this value.  complain. */
          p_error (val->node, "cannot initialize variable of type '%s'.\n",
@@ -646,15 +655,20 @@ int qs_value_list_internalize (qs_value_t *value)
       return 0;
    }
 
-   /* if already internalized, do nothing, but return success. */
+   /* if there's other internalized data that doesn't match, free it. */
+   if (value->data && value->val_p != value->data) {
+      qs_list_free (value->data);
+      value->data = NULL;
+   }
+   /* if there's no data, copy the list and use it ourselves. */
+   if (value->data == NULL) {
+      value->data = qs_list_copy (value->val_p);
+      value->val_p = value->data;
+   }
+   /* otherwise, make sure all values in the list belong to itself. */
    if (value->val_p == value->data)
-      return 1;
-   if (value->data)
-      p_error (value->node, "internalization of list ignores already "
-         "internalized data.  memory leak likely.\n");
+      qs_list_internalize (value->val_p);
 
-   /* copy the list and return success. */
-   value->data = qs_list_copy (value->val_p);
-   value->val_p = value->data;
+   /* make sure our list points to our own data and return success. */
    return 1;
 }

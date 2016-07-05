@@ -22,6 +22,7 @@
       qs_object_get;
       qs_object_get_by_id;
       qs_object_new;
+      qs_object_instantiate;
       qs_parse_content;
       qs_parse_init;
       qs_parse_file;
@@ -37,12 +38,12 @@
       qs_return_char;
       qs_return_float;
       qs_return_int;
+      qs_return_list;
       qs_return_string;
-      qs_return_value_new;
+      qs_return_value;
       qs_rlink_is_child_of;
-      qs_rlink_pop;
-      qs_rlink_push;
-      qs_rlink_push_at;
+      qs_rlink_eject;
+      qs_rlink_inject;
       qs_rlink_unwind;
       qs_rlink_wind;
       qs_scheme_cleanup;

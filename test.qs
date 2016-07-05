@@ -386,7 +386,8 @@ main {
    $error_test (== (@@main, "@@my_object"));
    $error_test (= (@@my_object.string, "this shouldn't work"));
    $error_test (= (this(), @@my_object));
-   $error_test (new (resource-that-doesnt-exist));
+   $error_test (new (derp, [resource-that-doesnt-exist]));
+   $error_test (new (derp, [my_object, derp]));
    echo ("   Error test concluded.");
    echo ();
 }

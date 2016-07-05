@@ -21,5 +21,6 @@ int qs_list_free (qs_list_t *list);
 qs_list_t *qs_list_new (qs_scheme_t *scheme, int size);
 qs_list_t *qs_list_copy (qs_list_t *list);
 qs_value_t *qs_list_value (qs_execute_t *exe, qs_list_t *list, int index);
+int qs_list_internalize (qs_list_t *list);
 
 #endif

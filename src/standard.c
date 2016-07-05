@@ -98,7 +98,7 @@ qs_func_t qs_func_list_standard[] = {
    { "tokenize","<value>",                 1, qsf_tokenize,0 },
    { "multi",   "<line1> [... <linen>]",   1, qsf_multi,   0 },
    { "for_each","<list> <storage> <action>",1,qsf_for_each,0 },
-   { "new", "<base> [<priority1> <resource1> ... [<priorityn> <resourcen>]",
+   { "new", "<name> [list(<resource> [<priority>])1 ... listn]",
                                            1, qsf_new,     0 },
    { NULL },
 };
@@ -158,6 +158,32 @@ QS_FUNC (qsf_math)
 
    /* perform different calculations based on type. */
    switch (val->type_id) {
+      /* only '+' is allowed for lists. */
+      case QSCRIPT_LIST: {
+         if (math_func != 0) {
+            QS_ARG_ERROR (0, "invalid operation.\n");
+            return QSV_INVALID_OPER;
+         }
+
+         /* build a new list with the contents of val + every other arg. */
+         qs_list_t *old_list = val->val_p;
+         rval = QS_RETL (old_list->value_count + (args - start));
+         qs_list_t *new_list = rval->val_p;
+
+         /* copy links to all previous data. */
+         int pos = 0;
+         for (i = 0; i < old_list->value_count; i++)
+            new_list->values[pos++] = old_list->values[i];
+
+         /* add links to new data. */
+         for (i = start; i < args; i++)
+            new_list->values[pos++] = QS_ARGV (i);
+
+         /* make sure our list has this data internalized. */
+         qs_value_list_internalize (rval);
+         break;
+      }
+
       case QSCRIPT_CHAR: {
          qs_value_t *ival;
          int v = val->val_i;
@@ -191,7 +217,7 @@ QS_FUNC (qsf_math)
                      v %= (int) rch;
                   break;
                default:
-                  QS_ARG_ERROR (i, "invalid operation.\n");
+                  QS_ARG_ERROR (0, "invalid operation.\n");
                   return QSV_INVALID_OPER;
             }
             if (v < 1 || v > 255) {
@@ -229,7 +255,7 @@ QS_FUNC (qsf_math)
                      v %= r;
                   break;
                default:
-                  QS_ARG_ERROR (i, "invalid operation.\n");
+                  QS_ARG_ERROR (0, "invalid operation.\n");
                   return QSV_INVALID_OPER;
             }
          }
@@ -259,7 +285,7 @@ QS_FUNC (qsf_math)
                      v = fmodf (v, r);
                   break;
                default:
-                  QS_ARG_ERROR (i, "invalid operation.\n");
+                  QS_ARG_ERROR (0, "invalid operation.\n");
                   return QSV_INVALID_OPER;
             }
          }
@@ -1222,11 +1248,8 @@ QS_FUNC (qsf_tokenize)
 
    /* allocate a new list. */
    qs_value_t *rval = qs_scheme_heap_value (exe->scheme);
-   qs_list_t *list = qs_list_new (exe->scheme, count);
-   rval->type_id = QSCRIPT_LIST;
-   qs_value_restring (rval, "<list>");
-   rval->val_p = list;
-   rval->data = list;
+   qs_value_init (rval, QSCRIPT_LIST, count);
+   qs_list_t *list = rval->val_p;
 
    /* copy token values. */
    int start = 0;
@@ -1302,40 +1325,68 @@ QS_FUNC (qsf_multi)
 QS_FUNC (qsf_new)
 {
    /* make sure the base resource exists. */
-   char *rsrc_str = QS_ARGS (0);
-   qs_resource_t *rsrc = qs_resource_get (exe->scheme, rsrc_str);
-   if (rsrc == NULL) {
-      QS_ARG_ERROR (0, "cannot find resource '%s'.\n", rsrc_str);
-      return QSV_INVALID_RESOURCE;
-   }
+   char *obj_name = QS_ARGS (0);
 
    /* instantiate the object. */
-   qs_object_t *new = qs_object_new (rsrc);
+   qs_object_t *new = qs_object_new (exe->scheme, obj_name);
    if (new == NULL) {
-      QS_ARG_ERROR (0, "unable to instantiate object '%s'.\n", rsrc_str);
+      QS_ARG_ERROR (0, "unable to instantiate object '%s'.\n", obj_name);
       return QSV_NO_OBJECT;
    }
 
+   /* variables required for the next loop. */
+   qs_list_t *list;
+   qs_resource_t *rsrc;
+   char *rsrc_name;
+   int i, priority = 0;
+
    /* apply resources at priorities. */
-   int i, priority;
-   for (i = 1; i < args - 1; i += 2) {
-      /* get a priority + resource pair. */
-      priority = QS_ARGI (i);
-      rsrc_str = QS_ARGS (i + 1);
+   for (i = 1; i < args; i++) {
+      /* argument must be a list. */
+      qs_value_t *v = QS_ARGV (i);
+      if (v->type_id != QSCRIPT_LIST) {
+         QS_ARG_ERROR (i, "argument '%s' is incorrect type.  must be a list "
+            "with a resource name and (optional) priority.\n", v->val_s);
+         continue;
+      }
+
+      /* list must have at least one element. */
+      list = v->val_p;
+      if (list->value_count == 0) {
+         QS_ARG_ERROR (i, "argument cannot be empty list.\n");
+         continue;
+      }
+
+      /* first list element must be type 'string'. */
+      v = qs_value_read (exe, list->values[0]);
+      if (v->type_id != QSCRIPT_STRING) {
+         QS_ARG_ERROR (i, "first list element '%s' for resource name must be "
+                          "type 'string'.\n", v->val_s);
+         continue;
+      }
+      rsrc_name = v->val_s;
+
+      /* second list element must be type 'int'. */
+      if (list->value_count >= 2) {
+         v = qs_value_read (exe, list->values[1]);
+         if (v->type_id != QSCRIPT_INT) {
+            QS_ARG_ERROR (i, "second list element '%s' for priority must be "
+                             "type 'int'.\n", v->val_s);
+            continue;
+         }
+         priority = v->val_i;
+      }
 
       /* report an error if it didn't work - but don't abort. */
-      if ((rsrc = qs_resource_get (exe->scheme, rsrc_str)) == NULL) {
-         QS_ARG_ERROR (i + 1, "cannot find resource '%s' to make rlink on "
-            "object '%s' at priority %g.\n", rsrc_str, new->name, priority);
+      if ((rsrc = qs_resource_get (exe->scheme, rsrc_name)) == NULL) {
+         QS_ARG_ERROR (i, "cannot find resource '%s' to make rlink on "
+            "object '%s' at priority %d.\n", rsrc_name, new->name, priority);
+         continue;
       }
-      /* looks like it worked!  push rlink. */
-      else
-         qs_rlink_push (new, rsrc, priority);
-   }
 
-   /* if there's an extra argument, toss a warning. */
-   if (i < args)
-      QS_ARG_ERROR (i, "extra argument - not evaluating.\n");
+      /* looks like it worked!  push rlink. */
+      qs_rlink_inject (new, rsrc, priority);
+   }
 
    /* TODO: this should be handled by the scheme in a different way. */
    /* wind all unwound rlinks. */

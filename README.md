@@ -1,6 +1,104 @@
 # *qscript*
 
-This library is designed to create a persistent-state world of generic objects with arbitrary code injection/ejection via scripts, complex inter-object relationships, and a sensible interface between the scripting environment and the project.  Each script's purpose is twofold: to 1) non-destructively modify object properties and 2) apply scripts onto other objects matching specified criteria.  The qscript language is functional, small, flexible, and grammatically minimal.
+This library is designed to create a persistent-state world of generic objects with arbitrary code injection/ejection, inter-object relationships that automatically update, and a sensible interface between the scripting environment and your project.
+
+*qscript* is useful for projects that need to:
+
+1. accurately and efficiently maintain element positions in a web document with a complex stylesheet,
+2. preserve a persistent world in a game with thousands of objects over an indefinite amount of time with guaranteed data consistency, and
+3. create objects with no strict definition and dynamic polymorphism.
+
+Objects are defined as a series of *rlinks* (links to resource scripts) in a chain that can be modified and re-arranged at runtime.  All object property modifications are non-destructive and pushed onto a stack so they can be safely reverted.  Chains are modified by *unwinding* (rolling back) to the point of modification, *injecting* (inserting) or *ejecting* (removing) the desired script, then *rewinding* (re-executing scripts that have been unwound).
+
+Sample object "player" with rlink chain:
+
+ Priority | Script           | Effect
+----------|------------------|----------------------------------------
+ 0        | `player_base`    | Define base values for all properties
+ 10       | `class_wizard`   | Modify stats and abilities to turn this character into a wizard
+ 20       | `purple_robe_on` | Change appearance and stats
+ 20       | `magic_wand_on`  | Increase strength and grant a new ability
+ 30       | `buff_invisible` | (Temporary) modify appearance and increase sneaking to 100%
+ 40       | `too_hot`        | (Applied from environment) Character is slower and dumber
+
+*qscript* uses its own scripting language designed specifically to accomplish these tasks in a flexible way that conforms to the object model's restrictions.  It strives to:
+
+1. be a functional language to ensure object consistency, and
+2. have a minimal set of grammatical rules to maintain simplicity.
+
+Sample scripts:
+
+```
+player_base {
+   # set base properties.
+   = (.str, 10.00);      # strength
+   = (.def, 10.00);      # defense
+   = (.int, 10.00);      # intelligence
+   = (.agi, 10.00);      # agility
+   = (.class, "none");   # we don't have a class yet.
+   = (.color, "beige");  # character is super bland.
+   = (.skills, []);      # our skills is an empty list.
+   = (.sneak, 0.00);     # we're not very sneaky.
+}
+
+class_wizard {  
+    = (.class, "wizard");       # define our class:
+   *= (.str, 0.50);             # weak,
+   *= (.def, 0.50);             # fragile,
+   *= (.int, 2.00);             # but super smart,
+   += (.skills, "spell_fire");  # and with a spell.
+}
+
+purple_robe_on {  
+    = (.color, "purple");  # we're purple now.
+   += (.def, 5.00);        # small buff to defense,
+   += (.int, 10.00);       # and a big one to intelligence.
+}
+
+magic_wand_on {
+   += (.str, 3.00);                      # slight strength increase,
+   if (== (.class, "wizard"),            # if we're a wizard...
+      += (.skills, "spell_invisible"));  # ...add a new spell.
+}
+
+buff_invisible {
+   = (.color, "clear");  # can't see us!
+   = (.sneak, 100.00);   # 100% sneaking
+}
+
+too_hot {
+   *= (.agi, 0.75)  # 75% agility
+   *= (.int, 0.75)  # 75% intelligence
+}
+```
+
+(write basic implementation description)
+
+```
+/* create our scheme, load its resources, and propagate changes. */
+qs_scheme_t *scheme = qs_scheme_new ();
+qs_parse_file (scheme, "my_resources.qs");
+qs_scheme_update (scheme);
+
+/* instantiate our player and add rlinks to its resource chain. */
+qs_object_t *obj = qs_object_new (scheme, "player");
+qs_rlink_inject (obj, qs_resource_get (scheme, "player_base"),    0);
+qs_rlink_inject (obj, qs_resource_get (scheme, "class_wizard"),   10);
+qs_rlink_inject (obj, qs_resource_get (scheme, "purple_robe_on"), 20);
+qs_rlink_inject (obj, qs_resource_get (scheme, "magic_wand_on"),  20);
+qs_rlink_inject (obj, qs_resource_get (scheme, "buff_invisible"), 30);
+qs_rlink_inject (obj, qs_resource_get (scheme, "too_hot"),        40);
+
+/* update changes again so 'obj' is run. */
+qs_scheme_update (scheme);
+
+/* (do everything we want with our object) */
+...
+
+/* clean-up time!  free all objects, resources, and the scheme itself. */
+qs_scheme_free (scheme);
+
+```
 
 ---
 
