@@ -338,7 +338,7 @@ P_FUNC (qs_language_resource)
          case QSCRIPT_RFLAGS:
             for (ch = n->first_child->contents; *ch != '\0'; ch++) {
                switch (*ch) {
-                  case '@': flags |= QS_RSRC_AUTO_INSTANTIATE; break;
+                  case '@': flags |= QS_RSRC_GLOBAL; break;
                }
             }
             break;

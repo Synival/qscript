@@ -90,10 +90,6 @@ int qs_object_instantiate_finish (qs_object_t *obj, qs_resource_t *rsrc)
    if ((rl = qs_rlink_inject (obj, rsrc, 0)) == NULL)
       return 0;
 
-   /* TODO: don't wind it here!! */
-   if (rl)
-      qs_rlink_wind (rl);
-
    /* return success. */
    return 1;
 }

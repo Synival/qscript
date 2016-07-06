@@ -83,7 +83,7 @@ enum qscript_tag_e {
 #define QS_EXE_READ_ONLY         0x04
 
 /* flags for resources. */
-#define QS_RSRC_AUTO_INSTANTIATE 0x01
+#define QS_RSRC_GLOBAL           0x01
 #define QS_RSRC_LINKED           0x02
 
 /* flags for values. */

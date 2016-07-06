@@ -11,6 +11,7 @@
 #include "link.h"
 #include "objects.h"
 #include "parser.h"
+#include "rlinks.h"
 #include "schemes.h"
 
 #include "resources.h"
@@ -43,7 +44,7 @@ qs_object_t *qs_resource_auto_instance (qs_resource_t *rsrc)
    qs_object_t *obj;
    if ((obj = qs_resource_get_auto_instance (rsrc)) != NULL)
       return obj;
-   else if (rsrc->flags & QS_RSRC_AUTO_INSTANTIATE)
+   else if (rsrc->flags & QS_RSRC_GLOBAL)
       return qs_object_instantiate_auto (rsrc);
    else
       return NULL;
@@ -68,7 +69,9 @@ int qs_resource_free (qs_resource_t *resource)
    if ((obj = qs_resource_get_auto_instance (resource)) != NULL)
       qs_object_free (obj);
 
-   /* TODO: free all rlinks applied from this resource. */
+   /* free all rlinks applied from this resource. */
+   while (resource->rlink_list_back)
+      qs_rlink_eject (resource->rlink_list_back);
 
    /* unlink from node. */
    if (resource->node)

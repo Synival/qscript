@@ -50,6 +50,7 @@ int main (void)
    qs_resource_t *rsrc = qs_resource_get (scheme, ("main"));
    if (rsrc)
       qs_object_instantiate (rsrc, "main");
+   qs_scheme_update (scheme);
 
    /* thorough, (hopefully) bug-free clean-up. */
    qs_scheme_free (scheme);

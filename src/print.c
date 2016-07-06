@@ -128,7 +128,7 @@ int qs_print_resource (qs_resource_t *r)
 
    /* build a string containing our flags. */
    len = 0;
-   if (r->flags & QS_RSRC_AUTO_INSTANTIATE) flag_str[len++] = '*';
+   if (r->flags & QS_RSRC_GLOBAL) flag_str[len++] = '*';
    flag_str[len] = '\0';
 
    /* print our resource title. */

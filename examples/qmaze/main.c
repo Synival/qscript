@@ -118,6 +118,7 @@ int main (void)
 
    /* instantiate an object of type 'main'. */
    qs_object_instantiate (qs_resource_get (g_scheme, "main"), "main");
+   qs_scheme_update (g_scheme);
 
    /* exit nicely. */
    printf ("\n(Game done. Press enter to end.)");
