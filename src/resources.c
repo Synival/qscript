@@ -17,7 +17,7 @@
 #include "resources.h"
 
 qs_resource_t *qs_resource_new (qs_scheme_t *scheme, char *name,
-                                qs_list_t *block, int flags)
+                                qs_list_t *block, qs_flags_t flags)
 {
    qs_resource_t *new;
 
@@ -44,7 +44,7 @@ qs_object_t *qs_resource_auto_instance (qs_resource_t *rsrc)
    qs_object_t *obj;
    if ((obj = qs_resource_get_auto_instance (rsrc)) != NULL)
       return obj;
-   else if (rsrc->flags & QS_RSRC_GLOBAL)
+   else if (rsrc->flags & QS_RESOURCE_GLOBAL)
       return qs_object_instantiate_auto (rsrc);
    else
       return NULL;

@@ -17,21 +17,42 @@ int qs_print_value (qs_value_t *v, int indent)
    if (v == NULL)
       return 0;
    int count = 1;
-   switch (v->type_id) {
-      case QSCRIPT_CHAR:
-         printf ("'\x1b[0;37;1m%s\x1b[0m'", v->val_s);
+   switch (v->value_id) {
+      /* simple real primitives. */
+      case QS_VALUE_UNDEFINED:
+         printf ("\x1b[0;31;1mundefined\x1b[0m");
          break;
-      case QSCRIPT_STRING:
-         if (v->action_list && v->action_list->type_id == QS_ACTION_CALL)
+      case QS_VALUE_INT:
+      case QS_VALUE_FLOAT:
+         printf ("\x1b[0;35;1m%s\x1b[0m", v->val_s);
+         break;
+      case QS_VALUE_STRING:
+         if (v->action_list && v->action_list->action_id == QS_ACTION_CALL)
             printf ("\x1b[0;33;1m%s\x1b[0m", v->val_s);
          else
             printf ("\x1b[0;35m\"\x1b[1m%s\x1b[0;35m\"\x1b[0m", v->val_s);
          break;
-      case QSCRIPT_FLOAT:
-      case QSCRIPT_INT:
-         printf ("\x1b[0;35;1m%s\x1b[0m", v->val_s);
+
+      /* complex real primitives. */
+      case QS_VALUE_CHAR:
+         printf ("'\x1b[0;37;1m%s\x1b[0m'", v->val_s);
          break;
-      case QSCRIPT_VARIABLE:
+      case QS_VALUE_LIST:
+         putchar ('[');
+         count += qs_print_list (v->val_p, indent);
+         putchar (']');
+         break;
+      case QS_VALUE_OBJECT:
+         printf ("\x1b[0;32m@\x1b[1m%s\x1b[0m", (char *) v->data);
+         break;
+
+      /* abstract primitives. */
+      case QS_VALUE_BLOCK:
+         printf ("{\n");
+         count += qs_print_list (v->val_p, indent + 3);
+         printf ("%*s}", indent, "");
+         break;
+      case QS_VALUE_VARIABLE:
          switch (v->val_i) {
             case QS_SCOPE_RLINK:
                printf ("\x1b[0;36m$$\x1b[1m%s\x1b[0m", v->val_s);
@@ -41,25 +62,11 @@ int qs_print_value (qs_value_t *v, int indent)
                break;
          }
          break;
-      case QSCRIPT_PROPERTY:
+      case QS_VALUE_PROPERTY:
          printf ("\x1b[0;34;1m.%s\x1b[0m", v->val_s);
          break;
-      case QSCRIPT_LIST:
-         putchar ('[');
-         count += qs_print_list (v->val_p, indent);
-         putchar (']');
-         break;
-      case QSCRIPT_BLOCK:
-         printf ("{\n");
-         count += qs_print_list (v->val_p, indent + 3);
-         printf ("%*s}", indent, "");
-         break;
-      case QSCRIPT_UNDEFINED:
-         printf ("\x1b[0;31;1mundefined\x1b[0m");
-         break;
-      case QSCRIPT_OBJECT:
-         printf ("\x1b[0;32m@\x1b[1m%s\x1b[0m", (char *) v->data);
-         break;
+
+      /* unhandled value type. */
       default:
          printf ("\x1b[0;31;1m<unknown value>\x1b[0m");
          break;
@@ -72,7 +79,7 @@ int qs_print_value (qs_value_t *v, int indent)
 
 int qs_print_action (qs_action_t *a, int indent)
 {
-   switch (a->type_id) {
+   switch (a->action_id) {
       case QS_ACTION_CALL:
          printf (" (");
          qs_print_list (a->data_p, indent + 3);
@@ -85,7 +92,7 @@ int qs_print_action (qs_action_t *a, int indent)
          break;
       case QS_ACTION_PROPERTY: {
          qs_value_t *val = a->data_p;
-         if (val->type_id == QSCRIPT_STRING && val->action_list == NULL)
+         if (val->value_id == QS_VALUE_STRING && val->action_list == NULL)
             printf ("\x1b[0;34;1m.%s\x1b[0m", val->val_s);
          else {
             printf ("\x1b[0;34;1m.\x1b[0m");
@@ -108,12 +115,12 @@ int qs_print_list (qs_list_t *l, int indent)
    /* print all parameters in this list. */
    for (i = 0; i < l->value_count; i++) {
       v = l->values[i];
-      if (l->type_id == QSCRIPT_BLOCK)
+      if (l->list_id == QS_LIST_BLOCK)
          printf ("%*s", indent, "");
       else if (i > 0)
          printf (", ");
       count += qs_print_value (v, indent);
-      if (l->type_id == QSCRIPT_BLOCK)
+      if (l->list_id == QS_LIST_BLOCK)
          printf (";\n");
    }
 
@@ -128,7 +135,7 @@ int qs_print_resource (qs_resource_t *r)
 
    /* build a string containing our flags. */
    len = 0;
-   if (r->flags & QS_RSRC_GLOBAL) flag_str[len++] = '*';
+   if (r->flags & QS_RESOURCE_GLOBAL) flag_str[len++] = '*';
    flag_str[len] = '\0';
 
    /* print our resource title. */

@@ -114,7 +114,7 @@ qs_value_t *qs_rlink_wind_from (qs_rlink_t *rlink, qs_execute_t *exe)
    /* if there's no execution state, create one here. */
    qs_execute_t *new_exe = NULL;
    if (exe == NULL)
-      exe = new_exe = qs_execute_push (QS_EXE_RESOURCE, rlink, NULL, NULL,
+      exe = new_exe = qs_execute_push (QS_EXECUTE_RESOURCE, rlink, NULL, NULL,
          rlink->resource->name, 0, NULL);
 
    /* evaluate our rlink's block. */

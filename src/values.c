@@ -21,9 +21,9 @@
 #include "values.h"
 
 /* some constant return values used all the time. */
-#define QSV_ERR QSCRIPT_UNDEFINED
-QSV_DEFINE (QSV_ZERO,           QSCRIPT_INT, "0",                   0, 0.00f);
-QSV_DEFINE (QSV_ONE,            QSCRIPT_INT, "1",                   1, 1.00f);
+#define QSV_ERR QS_VALUE_UNDEFINED
+QSV_DEFINE (QSV_ZERO,          QS_VALUE_INT, "0",                   0, 0.00f);
+QSV_DEFINE (QSV_ONE,           QS_VALUE_INT, "1",                   1, 1.00f);
 QSV_DEFINE (QSV_INVALID_TYPE,       QSV_ERR, "<invalid type>",      0, 0.00f);
 QSV_DEFINE (QSV_NOT_VARIABLE,       QSV_ERR, "<not variable>",      0, 0.00f);
 QSV_DEFINE (QSV_NOT_PROPERTY,       QSV_ERR, "<not property>",      0, 0.00f);
@@ -45,7 +45,7 @@ QSV_DEFINE (QSV_SCOPE_RLINK,        QSV_ERR, "rlink",               0, 0.00f);
 QSV_DEFINE (QSV_SCOPE_BLOCK,        QSV_ERR, "block",               0, 0.00f);
 QSV_DEFINE (QSV_SCOPE_PROPERTY,     QSV_ERR, "property",            0, 0.00f);
 QSV_DEFINE (QSV_SCOPE_UNKNOWN,      QSV_ERR, "unknown",             0, 0.00f);
-QSV_DEFINE (QSV_UNDEFINED,QSCRIPT_UNDEFINED, "<undefined>",         0, 0.00f);
+QSV_DEFINE (QSV_UNDEFINED,QS_VALUE_UNDEFINED,"<undefined>",         0, 0.00f);
 QSV_DEFINE (QSV_INVALID_VALUE,      QSV_ERR, "<invalid value>",     0, 0.00f);
 QSV_DEFINE (QSV_NO_OBJECT,          QSV_ERR, "<no object>",         0, 0.00f);
 QSV_DEFINE (QSV_ALREADY_WOUND,      QSV_ERR, "<already wound>",     0, 0.00f);
@@ -74,31 +74,27 @@ int qs_value_copy_real (qs_execute_t *exe, qs_value_t *dest, qs_value_t *src,
    qs_value_cleanup (dest);
 
    /* copy basic data. */
-   dest->type_id = src->type_id;
+   dest->value_id = src->value_id;
    dest->val_s = strdup (src->val_s);
    dest->val_i = src->val_i;
    dest->val_f = src->val_f;
 
    /* how do we handle the pointer? */
-   switch (dest->type_id) {
-      case QSCRIPT_LIST:
-         dest->val_p = src->val_p;
-         qs_value_list_internalize (dest);
-         break;
-      case QSCRIPT_INDEX:
-      case QSCRIPT_CHAR:
+   switch (dest->value_id) {
+      case QS_VALUE_CHAR:
          if (src->data) {
             int *data_i = malloc (sizeof (int));
             *data_i = *((int *) src->data);
             dest->data = data_i;
          }
          break;
-      case QSCRIPT_OBJECT:
+      case QS_VALUE_LIST:
+         dest->val_p = src->val_p;
+         qs_value_list_internalize (dest);
+         break;
+      case QS_VALUE_OBJECT:
          if (src->data)
             dest->data = strdup (src->data);
-         break;
-      case QSCRIPT_ACTION:
-         dest->val_p = src->val_p;
          break;
       default:
          dest->val_p = src->val_p;
@@ -117,23 +113,23 @@ int qs_value_copy_real (qs_execute_t *exe, qs_value_t *dest, qs_value_t *src,
 
 char *qs_value_type (qs_value_t *val)
 {
-   switch (val->type_id) {
+   switch (val->value_id) {
       /* real primitives:
        * ---simple: */
-      case QSCRIPT_UNDEFINED: return "undefined";
-      case QSCRIPT_INT:       return "int";
-      case QSCRIPT_FLOAT:     return "float";
-      case QSCRIPT_STRING:    return "string";
+      case QS_VALUE_UNDEFINED: return "undefined";
+      case QS_VALUE_INT:       return "int";
+      case QS_VALUE_FLOAT:     return "float";
+      case QS_VALUE_STRING:    return "string";
 
       /* ---complex: */
-      case QSCRIPT_CHAR:      return "char";
-      case QSCRIPT_LIST:      return "list";
-      case QSCRIPT_OBJECT:    return "object";
+      case QS_VALUE_CHAR:      return "char";
+      case QS_VALUE_LIST:      return "list";
+      case QS_VALUE_OBJECT:    return "object";
 
       /* abstract primitives: */
-      case QSCRIPT_BLOCK:     return "block";
-      case QSCRIPT_VARIABLE:  return "variable";
-      case QSCRIPT_PROPERTY:  return "property";
+      case QS_VALUE_BLOCK:     return "block";
+      case QS_VALUE_VARIABLE:  return "variable";
+      case QS_VALUE_PROPERTY:  return "property";
 
       /* who knows! */
       default:                return "unknown";
@@ -144,10 +140,10 @@ qs_variable_t *qs_value_variable (qs_execute_t *exe, qs_value_t *v)
 {
    if (v->link_id == QS_LINK_VARIABLE)
       return v->link;
-   switch (v->type_id) {
-      case QSCRIPT_VARIABLE:
+   switch (v->value_id) {
+      case QS_VALUE_VARIABLE:
          return qs_variable_get (exe, v->val_s, v->val_i);
-      case QSCRIPT_STRING: {
+      case QS_VALUE_STRING: {
          char *str = v->val_s;
          int scope = QS_SCOPE_BLOCK;
          if (*str == '$') {
@@ -186,13 +182,12 @@ int qs_value_cleanup_base (qs_value_t *value)
 {
    /* if there's some type-specific data, free it. */
    if (value->data) {
-      switch (value->type_id) {
-         case QSCRIPT_LIST:
+      switch (value->value_id) {
+         case QS_VALUE_LIST:
             qs_list_free (value->data);
             break;
-         case QSCRIPT_CHAR:
-         case QSCRIPT_INDEX:
-         case QSCRIPT_OBJECT:
+         case QS_VALUE_CHAR:
+         case QS_VALUE_OBJECT:
             free (value->data);
             break;
          default:
@@ -232,17 +227,17 @@ int qs_value_free (qs_value_t *value)
 int qs_value_truth (qs_execute_t *exe, qs_value_t *val)
 {
    if (val->val_f != 0.00f && 
-      (val->type_id == QSCRIPT_INT ||
-       val->type_id == QSCRIPT_FLOAT ||
-       val->type_id == QSCRIPT_STRING))
+      (val->value_id == QS_VALUE_INT ||
+       val->value_id == QS_VALUE_FLOAT ||
+       val->value_id == QS_VALUE_STRING))
       return 1;
-   else if (val->type_id == QSCRIPT_CHAR) {
+   else if (val->value_id == QS_VALUE_CHAR) {
       switch (val->val_s[0]) {
          case 'y': case 'Y': case '1': return 1;
          default:                      return 0;
       }
    }
-   else if (val->type_id == QSCRIPT_STRING) {
+   else if (val->value_id == QS_VALUE_STRING) {
       if (!(val->val_s[0] == 't' || val->val_s[0] == 'T' ||
             val->val_s[0] == 'y' || val->val_s[0] == 'Y' ||
             val->val_s[0] == 'o' || val->val_s[0] == 'O'))
@@ -252,7 +247,7 @@ int qs_value_truth (qs_execute_t *exe, qs_value_t *val)
       if (strcasecmp (val->val_s, "on")   == 0) return 1;
       return 0;
    }
-   else if (val->type_id == QSCRIPT_OBJECT) {
+   else if (val->value_id == QS_VALUE_OBJECT) {
       if (qs_value_object (exe, val))
          return 1;
       else
@@ -272,11 +267,11 @@ qs_value_t *qs_value_evaluate_block (qs_execute_t *exe, qs_list_t *list)
       return QSV_UNDEFINED;
 
    /* remember where to pop variables after we're done executing this block. */
-   if (list->type_id == QSCRIPT_BLOCK) {
+   if (list->list_id == QS_LIST_BLOCK) {
       if (exe == NULL)
          return QSV_UNDEFINED;
-      new_exe = qs_execute_push (QS_EXE_BLOCK, exe->rlink, exe, exe->action,
-         exe->name_p, 0, NULL);
+      new_exe = qs_execute_push (QS_EXECUTE_BLOCK, exe->rlink, exe,
+         exe->action, exe->name_p, 0, NULL);
       exe = new_exe;
    }
 
@@ -287,7 +282,8 @@ qs_value_t *qs_value_evaluate_block (qs_execute_t *exe, qs_list_t *list)
    /* get the first value.  if there are any more, roll everything on
     * the heap back (it's useless after this point). */
    qs_value_t *rval = qs_value_read (exe, list->values[0]);
-   for (i = 1; i < list->value_count && !(exe->flags & QS_EXE_BREAK); i++) {
+   for (i = 1; i < list->value_count &&
+               !(exe->flags & QS_EXECUTE_BREAK); i++) {
       qs_stack_pop_to (exe->scheme->stack_values, last);
       rval = qs_value_read (exe, list->values[i]);
    }
@@ -310,23 +306,23 @@ qs_value_t *qs_value_evaluate (qs_execute_t *exe, qs_value_t *val)
    qs_value_t *rval = QSV_CANNOT_EXECUTE;
 
    /* is this a real primitive or an abstract one? */
-   switch (val->type_id) {
+   switch (val->value_id) {
       /* real primitives: */
-      case QSCRIPT_STRING:
-      case QSCRIPT_INT:
-      case QSCRIPT_FLOAT:
-      case QSCRIPT_CHAR:
-      case QSCRIPT_LIST:
-      case QSCRIPT_OBJECT:
-      case QSCRIPT_UNDEFINED:
+      case QS_VALUE_UNDEFINED:
+      case QS_VALUE_INT:
+      case QS_VALUE_FLOAT:
+      case QS_VALUE_STRING:
+      case QS_VALUE_CHAR:
+      case QS_VALUE_LIST:
+      case QS_VALUE_OBJECT:
          rval = val;
          break;
 
       /* abstract primitives: */
-      case QSCRIPT_BLOCK:
+      case QS_VALUE_BLOCK:
          rval = qs_value_evaluate_block (exe, val->val_p);
          break;
-      case QSCRIPT_VARIABLE: {
+      case QS_VALUE_VARIABLE: {
          qs_variable_t *var = qs_value_variable (exe, val);
          if (var == NULL) {
             p_error (val->node, "cannot get variable for '%s'.\n",
@@ -337,7 +333,7 @@ qs_value_t *qs_value_evaluate (qs_execute_t *exe, qs_value_t *val)
             rval = qs_variable_value (var);
          break;
       }
-      case QSCRIPT_PROPERTY: {
+      case QS_VALUE_PROPERTY: {
          qs_property_t *p = qs_value_property (exe, val);
          if (p == NULL) {
             p_error (val->node, "cannot get property for '%s'.\n",
@@ -368,10 +364,10 @@ qs_value_t *qs_value_evaluate (qs_execute_t *exe, qs_value_t *val)
 int qs_value_length (qs_value_t *v)
 {
    /* return a value based on type. */
-   switch (v->type_id) {
-      case QSCRIPT_STRING:
+   switch (v->value_id) {
+      case QS_VALUE_STRING:
          return strlen (v->val_s);
-      case QSCRIPT_LIST:
+      case QS_VALUE_LIST:
          return ((qs_list_t *) v->val_p)->value_count;
       default:
          return -1;
@@ -400,7 +396,7 @@ qs_value_t *qs_value_lvalue_real (qs_execute_t *exe, qs_value_t *val,
    int push)
 {
    /* read-only execution states vorbid this. */
-   if (exe && exe->flags & QS_EXE_READ_ONLY)
+   if (exe && exe->flags & QS_EXECUTE_READ_ONLY)
       return NULL;
 
    /* immutable values will always fail.  literals, for example,
@@ -408,8 +404,8 @@ qs_value_t *qs_value_lvalue_real (qs_execute_t *exe, qs_value_t *val,
    if (!(val->flags & QS_VALUE_MUTABLE))
       return NULL;
 
-   /* the 'index' and 'char' types makes sure its reference is modifiable. */
-   if (val->type_id == QSCRIPT_INDEX || val->type_id == QSCRIPT_CHAR)
+   /* the 'char' type makes sure its reference is modifiable. */
+   if (val->value_id == QS_VALUE_CHAR)
       if (val->val_p && !qs_value_can_modify (exe, val->val_p))
          return NULL;
 
@@ -432,7 +428,7 @@ qs_value_t *qs_value_lvalue_real (qs_execute_t *exe, qs_value_t *val,
 
 char *qs_value_char_pointer (qs_value_t *val)
 {
-   if (val->type_id != QSCRIPT_CHAR)
+   if (val->value_id != QS_VALUE_CHAR)
       return NULL;
    if (val->val_p == NULL)
       return val->val_s;
@@ -448,19 +444,19 @@ char *qs_value_char_pointer (qs_value_t *val)
 
 int qs_value_as_char (qs_value_t *rval, char *out)
 {
-   switch (rval->type_id) {
-      case QSCRIPT_CHAR:
+   switch (rval->value_id) {
+      case QS_VALUE_CHAR:
          *out = rval->val_s[0];
          return 1;
 
-      case QSCRIPT_STRING:
+      case QS_VALUE_STRING:
          if (strlen (rval->val_s) != 1)
             return 0;
          *out = rval->val_s[0];
          return 1;
 
-      case QSCRIPT_INT:
-      case QSCRIPT_FLOAT:
+      case QS_VALUE_INT:
+      case QS_VALUE_FLOAT:
          if (rval->val_i < 1 || rval->val_i > 255)
             return 0;
          *out = (char) rval->val_i;
@@ -483,7 +479,7 @@ qs_object_t *qs_value_object (qs_execute_t *exe, qs_value_t *val)
    qs_object_t *obj;
 
    /* only allow this for objects. */
-   if (val->type_id != QSCRIPT_OBJECT)
+   if (val->value_id != QS_VALUE_OBJECT)
       return NULL;
 
    /* first, look for an object by id.  this will be ultra-quick. */
@@ -512,12 +508,13 @@ int qs_value_contains (qs_value_t *haystack, qs_value_t *needle)
       return 1;
 
    /* is 'val' an indexed character reference to 'var'? */
-   if (haystack->type_id == QSCRIPT_STRING && needle->type_id == QSCRIPT_CHAR
+   if (haystack->value_id  == QS_VALUE_STRING
+       && needle->value_id == QS_VALUE_CHAR
        && haystack->val_s == needle->val_s)
       return 1;
 
    /* is this a list? if so, look in the list's self-allocated data. */
-   if (haystack->type_id == QSCRIPT_LIST) {
+   if (haystack->value_id == QS_VALUE_LIST) {
       qs_list_t *list = haystack->data;
       if (list->values_data) {
          int i;
@@ -532,28 +529,25 @@ int qs_value_contains (qs_value_t *haystack, qs_value_t *needle)
    return 0;
 }
 
-int qs_value_init (qs_value_t *val, int type, ...)
+int qs_value_init (qs_value_t *val, qs_value_type_e type, ...)
 {
    va_list va;
    int rval = 1;
 
    /* reset variable to our type. */
    qs_value_cleanup_base (val);
-   val->type_id = type;
+   val->value_id = type;
 
    /* assign parameters based on type. */
    va_start (va, type);
    switch (type) {
-      case QSCRIPT_UNDEFINED: {
+      /* simple real primitives. */
+      case QS_VALUE_UNDEFINED: {
          char *str = va_arg (va, char *);
          qs_value_restring (val, str ? str : "<undefined>");
          break;
       }
-      case QSCRIPT_STRING:
-         qs_value_restring (val, va_arg (va, char *));
-         qs_value_update_from_string (val);
-         break;
-      case QSCRIPT_INT: {
+      case QS_VALUE_INT: {
          val->val_i = va_arg (va, int);
          val->val_f = val->val_i;
          char buf[256];
@@ -561,7 +555,7 @@ int qs_value_init (qs_value_t *val, int type, ...)
          qs_value_restring (val, buf);
          break;
       }
-      case QSCRIPT_FLOAT: {
+      case QS_VALUE_FLOAT: {
          val->val_f = (float) va_arg (va, double);
          val->val_i = (int) val->val_f;
          char buf[256];
@@ -569,7 +563,13 @@ int qs_value_init (qs_value_t *val, int type, ...)
          qs_value_restring (val, buf);
          break;
       }
-      case QSCRIPT_CHAR: {
+      case QS_VALUE_STRING:
+         qs_value_restring (val, va_arg (va, char *));
+         qs_value_update_from_string (val);
+         break;
+
+      /* complex real primitives: */
+      case QS_VALUE_CHAR: {
          char buf[2];
          buf[0] = (char) va_arg (va, int);
          buf[1] = '\0';
@@ -590,14 +590,21 @@ int qs_value_init (qs_value_t *val, int type, ...)
          }
          break;
       }
-      case QSCRIPT_OBJECT:
+      case QS_VALUE_LIST:
+         qs_value_restring (val, "<list>");
+         val->val_p = qs_list_new (val->scheme, va_arg (va, int));
+         val->data = val->val_p;
+         break;
+      case QS_VALUE_OBJECT:
          qs_value_restring (val, "<object>");
          val->data = strdup (va_arg (va, char *));
          val->val_i = va_arg (va, qs_id_t);
          val->val_f = val->val_i;
          break;
 
-      case QSCRIPT_VARIABLE: {
+      /* abstract primtiives: */
+      /* TODO: block? */
+      case QS_VALUE_VARIABLE: {
          val->val_i = va_arg (va, int);
          val->val_f = val->val_i;
          char *str = va_arg (va, char *);
@@ -615,17 +622,11 @@ int qs_value_init (qs_value_t *val, int type, ...)
             qs_value_restring (val, str);
          break;
       }
-
-      case QSCRIPT_PROPERTY:
+      case QS_VALUE_PROPERTY:
          qs_value_restring (val, va_arg (va, char *));
          break;
 
-      case QSCRIPT_LIST:
-         qs_value_restring (val, "<list>");
-         val->val_p = qs_list_new (val->scheme, va_arg (va, int));
-         val->data = val->val_p;
-         break;
-
+      /* unhandled value type. */
       default:
          /* can't initialize this value.  complain. */
          p_error (val->node, "cannot initialize variable of type '%s'.\n",
@@ -641,7 +642,7 @@ int qs_value_init (qs_value_t *val, int type, ...)
 
 qs_list_t *qs_value_list (qs_value_t *value)
 {
-   if (value->type_id != QSCRIPT_LIST)
+   if (value->value_id != QS_VALUE_LIST)
       return NULL;
    return value->val_p;
 }
@@ -649,7 +650,7 @@ qs_list_t *qs_value_list (qs_value_t *value)
 int qs_value_list_internalize (qs_value_t *value)
 {
    /* not allowed for non-lists. */
-   if (value->type_id != QSCRIPT_LIST) {
+   if (value->value_id != QS_VALUE_LIST) {
       p_error (value->node, "attempted to internalize list contents of "
          "'%s' of type '%s'.\n", value->val_s, qs_value_type (value));
       return 0;

@@ -15,7 +15,7 @@ struct _qs_variable_t {
    qs_value_t value;
 
    /* link info. */
-   int link_id;
+   qs_variable_scope_e scope_id;
    void *parent;
    qs_variable_t *prev, *next;
 };

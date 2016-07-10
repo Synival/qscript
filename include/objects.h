@@ -12,7 +12,7 @@ struct _qs_object_t {
    /* identifing info. */
    char *name;
    qs_id_t id;
-   int flags;
+   qs_flags_t flags;
 
    /* rlinks and property lists. */
    qs_rlink_t *rlink_list_front, *rlink_list_back;

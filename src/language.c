@@ -162,44 +162,43 @@ P_FUNC (qs_language_value)
                case QSCRIPT_NUMBER:
                   switch (n->first_child->type_id) {
                      case QSCRIPT_INT:
-                        qs_value_init (v, QSCRIPT_INT,
+                        qs_value_init (v, QS_VALUE_INT,
                            atoi (n->first_child->first_child->contents));
                         break;
                      case QSCRIPT_FLOAT:
-                        qs_value_init (v, QSCRIPT_FLOAT,
+                        qs_value_init (v, QS_VALUE_FLOAT,
                            atof (n->first_child->first_child->contents));
                         break;
                   }
                   break;
                case QSCRIPT_OBJECT:
-                  qs_value_init (v, QSCRIPT_OBJECT, n->contents + 1,
+                  qs_value_init (v, QS_VALUE_OBJECT, n->contents + 1,
                                  (qs_id_t) 0);
-                  v->type_id = QSCRIPT_OBJECT;
                   break;
                case QSCRIPT_VARIABLE:
-                  qs_value_init (v, QSCRIPT_VARIABLE, QS_SCOPE_AUTO,
+                  qs_value_init (v, QS_VALUE_VARIABLE, QS_SCOPE_AUTO,
                                  n->contents + 1);
                   break;
                case QSCRIPT_PROPERTY:
-                  qs_value_init (v, QSCRIPT_PROPERTY, ((qs_value_t *)
+                  qs_value_init (v, QS_VALUE_PROPERTY, ((qs_value_t *)
                      n->first_child->next->data)->val_s);
                   break;
                case QSCRIPT_CHAR:
-                  qs_value_init (v, QSCRIPT_CHAR, (int)
+                  qs_value_init (v, QS_VALUE_CHAR, (int)
                      n->first_child->contents[1], NULL, NULL);
                   break;
                case QSCRIPT_STRING:
-                  qs_value_init (v, QSCRIPT_STRING, n->contents);
+                  qs_value_init (v, QS_VALUE_STRING, n->contents);
                   break;
 
                /* these are internal and handled deeper in the parse tree. */
                case QSCRIPT_OUTER_LIST:
-                  v->type_id = QSCRIPT_LIST;
+                  v->value_id = QS_VALUE_LIST;
                   v->val_s = strdup ("<list>");
                   v->val_p = n->data;
                   break;
                case QSCRIPT_OUTER_BLOCK:
-                  v->type_id = QSCRIPT_BLOCK;
+                  v->value_id = QS_VALUE_BLOCK;
                   v->val_s = strdup ("<block>");
                   v->val_p = n->data;
                   break;
@@ -254,8 +253,8 @@ P_FUNC (qs_language_outer_list)
 
       /* assign the type. */
       switch (node->type_id) {
-         case QSCRIPT_OUTER_LIST:  l->type_id = QSCRIPT_LIST;  break;
-         case QSCRIPT_OUTER_BLOCK: l->type_id = QSCRIPT_BLOCK; break;
+         case QSCRIPT_OUTER_LIST:  l->list_id = QS_LIST_LIST;  break;
+         case QSCRIPT_OUTER_BLOCK: l->list_id = QS_LIST_BLOCK; break;
       }
    }
 }
@@ -271,9 +270,15 @@ P_FUNC (qs_language_list)
    qs_list_t *l = malloc (sizeof (qs_list_t));
    memset (l, 0, sizeof (qs_list_t));
    l->scheme = node->parse_data;
-   l->type_id = node->type_id;
    l->node = node;
    node->data = l;
+
+   /* what kind of list? */
+   switch (node->type_id) {
+      case QSCRIPT_LIST:  l->list_id = QS_LIST_LIST;  break;
+      case QSCRIPT_BLOCK: l->list_id = QS_LIST_BLOCK; break;
+      default:            l->list_id = QS_LIST_UNDEFINED;
+   }
 
    /* allocate our parameters. */
    l->value_count = 0;
@@ -307,15 +312,15 @@ P_FUNC (qs_language_action)
    for (n = node->first_child; n != NULL; n = n->next) {
       switch (n->type_id) {
          case QSCRIPT_CALL:
-            a->type_id = QS_ACTION_CALL;
+            a->action_id = QS_ACTION_CALL;
             a->data_p = n->first_child->next->data;
             break;
          case QSCRIPT_INDEX:
-            a->type_id = QS_ACTION_INDEX;
+            a->action_id = QS_ACTION_INDEX;
             a->data_p = n->first_child->next->data;
             break;
          case QSCRIPT_PROPERTY:
-            a->type_id = QS_ACTION_PROPERTY;
+            a->action_id = QS_ACTION_PROPERTY;
             a->data_p = n->first_child->next->data;
             break;
       }
@@ -328,8 +333,8 @@ P_FUNC (qs_language_resource)
 {
    p_node_t *n;
    qs_list_t *list = NULL;
+   qs_flags_t flags = 0;
    char *name = NULL, *ch;
-   int flags = 0;
 
    /* get our flags, name, and code block. */
    for (n = node->first_child; n != NULL; n = n->next) {
@@ -338,7 +343,7 @@ P_FUNC (qs_language_resource)
          case QSCRIPT_RFLAGS:
             for (ch = n->first_child->contents; *ch != '\0'; ch++) {
                switch (*ch) {
-                  case '@': flags |= QS_RSRC_GLOBAL; break;
+                  case '@': flags |= QS_RESOURCE_GLOBAL; break;
                }
             }
             break;

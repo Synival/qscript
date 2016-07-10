@@ -35,14 +35,14 @@ inline int   qs_arg_int    (qs_execute_t *exe, qs_value_t *val)
 inline qs_list_t *qs_arg_list (qs_execute_t *exe, qs_value_t *val)
 {
    qs_arg_start (NULL);
-   if (v->type_id != QSCRIPT_LIST)
+   if (v->value_id != QS_VALUE_LIST)
       return NULL;
    return v->val_p;
 }
 inline qs_object_t *qs_arg_object (qs_execute_t *exe, qs_value_t *val)
 {
    qs_arg_start (NULL);
-   if (v->type_id != QSCRIPT_OBJECT)
+   if (v->value_id != QS_VALUE_OBJECT)
       return NULL;
    return qs_value_object (exe, val);
 }
@@ -70,35 +70,35 @@ inline qs_value_t *qs_return_value (qs_scheme_t *scheme)
 inline qs_value_t *qs_return_string (qs_scheme_t *scheme, char *s)
 {
    qs_value_t *r = qs_return_value (scheme);
-   qs_value_init (r, QSCRIPT_STRING, s);
+   qs_value_init (r, QS_VALUE_STRING, s);
    return r;
 }
 
 inline qs_value_t *qs_return_int (qs_scheme_t *scheme, int i)
 {
    qs_value_t *r = qs_return_value (scheme);
-   qs_value_init (r, QSCRIPT_INT, i);
+   qs_value_init (r, QS_VALUE_INT, i);
    return r;
 }
 
 inline qs_value_t *qs_return_float (qs_scheme_t *scheme, float f)
 {
    qs_value_t *r = qs_return_value (scheme);
-   qs_value_init (r, QSCRIPT_FLOAT, f);
+   qs_value_init (r, QS_VALUE_FLOAT, f);
    return r;
 }
 
 inline qs_value_t *qs_return_char (qs_scheme_t *scheme, char c)
 {
    qs_value_t *r = qs_return_value (scheme);
-   qs_value_init (r, QSCRIPT_CHAR, c, NULL, NULL);
+   qs_value_init (r, QS_VALUE_CHAR, c, NULL, NULL);
    return r;
 }
 
 inline qs_value_t *qs_return_list (qs_scheme_t *scheme, int count)
 {
    qs_value_t *r = qs_return_value (scheme);
-   qs_value_init (r, QSCRIPT_LIST, count);
+   qs_value_init (r, QS_VALUE_LIST, count);
    return r;
 }
 
@@ -120,10 +120,11 @@ int qs_func_break (qs_execute_t *e)
 {
    int count = 0;
    for (; e != NULL; e = e->parent) {
-      e->flags |= QS_EXE_BREAK;
+      e->flags |= QS_EXECUTE_BREAK;
       count++;
-      if (e->type_id == QS_EXE_RESOURCE || e->type_id == QS_EXE_LAMBDA ||
-          e->type_id == QS_EXE_LOOP)
+      if (e->execute_id == QS_EXECUTE_RESOURCE ||
+          e->execute_id == QS_EXECUTE_LAMBDA ||
+          e->execute_id == QS_EXECUTE_LOOP)
          break;
    }
    return count;
@@ -133,9 +134,10 @@ int qs_func_return (qs_execute_t *e)
 {
    int count = 0;
    for (; e != NULL; e = e->parent) {
-      e->flags |= QS_EXE_BREAK;
+      e->flags |= QS_EXECUTE_BREAK;
       count++;
-      if (e->type_id == QS_EXE_RESOURCE || e->type_id == QS_EXE_LAMBDA)
+      if (e->execute_id == QS_EXECUTE_RESOURCE ||
+          e->execute_id == QS_EXECUTE_LAMBDA)
          break;
    }
    return count;
@@ -145,11 +147,12 @@ int qs_func_continue (qs_execute_t *e)
 {
    int count = 0;
    for (; e != NULL; e = e->parent) {
-      if (e->type_id == QS_EXE_LOOP)
+      if (e->execute_id == QS_EXECUTE_LOOP)
          break;
-      e->flags |= QS_EXE_BREAK;
+      e->flags |= QS_EXECUTE_BREAK;
       count++;
-      if (e->type_id == QS_EXE_RESOURCE || e->type_id == QS_EXE_LAMBDA)
+      if (e->execute_id == QS_EXECUTE_RESOURCE ||
+          e->execute_id == QS_EXECUTE_LAMBDA)
          break;
    }
    return count;

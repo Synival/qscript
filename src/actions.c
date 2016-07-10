@@ -51,7 +51,7 @@ int qs_action_parameters (qs_execute_t *exe, qs_action_t *action,
 
       /* get our value.  if it's not a list, complain and bail. */
       v = qs_value_read (exe, arg[i]);
-      if (v->type_id != QSCRIPT_LIST) {
+      if (v->value_id != QS_VALUE_LIST) {
          qs_func_error (exe, func_name, arg[i]->node, "cannot unwrap; "
             "argument '%s' is type '%s' instead of type <list>.\n",
             qs_value_type (v), v->val_s);
@@ -98,7 +98,7 @@ inline qs_value_t *qs_action_run (qs_execute_t *exe, qs_value_t *val,
    qs_action_t *action)
 {
    /* what kind of action are we performing? */
-   switch (action->type_id) {
+   switch (action->action_id) {
       case QS_ACTION_CALL:
          return qs_action_call (exe, val, action);
       case QS_ACTION_INDEX:
@@ -107,7 +107,7 @@ inline qs_value_t *qs_action_run (qs_execute_t *exe, qs_value_t *val,
          return qs_action_property (exe, val, action);
       default:
          p_error (action->node, "unknown action type '%d'.\n",
-                  action->type_id);
+                  action->action_id);
          return QSV_CANNOT_EXECUTE;
    }
 }
@@ -121,7 +121,7 @@ qs_value_t *qs_action_call (qs_execute_t *exe, qs_value_t *val,
    qs_execute_t *e;
 
    /* we can only execute strings and lists. */
-   if (val->type_id != QSCRIPT_STRING && val->type_id != QSCRIPT_LIST) {
+   if (val->value_id != QS_VALUE_STRING && val->value_id != QS_VALUE_LIST) {
       p_error (action->node, "cannot execute call action for value of "
          "type '%s'.\n", qs_value_type (val));
       return QSV_CANNOT_EXECUTE;
@@ -136,25 +136,25 @@ qs_value_t *qs_action_call (qs_execute_t *exe, qs_value_t *val,
     * what they were called with.  make sure they're deallocated later. */
    e = qs_execute_push (-1, exe->rlink, exe, action, val->val_s, 0, l);
    if (l != l_in)
-      e->flags |= QS_EXE_FREE_LIST;
+      e->flags |= QS_EXECUTE_FREE_LIST;
 
    /* if our function is a list, it's a lambda functions; run it. */
    qs_value_t *rval = QSV_CANNOT_EXECUTE;
-   if (val->type_id == QSCRIPT_LIST) {
+   if (val->value_id == QS_VALUE_LIST) {
       l = val->val_p;
-      e->type_id = QS_EXE_LAMBDA;
+      e->execute_id = QS_EXECUTE_LAMBDA;
       rval = qs_value_evaluate_block (e, val->val_p);
    }
    /* if there's a resource, run it. */
    else if ((r = qs_resource_get (scheme, val->val_s)) != NULL) {
-      e->type_id = QS_EXE_RESOURCE;
+      e->execute_id = QS_EXECUTE_RESOURCE;
       e->rlink = qs_rlink_inject_at (e->object, r, e->rlink->priority,
          e->rlink, e->rlink->child_back, e, action);
       rval = qs_rlink_wind_from (e->rlink, e);
    }
    /* if there's a built-in function, run it. */
    else if ((func = qs_scheme_get_func (scheme, val->val_s)) != NULL) {
-      e->type_id = QS_EXE_FUNC;
+      e->execute_id = QS_EXECUTE_FUNC;
       qs_value_t *last = qs_stack_last (scheme->stack_values);
       rval = qs_func_run (e, func);
       qs_stack_pop_to_except (scheme->stack_values, last, rval);
@@ -178,28 +178,31 @@ qs_value_t *qs_action_index (qs_execute_t *exe, qs_value_t *val,
    int length;
 
    /* complain if our value is not a valid type. */
-   if ((length = qs_value_length (val)) < 0) {
-      p_error (action->node, "cannot index value '%s' of type '%s'.\n",
-         val->val_s, qs_value_type (val));
-      return QSV_INVALID_INDEX;
-   }
-   else if (length == 0) {
-      switch (val->type_id) {
-         case QSCRIPT_LIST:
+   length = qs_value_length (val);
+   switch (val->value_id) {
+      case QS_VALUE_LIST:
+         if (length == 0) {
             p_error (action->node, "cannot index empty list.\n");
-            break;
-         case QSCRIPT_STRING:
+            return QSV_INVALID_INDEX;
+         }
+         break;
+      case QS_VALUE_STRING:
+         if (length == 0) {
             p_error (action->node, "cannot index blank string.\n");
-            break;
-      }
-      return QSV_INVALID_INDEX;
+            return QSV_INVALID_INDEX;
+         }
+         break;
+      default:
+         p_error (action->node, "cannot index value '%s' of type '%s'.\n",
+            val->val_s, qs_value_type (val));
+         return QSV_INVALID_INDEX;
    }
 
    /* get the index value. */
    qs_value_t *ival = qs_value_read (exe, action->data_p);
 
    /* enforce type 'int'. */
-   if (ival->type_id != QSCRIPT_INT) {
+   if (ival->value_id != QS_VALUE_INT) {
       p_error (action->node, "cannot index using type '%s' (must be "
          "'int').\n", qs_value_type (ival));
       return QSV_INVALID_INDEX;
@@ -220,15 +223,15 @@ qs_value_t *qs_action_index (qs_execute_t *exe, qs_value_t *val,
 
    /* return different sub-values cased on type. */
    qs_value_t *rval = QSV_CANNOT_EXECUTE;
-   switch (val->type_id) {
-      case QSCRIPT_LIST:
+   switch (val->value_id) {
+      case QS_VALUE_LIST:
          rval = ((qs_list_t *) val->val_p)->values[ival->val_i];
          break;
 
-      case QSCRIPT_STRING: {
+      case QS_VALUE_STRING: {
          /* add a value to the heap that contains our character. */
          rval = qs_scheme_heap_value (exe->scheme);
-         rval->type_id = QSCRIPT_CHAR;
+         rval->value_id = QS_VALUE_CHAR;
          rval->flags |= (val->flags & QS_VALUE_MUTABLE);
 
          /* for reading purposes, it will be a virtual 'char' type. */
@@ -261,7 +264,7 @@ qs_value_t *qs_action_property (qs_execute_t *exe, qs_value_t *val,
    qs_action_t *action)
 {
    /* complain if val isn't of type 'object'. */
-   if (val->type_id != QSCRIPT_OBJECT) {
+   if (val->value_id != QS_VALUE_OBJECT) {
       p_error (action->node, "cannot get member value from "
                "non-object (type is '%s'). \n", qs_value_type (val));
       return QSV_INVALID_TYPE;

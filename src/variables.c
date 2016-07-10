@@ -8,6 +8,7 @@
 #include "execute.h"
 #include "funcs.h"
 #include "objects.h"
+#include "parser.h"
 #include "rlinks.h"
 #include "schemes.h"
 #include "values.h"
@@ -49,7 +50,7 @@ qs_variable_t *qs_variable_get_execute (qs_execute_t *exe, char *name)
       for (v = exe->variable_list_back; v != NULL; v = v->prev)
          if (strcmp (v->name, name) == 0)
             return v;
-      if (exe->type_id == QS_EXE_RESOURCE)
+      if (exe->execute_id == QS_EXECUTE_RESOURCE)
          break;
       exe = exe->parent;
    }
@@ -66,7 +67,7 @@ qs_variable_t *qs_variable_new_base (qs_scheme_t *scheme, char *name)
    new->value.link     = new;
    new->value.scheme   = scheme;
    new->value.flags    = QS_VALUE_MUTABLE;
-   qs_value_init (&(new->value), QSCRIPT_UNDEFINED, NULL);
+   qs_value_init (&(new->value), QS_VALUE_UNDEFINED, NULL);
    return new;
 }
 
@@ -82,7 +83,7 @@ qs_variable_t *qs_variable_new_rlink (qs_rlink_t *rlink, char *name)
    new = qs_variable_new_base (rlink->scheme, name);
 
    /* link to the end of the object. */
-   new->link_id = QS_SCOPE_RLINK;
+   new->scope_id = QS_SCOPE_RLINK;
    new->parent = rlink;
    new->prev = rlink->variable_list_back;
    if (new->prev) new->prev->next            = new;
@@ -105,7 +106,7 @@ qs_variable_t *qs_variable_new_execute (qs_execute_t *exe, char *name)
    new = qs_variable_new_base (exe->scheme, name);
 
    /* link to the end of the rlink. */
-   new->link_id = QS_SCOPE_BLOCK;
+   new->scope_id = QS_SCOPE_BLOCK;
    new->parent = exe;
    new->prev = exe->variable_list_back;
    if (new->prev) new->prev->next          = new;
@@ -128,7 +129,7 @@ int qs_variable_free (qs_variable_t *v)
    qs_value_cleanup (&(v->value));
 
    /* remove from whatever list this variable is attached to. */
-   switch (v->link_id) {
+   switch (v->scope_id) {
       case QS_SCOPE_RLINK: {
          qs_rlink_t *r = v->parent;
          if (v->next) v->next->prev          = v->prev;
@@ -148,6 +149,10 @@ int qs_variable_free (qs_variable_t *v)
          e->variable_count--;
          break;
       }
+
+      default:
+         p_error (NULL, "qs_variable_free(): unhandled variable scope '%d'.\n",
+                  v->scope_id);
    }
 
    /* free the variable itself and return success. */

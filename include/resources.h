@@ -12,7 +12,7 @@ struct _qs_resource_t {
    qs_scheme_t *scheme;
    p_node_t *node;
    qs_id_t id, auto_id;
-   int flags;
+   qs_flags_t flags;
    char *name;
    qs_list_t *block;
    qs_rlink_t *rlink_list_front, *rlink_list_back;
@@ -21,7 +21,7 @@ struct _qs_resource_t {
 
 /* function declarations. */
 qs_resource_t *qs_resource_new (qs_scheme_t *scheme, char *name,
-                                qs_list_t *block, int flags);
+                                qs_list_t *block, qs_flags_t flags);
 qs_resource_t *qs_resource_get_by_id (qs_scheme_t *scheme, qs_id_t id);
 qs_resource_t *qs_resource_get (qs_scheme_t *scheme, char *name);
 qs_object_t *qs_resource_get_auto_instance (qs_resource_t *rsrc);

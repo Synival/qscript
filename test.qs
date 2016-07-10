@@ -114,7 +114,7 @@ main {
    echo ("   undefined | ", type (undefined));
    echo ("   string    | ", type (string));
    echo ("   'a'       | ", type ('a'), " (", index ('a'), ")");
-   echo ("   string[1] | ", type (string[0]), " (", index (string[1]), ")");
+   echo ("   string[1] | ", type (string[1]), " (", index (string[1]), ")");
    echo ("   0         | ", type (0));
    echo ("   1.00      | ", type (1.00));
    echo ("   [string]  | ", type ([string]));

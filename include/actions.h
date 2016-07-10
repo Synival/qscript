@@ -9,7 +9,8 @@
 
 /* structure for each individual action. */
 struct _qs_action_t {
-   int type_id, flags;
+   qs_action_type_e action_id;
+   qs_flags_t flags;
    void *data_p, *data;
    p_node_t *node;
    qs_value_t *parent_value;

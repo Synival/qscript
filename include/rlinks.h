@@ -12,7 +12,7 @@ struct _qs_rlink_t {
    /* identity stuff. */
    qs_scheme_t *scheme;
    qs_resource_t *resource;
-   int flags;
+   qs_flags_t flags;
 
    /* modificiations applied to properties. */
    qs_stack_t *stack_modify;

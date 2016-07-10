@@ -119,7 +119,7 @@ qs_value_t *qs_scheme_heap_value (qs_scheme_t *scheme)
    memset (new, 0, sizeof (qs_value_t));
    new->scheme = scheme;
    new->flags |= QS_VALUE_HEAP;
-   qs_value_init (new, QSCRIPT_UNDEFINED, NULL);
+   qs_value_init (new, QS_VALUE_UNDEFINED, NULL);
 
    /* return our new value. */
    return new;
@@ -142,9 +142,9 @@ int qs_scheme_update (qs_scheme_t *scheme)
 
    /* auto-instantiate resources. */
    for (r = scheme->resource_list_front; r != NULL; r = r->next) {
-      if (r->flags & QS_RSRC_LINKED)
+      if (r->flags & QS_RESOURCE_LINKED)
          continue;
-      r->flags |= QS_RSRC_LINKED;
+      r->flags |= QS_RESOURCE_LINKED;
       if (!r->auto_id && qs_resource_auto_instance (r))
          count++;
    }

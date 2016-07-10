@@ -13,7 +13,7 @@
 struct _qs_property_t {
    /* name of this property. */
    char *name;
-   int flags;
+   qs_flags_t flags;
 
    /* value, a copy of the latest modification in the stack. */
    qs_value_t *value, value_default;
@@ -27,7 +27,7 @@ struct _qs_property_t {
 /* individual modifications on properties. */
 struct _qs_modify_t {
    /* value assigned to this modification. */
-   int flags;
+   qs_flags_t flags;
    qs_value_t value;
 
    /* links to the property and the rlink from which it came. */

@@ -9,37 +9,67 @@
 
 #include "parser_types.h"
 
-/* variable scopes. */
-enum qscript_execute_type_e {
-   QS_EXE_UNDEFINED = 0,
-   QS_EXE_LAMBDA,
-   QS_EXE_FUNC,
-   QS_EXE_RESOURCE,
-   QS_EXE_BLOCK,
-   QS_EXE_LOOP,
-   QS_EXE_LAST
-};
+/* list types. */
+typedef enum _qs_list_type_e {
+   QS_LIST_UNDEFINED = 0,
+   QS_LIST_LIST,
+   QS_LIST_BLOCK,
+   QS_LIST_LAST,
+} qs_list_type_e;
+
+/* value types. */
+typedef enum _qs_value_type_e {
+   /* simple real primitives. */
+   QS_VALUE_UNDEFINED = 0,
+   QS_VALUE_INT,
+   QS_VALUE_FLOAT,
+   QS_VALUE_STRING,
+
+   /* complex real primitives. */
+   QS_VALUE_CHAR,
+   QS_VALUE_LIST,
+   QS_VALUE_OBJECT,
+
+   /* abstract primitives. */
+   QS_VALUE_BLOCK,
+   QS_VALUE_VARIABLE,
+   QS_VALUE_PROPERTY,
+
+   /* indicate the final one. */
+   QS_VALUE_LAST,
+} qs_value_type_e;
 
 /* variable scopes. */
-enum qscript_variable_scope_e {
+typedef enum _qs_execute_type_e {
+   QS_EXECUTE_UNDEFINED = 0,
+   QS_EXECUTE_LAMBDA,
+   QS_EXECUTE_FUNC,
+   QS_EXECUTE_RESOURCE,
+   QS_EXECUTE_BLOCK,
+   QS_EXECUTE_LOOP,
+   QS_EXECUTE_LAST
+} qs_execute_type_e;
+
+/* variable scopes. */
+typedef enum _qs_variable_scope_e {
    QS_SCOPE_AUTO = -1,
    QS_SCOPE_UNDEFINED = 0,
    QS_SCOPE_RLINK,
    QS_SCOPE_BLOCK,
    QS_SCOPE_LAST
-};
+} qs_variable_scope_e;
 
 /* action types. */
-enum qscript_action_type_e {
+typedef enum _qs_action_type_e {
    QS_ACTION_UNDEFINED = 0,
    QS_ACTION_CALL,
    QS_ACTION_INDEX,
    QS_ACTION_PROPERTY,
    QS_ACTION_LAST
-};
+} qs_action_type_e;
 
 /* our giant list of qscript tokens. */
-enum qscript_tag_e {
+typedef enum _qs_tag_type_e {
    QSCRIPT_MPC = -1,
    QSCRIPT_UNDEFINED = 0,
    QSCRIPT_ROOT,
@@ -69,7 +99,16 @@ enum qscript_tag_e {
    QSCRIPT_OBJECT,
    QSCRIPT_PROPERTY,
    QSCRIPT_LAST,
-};
+} qs_tag_type_e;
+
+/* value link types. */
+typedef enum _qs_value_link_e {
+   QS_LINK_UNDEFINED = 0,
+   QS_LINK_LITERAL,
+   QS_LINK_VARIABLE,
+   QS_LINK_PROPERTY,
+   QS_LINK_LAST,
+} qs_value_link_e;
 
 /* rlink states. */
 #define QS_RLINK_ON              0x01
@@ -78,24 +117,19 @@ enum qscript_tag_e {
 #define QS_MODIFY_POPPING        0x01
 
 /* flags for execution states. */
-#define QS_EXE_BREAK             0x01
-#define QS_EXE_FREE_LIST         0x02
-#define QS_EXE_READ_ONLY         0x04
+#define QS_EXECUTE_BREAK         0x01
+#define QS_EXECUTE_FREE_LIST     0x02
+#define QS_EXECUTE_READ_ONLY     0x04
 
 /* flags for resources. */
-#define QS_RSRC_GLOBAL           0x01
-#define QS_RSRC_LINKED           0x02
+#define QS_RESOURCE_GLOBAL       0x01
+#define QS_RESOURCE_LINKED       0x02
 
 /* flags for values. */
 #define QS_VALUE_UNWRAP          0x01
 #define QS_VALUE_MUTABLE         0x02
 #define QS_VALUE_HEAP            0x04
 #define QS_VALUE_FREE_ACTIONS    0x08
-
-/* value link types. */
-#define QS_LINK_LITERAL          0
-#define QS_LINK_VARIABLE         1
-#define QS_LINK_PROPERTY         2
 
 /* flags for objects. */
 #define QS_OBJECT_GLOBAL         0x01
@@ -105,6 +139,7 @@ enum qscript_tag_e {
 
 /* simple types. */
 typedef uint32_t qs_id_t;
+typedef uint32_t qs_flags_t;
 typedef struct _qs_id_manager_t qs_id_manager_t;
 
 /* typedefs. */

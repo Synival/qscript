@@ -11,7 +11,8 @@
 struct _qs_list_t {
    p_node_t *node;
    qs_value_t *value;
-   int type_id, value_count;
+   qs_list_type_e list_id;
+   int value_count;
    qs_value_t **values, **values_data;
    qs_scheme_t *scheme;
 };
