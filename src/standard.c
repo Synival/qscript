@@ -25,8 +25,8 @@
 #include "standard.h"
 
 qs_func_t qs_func_list_standard[] = {
-   { "print",   "<print1> [... <printn>]", 0, qsf_print,   0 },
-   { "echo",    "<print1> [... <printn>]", 0, qsf_print,   1 },
+   { "print",   "<text1> [... <textn>]",   0, qsf_print,   0 },
+   { "echo",    "<text1> [... <textn>]",   0, qsf_print,   1 },
    { "+",       "<val1> [... <valn>]",     2, qsf_math,    0 },
    { "-",       "<val1> [... <valn>]",     2, qsf_math,    1 },
    { "*",       "<val1> [... <valn>]",     2, qsf_math,    2 },
@@ -96,7 +96,7 @@ qs_func_t qs_func_list_standard[] = {
    { "name",    "[<object>]",              1, qsf_id,      1 },
    { "func_exists", "<value>",             1, qsf_func_exists, 0 },
    { "tokenize","<value>",                 1, qsf_tokenize,0 },
-   { "multi",   "<line1> [... <linen>]",   1, qsf_multi,   0 },
+   { "multi",   "[<line1> ... <linen>]",   0, qsf_multi,   0 },
    { "for_each","<list> <storage> <action>",1,qsf_for_each,0 },
    { "new", "<name> [list(<resource> [<priority>])1 ... listn]",
                                            1, qsf_new,     0 },

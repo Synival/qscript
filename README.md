@@ -74,9 +74,9 @@ Here is our desired rlink chain:
  30       | `buff_invisible` | (Temporary) modify appearance and increase sneaking to 100%
  40       | `too_hot`        | (Applied from environment) Character is slower and dumber
 
-Before implementing *qscript* in your project, let's define all of the resources listed above.
-
 ## Player's scripts:
+
+Before creating our object and implementing *qscript* into your project, let's define all of the resources listed above in a '.qs' resource file.
 
 (from 'examples/objdump/my_resources.qs'):
 
@@ -124,14 +124,14 @@ too_hot {
 }
 ```
 
-To create this object, we'll need to:
+## Implementation:
+
+To create the object described above, we'll need to:
 
 1. create a scheme for our qscript world,
 2. instantiate a blank object,
 3. inject rlinks into the object's rlink chain, and
 4. update our world to finish our object.
-
-## Implementation:
 
 (from 'examples/objdump/main.c'):
 
@@ -160,9 +160,9 @@ qs_scheme_update (scheme);
 qs_scheme_free (scheme);
 ```
 
-Executing the test program 'objdump' via 'objdump.sh' will describe the resulting object like so:
-
 ## Running *objdump*:
+
+Executing the test program 'objdump' via 'objdump.sh' will describe the resulting object like so:
 
 ```
 > ./objdump.sh
@@ -180,7 +180,7 @@ player:
 
 ---
 
-# Why make this?
+# Why *qscript*?
 
 One of my favorite type of games to make are text-based multiplayer RPGs called MUDs (multi-user dungeons), which are early forerunners to MMOs.  These are reasonable projects to tackle because you don't need to make a million assets and the game runs 100% server-side.  For one MUD I was working on, my goal was to have a persistent world with as many of its resources put into text files as possible so I could define new monsters, classes, and abilities without hard-coding anything in.  The purpose of that was to make edits quick and easy without recompilation and allow hot-loading so the server would never have to reboot.  If I wanted to add stuff in or make changes, I could log into the server, load the new files, and play right away.  Neat!
 
@@ -347,7 +347,7 @@ Values can also contain primitives that require execution or referencing during 
 
 ### Injection:
 
-Resources injected into objects will typically modify properties.  The conditions of those modifications can 
+Resources injected into objects will typically modify properties.
 
 ```
 # Multiply strength by 4.
@@ -372,7 +372,7 @@ buff_chameleon {
 
 ### Utility Functions:
 
-These examples are designed to showcase various forms of loops.
+Utility functions are resources that take zero or more arguments as inputs and either return a result or perform an operation.
 
 ```
 # fibonacci_for (n):
@@ -428,14 +428,18 @@ fibonacci_recurse {
 
 ## Objects:
 
+These resources are designed for instantiation.  They set base values and run any initialization scripts they may need.
+
 ```
 # Base object used for instantiation of characters.
 character_base {
    # Base values modified by class and level later.
-   = (.str,    10);
-   = (.def,    10);
-   = (.agi,    10);
-   = (.max_hp, 50);
+   = (.str,    10.0);
+   = (.def,    10.0);
+   = (.agi,    10.0);
+   = (.max_hp, 50.0);
+   = (.int,    10.0);
+   = (.agi,    10.0);
 
    # Some default values that will need additional scripts.
    = (.class,  "Unemployed");
@@ -446,6 +450,20 @@ character_base {
    = (.level,  %level);
    = (.exp,    %exp);
    = (.gold,   %gold);
+}
+
+# Warrior ready for instantiation.
+warrior_base {  
+   # Use 'character_base' as our model.
+   character_base ();
+
+   # Modify stats/properties and turn ourselves into a warrior.
+   = (.class, "Warrior");
+   *= (.str,    1.50);
+   *= (.def,    1.50);
+   *= (.max_hp, 1.25);
+   *= (.int,    0.50);
+   *= (.agi,    0.50);
 }
 
 # Global object that stores useful information.
@@ -483,53 +501,109 @@ character_base {
 - [Casting](#casting)
 - [Object manipulation](#object-manipulation)
 
-(coming later!)
-
 ## Text output:
 
-1. `print`
-2. `echo`
-3. `print_resource`
-4. `print_value`
+### `print ([<text1> ... <textn>])`
 
-## Math / logical:
+Prints zero or more strings to `stdout`.  No newline character is printed.
 
-1. `+`
-2. `-`
-3. `*`
-4. `/`
-5. `**`
-6. `|`
-7. `&`
-8. `^`
-9. `%`
-10. `==`
-11. `!=`
-12. `>`
-13. `>=`
-14. `<`
-15. `<=`
-16. `||`
-17. `&&`
-18. `^^`
-19. `!||`
-20. `!&&`
-21. `!^^`
-22. `multi`
+### `echo ([<text1> ... <textn>])`
+
+Prints zero or more strings to `stdout`.  Prints newline character afterwards.
+
+### `print_resource ([<resource>])`
+
+Prints the current resource or a resource identified by `<resource>` with nice formatting and syntax highlighting.  Used for debugging.
+
+### `print_value ([<value>])`
+
+Prints an evaluation of `<value>` with proper syntax highlighting identical to `print_resource`.
+
+## Math:
+
+Math functions can be expressed in two ways: 
+
+1. Perform a calculation and return the result (`+`, `-`, `*`, etc).
+
+2. Directly modify an *lvalue* (`+=`, `-=`, `*=`, etc).  An *lvalue* is any value can that be modified because it is stored by a variable or parameter.
+
+Math functions do not perform type promotion and will always return or store a value whose type is determined by the first argument.  This type will be refered to as the *operation type* for all math descriptions.  All proceeding values are interpreted as values of the same type.  Exceptions and special features such as concatenating strings or appending to lists via `+`/`+=` are described in their function descriptions.
+
+### `+ (<value1>, <value2> [... <valuen>])`, `+= (<lvalue>, <value1> [... <valuen>])`
+
+Applicable operation types: *int, float, string, char, list*
+
+Adds two or more values and returns the result.
+
+For operation type *string*, values are concatenated.
+For operation type *list*, the proceeding values are appended as list items.
+For operation type *char*, the initial ASCII value is incremented by the integer component of each value.  Exceeding the char boundries (>= 1, <= 255) will result in an error.
+
+### `- (<value1>, <value2> [... <valuen>])`, `-= (<lvalue>, <value1> [... <valuen>])`
+
+Applicable operation types: *int, float, char*
+
+Subtracts one or more values from `<value1>` and returns the result.
+
+For operation type *char*, the initial ASCII value is decremented by the integer component of each value.  Exceeding the char boundries (>= 1, <= 255) will result in an error.
+
+### `* (<value1>, <value2> [... <valuen>])`, `*= (<lvalue>, <value1> [... <valuen>])`
+
+Multiplies two or more values and returns the result.
+
+### `/ (<value1>, <value2> [... <valuen>])`, `/= (<lvalue>, <value1> [... <valuen>])`
+
+### `** (<value1>, <value2> [... <valuen>])`, `**= (<lvalue>, <value1> [... <valuen>])`
+
+### `| (<value1>, <value2> [... <valuen>])`, `|= (<lvalue>, <value1> [... <valuen>])`
+
+### `& (<value1>, <value2> [... <valuen>])`, `&= (<lvalue>, <value1> [... <valuen>])`
+
+### `^ (<value1>, <value2> [... <valuen>])`, `^= (<lvalue>, <value1> [... <valuen>])`
+
+### `% (<value1>, <value2> [... <valuen>])`, `%= (<lvalue>, <value1> [... <valuen>])`
+
+## Comparison:
+
+### `== (<value1>, <value2> [... <valuen>])`
+
+### `!= (<value1>, <value2> [... <valuen>])`
+
+### `> (<value1>, <value2> [... <valuen>])`
+
+### `>= (<value1>, <value2> [... <valuen>])`
+
+### `< (<value1>, <value2> [... <valuen>])`
+
+### `<= (<value1>, <value2> [... <valuen>])`
+
+### `|| (<value1>, <value2> [... <valuen>])`
+
+### `&& (<value1>, <value2> [... <valuen>])`
+
+### `^^ (<value1>, <value2> [... <valuen>])`
+
+### `!|| (<value1>, <value2> [... <valuen>])`
+
+### `!&& (<value1>, <value2> [... <valuen>])`
+
+### `!^^ (<value1>, <value2> [... <valuen>])`
 
 ## Informative:
 
-1. `?`
-2. `!`
-3. `inv`
-4. `type`
-5. `scope`
-6. `length`
-7. `this`
-8. `id`
-9. `name`
-10. `func_exists`
-11. `tokenize`
+### `?`
+### `!`
+### `inv`
+### `type`
+### `scope`
+### `length`
+### `this`
+### `id`
+### `name`
+### `func_exists`
+### `tokenize`
+
+### `multi (<line1> [... <linen>])`
 
 ## Assigning / modifying:
 
