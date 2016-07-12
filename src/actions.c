@@ -22,7 +22,7 @@
 #include "actions.h"
 
 int qs_action_parameters (qs_execute_t *exe, qs_action_t *action,
-   char *func_name, qs_list_t *in, qs_list_t **out)
+   const char *func_name, qs_list_t *in, qs_list_t **out)
 {
    int args = in->value_count;
    qs_value_t **arg = in->values;

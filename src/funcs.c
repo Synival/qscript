@@ -47,8 +47,8 @@ inline qs_object_t *qs_arg_object (qs_execute_t *exe, qs_value_t *val)
    return qs_value_object (exe, val);
 }
 
-inline int qs_func_error (qs_execute_t *exe, char *func_name, p_node_t *node,
-   char *format, ...)
+inline int qs_func_error (qs_execute_t *exe, const char *func_name,
+   p_node_t *node, char *format, ...)
 {
    char buf[256];
    va_list va_args;
@@ -67,7 +67,7 @@ inline qs_value_t *qs_return_value (qs_scheme_t *scheme)
    return qs_scheme_heap_value (scheme);
 }
 
-inline qs_value_t *qs_return_string (qs_scheme_t *scheme, char *s)
+inline qs_value_t *qs_return_string (qs_scheme_t *scheme, const char *s)
 {
    qs_value_t *r = qs_return_value (scheme);
    qs_value_init (r, QS_VALUE_STRING, s);
