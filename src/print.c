@@ -12,7 +12,7 @@
 
 #include "print.h"
 
-int qs_print_value (qs_value_t *v, int indent)
+int qs_print_value (const qs_value_t *v, int indent)
 {
    if (v == NULL)
       return 0;
@@ -77,7 +77,7 @@ int qs_print_value (qs_value_t *v, int indent)
    return count;
 }
 
-int qs_print_action (qs_action_t *a, int indent)
+int qs_print_action (const qs_action_t *a, int indent)
 {
    switch (a->action_id) {
       case QS_ACTION_CALL:
@@ -91,7 +91,7 @@ int qs_print_action (qs_action_t *a, int indent)
          printf ("]");
          break;
       case QS_ACTION_PROPERTY: {
-         qs_value_t *val = a->data_p;
+         const qs_value_t *val = a->data_p;
          if (val->value_id == QS_VALUE_STRING && val->action_list == NULL)
             printf ("\x1b[0;34;1m.%s\x1b[0m", val->val_s);
          else {
@@ -107,7 +107,7 @@ int qs_print_action (qs_action_t *a, int indent)
    return 1;
 }
 
-int qs_print_list (qs_list_t *l, int indent)
+int qs_print_list (const qs_list_t *l, int indent)
 {
    qs_value_t *v;
    int i, count = 0;
@@ -128,7 +128,7 @@ int qs_print_list (qs_list_t *l, int indent)
    return count;
 }
 
-int qs_print_resource (qs_resource_t *r)
+int qs_print_resource (const qs_resource_t *r)
 {
    char flag_str[16];
    int len;

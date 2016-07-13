@@ -20,8 +20,8 @@
 #include "execute.h"
 
 qs_execute_t *qs_execute_push (qs_execute_type_e type, qs_rlink_t *rlink,
-   qs_execute_t *exe, qs_action_t *action, const char *name_p,
-   qs_flags_t flags, qs_list_t *list)
+   qs_execute_t *exe, const qs_action_t *action, const char *name_p,
+   qs_flags_t flags, const qs_list_t *list_p)
 {
 
    /* allocate and initialize our new execution state. */
@@ -35,7 +35,7 @@ qs_execute_t *qs_execute_push (qs_execute_type_e type, qs_rlink_t *rlink,
    new->action     = action;
    new->flags      = flags;
    new->name_p     = name_p;
-   new->list       = list;
+   new->list_p     = list_p;
 
    /* link to parent. */
    new->parent = exe;
@@ -63,8 +63,8 @@ int qs_execute_pop (qs_execute_t *exe)
 int qs_execute_cleanup (qs_execute_t *exe)
 {
    /* should we free our list? */
-   if (exe->flags & QS_EXECUTE_FREE_LIST)
-      qs_list_free (exe->list);
+   if (exe->list_data)
+      qs_list_free (exe->list_data);
 
    /* free any remaining variables. */
    while (exe->variable_list_back)
@@ -83,7 +83,7 @@ qs_execute_t *qs_execute_get_call (qs_execute_t *exe)
     * return the first one of those we find, going back from our current
     * execution state. */
    for (; exe != NULL; exe = exe->parent) {
-      if (!exe->list)
+      if (!exe->list_p)
          continue;
       if (exe->execute_id == QS_EXECUTE_LAMBDA ||
           exe->execute_id == QS_EXECUTE_RESOURCE)

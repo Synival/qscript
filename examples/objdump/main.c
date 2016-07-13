@@ -30,7 +30,7 @@ int main (void)
    qs_object_t *o;
    qs_property_t *p;
    qs_value_t *v;
-   char *type;
+   const char *type;
    for (o = scheme->object_list_front; o != NULL; o = o->next) {
       printf ("%s:\n", o->name);
       for (p = o->property_list_front; p != NULL; p = p->next) {

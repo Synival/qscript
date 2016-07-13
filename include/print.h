@@ -8,9 +8,9 @@
 #include "defs.h"
 
 /* printing functions. */
-int qs_print_value (qs_value_t *v, int indent);
-int qs_print_action (qs_action_t *a, int indent);
-int qs_print_list (qs_list_t *l, int indent);
-int qs_print_resource (qs_resource_t *r);
+int qs_print_value (const qs_value_t *v, int indent);
+int qs_print_action (const qs_action_t *a, int indent);
+int qs_print_list (const qs_list_t *l, int indent);
+int qs_print_resource (const qs_resource_t *r);
 
 #endif
