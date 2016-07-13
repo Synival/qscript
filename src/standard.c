@@ -166,9 +166,9 @@ QS_FUNC (qsf_math)
          }
 
          /* build a new list with the contents of val + every other arg. */
-         const qs_list_t *old_list = val->val_p;
+         qs_list_t *old_list = val->val_p;
          rval = QS_RETL (old_list->value_count + (args - start));
-         qs_list_t *new_list = (qs_list_t *) rval->val_p;
+         qs_list_t *new_list = rval->val_p;
 
          /* copy links to all previous data. */
          int pos = 0;
@@ -746,12 +746,12 @@ QS_FUNC (qsf_for_each)
 QS_FUNC (qsf_args)
 {
    qs_execute_t *e;
-   const qs_list_t *list;
+   qs_list_t *list;
 
    /* make sure we came from an action, and there's a previous list
     * of arguments passed to this function call. */
    if ((e = qs_execute_get_call (exe)) == NULL ||
-       (list = e->list_p) == NULL) {
+       (list = e->list) == NULL) {
       /* if we're calling args(), we can safely return zero to indicate
        * that we're not a function. */
       if (args == 0)
@@ -800,12 +800,12 @@ QS_FUNC (qsf_args)
 QS_FUNC (qsf_arg)
 {
    qs_execute_t *e;
-   const qs_list_t *list;
+   qs_list_t *list;
 
    /* make sure we came from an action, and there's a previous list
     * of arguments passed to this function call. */
    if ((e = qs_execute_get_call (exe)) == NULL ||
-       (list = e->list_p) == NULL) {
+       (list = e->list) == NULL) {
       qs_func_error (exe, func->name, action->node,
          "not a function call.\n");
       return QSV_NOT_FUNC_CALL;
@@ -832,12 +832,12 @@ QS_FUNC (qsf_arg)
 QS_FUNC (qsf_arg_list)
 {
    qs_execute_t *e;
-   const qs_list_t *list;
+   qs_list_t *list;
 
    /* make sure we came from an action, and there's a previous list
     * of arguments passed to this function call. */
    if ((e = qs_execute_get_call (exe)) == NULL ||
-       (list = e->list_p) == NULL) {
+       (list = e->list) == NULL) {
       qs_func_error (exe, func->name, action->node,
          "not a function call.\n");
       return QSV_NOT_FUNC_CALL;
@@ -848,7 +848,7 @@ QS_FUNC (qsf_arg_list)
    rval->flags &= ~QS_VALUE_MUTABLE;
    rval->value_id = QS_VALUE_LIST;
    qs_value_restring (rval, "<list>");
-   rval->val_p = (void *) list;
+   rval->val_p = list;
 
    /* return our new value. */
    return rval;
@@ -1154,7 +1154,7 @@ QS_FUNC (qsf_cast)
          int id = 0l;
 
          /* should we return our own object? */
-         const qs_object_t *obj = NULL;
+         qs_object_t *obj = NULL;
          if (val == NULL)
             obj = object;
          /* nope - attempt to get an object by type. */

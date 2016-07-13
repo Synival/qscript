@@ -22,7 +22,7 @@
 #include "actions.h"
 
 int qs_action_parameters (qs_execute_t *exe, qs_action_t *action,
-   const char *func_name, const qs_list_t *in, qs_list_t **out)
+   const char *func_name, qs_list_t *in, qs_list_t **out)
 {
    int args = in->value_count;
    qs_value_t **arg = in->values;
@@ -32,12 +32,14 @@ int qs_action_parameters (qs_execute_t *exe, qs_action_t *action,
    for (i = 0; i < args; i++)
       if (arg[i]->flags & QS_VALUE_UNWRAP)
          unwrap++;
-   if (unwrap == 0)
+   if (unwrap == 0) {
+      *out = in;
       return 0;
+   }
 
    /* there are; unwrap them! */
    int w = 0, new_args = args;
-   const qs_list_t *l;
+   qs_list_t *l;
 
    /* allocate reference storage for our new values. */
    qs_value_t *v, **vals = malloc (sizeof (qs_value_t *) * unwrap);
@@ -82,18 +84,17 @@ int qs_action_parameters (qs_execute_t *exe, qs_action_t *action,
    free (vals);
 
    /* create a new list. */
-   qs_list_t *new = malloc (sizeof (qs_list_t));
-   memset (new, 0, sizeof (qs_list_t));
-   new->scheme      = exe->scheme;
-   new->value_count = new_args;
-   new->values      = new_arg;
+   *out = malloc (sizeof (qs_list_t));
+   memset (*out, 0, sizeof (qs_list_t));
+   (*out)->scheme      = exe->scheme;
+   (*out)->value_count = new_args;
+   (*out)->values      = new_arg;
 
    /* return 1 to indicate we allocated our own data. */
-   *out = new;
    return 1;
 }
 
-inline qs_value_t *qs_action_run (qs_execute_t *exe, const qs_value_t *val,
+inline qs_value_t *qs_action_run (qs_execute_t *exe, qs_value_t *val,
    qs_action_t *action)
 {
    /* what kind of action are we performing? */
@@ -111,7 +112,7 @@ inline qs_value_t *qs_action_run (qs_execute_t *exe, const qs_value_t *val,
    }
 }
 
-qs_value_t *qs_action_call (qs_execute_t *exe, const qs_value_t *val,
+qs_value_t *qs_action_call (qs_execute_t *exe, qs_value_t *val,
    qs_action_t *action)
 {
    qs_scheme_t *scheme = action->node->parse_data;
@@ -127,24 +128,22 @@ qs_value_t *qs_action_call (qs_execute_t *exe, const qs_value_t *val,
    }
 
    /* determine our arguments. */
-   const qs_list_t *l_in = action->data_p;
-   qs_list_t *l_out = NULL;
-   if (qs_action_parameters (exe, action, val->val_s, l_in, &l_out) < 0)
+   qs_list_t *l_in = action->data_p, *l = NULL;
+   if (qs_action_parameters (exe, action, val->val_s, l_in, &l) < 0)
       return QSV_CANNOT_EXECUTE;
-   if (l_out)
-      l_in = l_out;
 
    /* new parameters?  push them to our stack so later functions know
     * what they were called with.  make sure they're deallocated later. */
-   e = qs_execute_push (-1, exe->rlink, exe, action, val->val_s, 0, l_in);
-   if (l_out)
-      e->list_data = l_out;
+   e = qs_execute_push (-1, exe->rlink, exe, action, val->val_s, 0, l);
+   if (l != l_in)
+      e->flags |= QS_EXECUTE_FREE_LIST;
 
    /* if our function is a list, it's a lambda functions; run it. */
    qs_value_t *rval = QSV_CANNOT_EXECUTE;
    if (val->value_id == QS_VALUE_LIST) {
+      l = val->val_p;
       e->execute_id = QS_EXECUTE_LAMBDA;
-      rval = qs_value_evaluate_block (e, (qs_list_t *) val->val_p);
+      rval = qs_value_evaluate_block (e, val->val_p);
    }
    /* if there's a resource, run it. */
    else if ((r = qs_resource_get (scheme, val->val_s)) != NULL) {
@@ -173,7 +172,7 @@ qs_value_t *qs_action_call (qs_execute_t *exe, const qs_value_t *val,
    return rval;
 }
 
-qs_value_t *qs_action_index (qs_execute_t *exe, const qs_value_t *val,
+qs_value_t *qs_action_index (qs_execute_t *exe, qs_value_t *val,
    qs_action_t *action)
 {
    int length;
@@ -240,7 +239,7 @@ qs_value_t *qs_action_index (qs_execute_t *exe, const qs_value_t *val,
          rval->val_s[0] = val->val_s[ival->val_i];
          rval->val_i = rval->val_s[0];
          rval->val_f = rval->val_s[0];
-         rval->val_p = (void *) val;
+         rval->val_p = val;
 
          /* data will contain an integer with the character index. */
          int *data_i = malloc (sizeof (int));
@@ -261,7 +260,7 @@ qs_value_t *qs_action_index (qs_execute_t *exe, const qs_value_t *val,
    return qs_value_read (exe, rval);
 }
 
-qs_value_t *qs_action_property (qs_execute_t *exe, const qs_value_t *val,
+qs_value_t *qs_action_property (qs_execute_t *exe, qs_value_t *val,
    qs_action_t *action)
 {
    /* complain if val isn't of type 'object'. */

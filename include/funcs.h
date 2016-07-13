@@ -9,10 +9,10 @@
 
 /* function usage and definitions. */
 struct _qs_func_t {
-   const char *name, *format_string;
-   const int min_args;
+   char *name, *format_string;
+   int min_args;
    qs_func *func;
-   const int sub_func;
+   int sub_func;
 };
 
 /* function execution. */

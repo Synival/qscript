@@ -37,7 +37,7 @@ inline qs_list_t *qs_arg_list (qs_execute_t *exe, qs_value_t *val)
    qs_arg_start (NULL);
    if (v->value_id != QS_VALUE_LIST)
       return NULL;
-   return (qs_list_t *) v->val_p;
+   return v->val_p;
 }
 inline qs_object_t *qs_arg_object (qs_execute_t *exe, qs_value_t *val)
 {
@@ -105,15 +105,15 @@ inline qs_value_t *qs_return_list (qs_scheme_t *scheme, int count)
 inline qs_value_t *qs_func_run (qs_execute_t *exe, qs_func_t *func)
 {
    /* are there enough arguments for this function? */
-   if (exe->list_p->value_count < func->min_args) {
+   if (exe->list->value_count < func->min_args) {
       qs_func_error (exe, func->name, (exe->action) ? exe->action->node
          : NULL, "at least %d args required, only %d given.\n",
-         func->min_args, exe->list_p->value_count);
+         func->min_args, exe->list->value_count);
       return QSV_NOT_ENOUGH_ARGS;
    }
    else
       return func->func (exe->object, exe->rlink, exe, exe->action,
-         func, func->sub_func, exe->list_p->value_count, exe->list_p->values);
+         func, func->sub_func, exe->list->value_count, exe->list->values);
 }
 
 int qs_func_break (qs_execute_t *e)

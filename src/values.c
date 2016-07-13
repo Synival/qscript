@@ -111,7 +111,7 @@ int qs_value_copy_real (qs_execute_t *exe, qs_value_t *dest, qs_value_t *src,
    return 1;
 }
 
-const char *qs_value_type (const qs_value_t *val)
+char *qs_value_type (qs_value_t *val)
 {
    switch (val->value_id) {
       /* real primitives:
@@ -136,7 +136,7 @@ const char *qs_value_type (const qs_value_t *val)
    }
 }
 
-qs_variable_t *qs_value_variable (qs_execute_t *exe, const qs_value_t *v)
+qs_variable_t *qs_value_variable (qs_execute_t *exe, qs_value_t *v)
 {
    if (v->link_id == QS_LINK_VARIABLE)
       return v->link;
@@ -159,7 +159,7 @@ qs_variable_t *qs_value_variable (qs_execute_t *exe, const qs_value_t *v)
    }
 }
 
-qs_property_t *qs_value_property (qs_execute_t *exe, const qs_value_t *v)
+qs_property_t *qs_value_property (qs_execute_t *exe, qs_value_t *v)
 {
    if (v->link_id == QS_LINK_PROPERTY)
       return v->link;
@@ -301,7 +301,7 @@ qs_value_t *qs_value_evaluate_block (qs_execute_t *exe, qs_list_t *list)
    return rval;
 }
 
-qs_value_t *qs_value_evaluate (qs_execute_t *exe, const qs_value_t *val)
+qs_value_t *qs_value_evaluate (qs_execute_t *exe, qs_value_t *val)
 {
    qs_value_t *rval = QSV_CANNOT_EXECUTE;
 
@@ -315,7 +315,7 @@ qs_value_t *qs_value_evaluate (qs_execute_t *exe, const qs_value_t *val)
       case QS_VALUE_CHAR:
       case QS_VALUE_LIST:
       case QS_VALUE_OBJECT:
-         rval = (qs_value_t *) val;
+         rval = val;
          break;
 
       /* abstract primitives: */
@@ -361,7 +361,7 @@ qs_value_t *qs_value_evaluate (qs_execute_t *exe, const qs_value_t *val)
    return rval;
 }
 
-int qs_value_length (const qs_value_t *v)
+int qs_value_length (qs_value_t *v)
 {
    /* return a value based on type. */
    switch (v->value_id) {
@@ -474,7 +474,7 @@ int qs_value_update_from_string (qs_value_t *val)
    return 1;
 }
 
-qs_object_t *qs_value_object (qs_execute_t *exe, const qs_value_t *val)
+qs_object_t *qs_value_object (qs_execute_t *exe, qs_value_t *val)
 {
    qs_object_t *obj;
 
@@ -482,16 +482,12 @@ qs_object_t *qs_value_object (qs_execute_t *exe, const qs_value_t *val)
    if (val->value_id != QS_VALUE_OBJECT)
       return NULL;
 
-   /* we need to modify a const value.  yes, yes, this is bad, too bad
-    * it's all too necessary compared to the alternative. */
-   qs_value_t *mval = (qs_value_t *) val;
-
    /* first, look for an object by id.  this will be ultra-quick. */
    if ((obj = qs_object_get_by_id (exe->scheme, val->val_i)) != NULL) {
       /* update the string if necessary. */
       if (val->data == NULL || strcmp (val->data, obj->name) != 0) {
-         free (mval->data);
-         mval->data = strdup (obj->name);
+         free (val->data);
+         val->data = strdup (obj->name);
       }
       return obj;
    }
@@ -501,7 +497,7 @@ qs_object_t *qs_value_object (qs_execute_t *exe, const qs_value_t *val)
       return NULL;
 
    /* we found an object! update our id reference and return it. */
-   mval->val_i = obj->id;
+   val->val_i = obj->id;
    return obj;
 }
 

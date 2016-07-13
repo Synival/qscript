@@ -118,7 +118,8 @@ typedef enum _qs_value_link_e {
 
 /* flags for execution states. */
 #define QS_EXECUTE_BREAK         0x01
-#define QS_EXECUTE_READ_ONLY     0x02
+#define QS_EXECUTE_FREE_LIST     0x02
+#define QS_EXECUTE_READ_ONLY     0x04
 
 /* flags for resources. */
 #define QS_RESOURCE_GLOBAL       0x01
@@ -157,9 +158,9 @@ typedef struct _qs_property_t  qs_property_t;
 typedef struct _qs_modify_t    qs_modify_t;
 
 /* function types. */
-#define QS_FUNC(x) qs_value_t *x (const qs_object_t *object, \
-   const qs_rlink_t *rlink, qs_execute_t *exe, const qs_action_t *action, \
-   const qs_func_t *func, int sub_func, int args, qs_value_t **arg)
+#define QS_FUNC(x) qs_value_t *x (qs_object_t *object, qs_rlink_t *rlink, \
+   qs_execute_t *exe, qs_action_t *action, qs_func_t *func, int sub_func, \
+   int args, qs_value_t **arg)
 typedef QS_FUNC(qs_func);
 
 #define QS_STACK_FUNC(x) int x (qs_stack_t *stack, void *data)
