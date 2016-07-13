@@ -12,7 +12,7 @@ struct _qs_execute_t {
    qs_execute_type_e execute_id;
    qs_flags_t flags;
    qs_id_t id;
-   const char *name_p;
+   char *name_p;
    qs_action_t *action;
    qs_list_t *list;
    qs_rlink_t *rlink;
@@ -27,7 +27,7 @@ struct _qs_execute_t {
 
 /* execution functions. */
 qs_execute_t *qs_execute_push (qs_execute_type_e type, qs_rlink_t *rlink,
-   qs_execute_t *exe, qs_action_t *action, const char *name, qs_flags_t flags,
+   qs_execute_t *exe, qs_action_t *action, char *name, qs_flags_t flags,
    qs_list_t *list);
 int qs_execute_pop (qs_execute_t *exe);
 int qs_execute_cleanup (qs_execute_t *exe);

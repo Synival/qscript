@@ -20,8 +20,8 @@
 #include "execute.h"
 
 qs_execute_t *qs_execute_push (qs_execute_type_e type, qs_rlink_t *rlink,
-   qs_execute_t *exe, qs_action_t *action, const char *name_p,
-   qs_flags_t flags, qs_list_t *list)
+   qs_execute_t *exe, qs_action_t *action, char *name, qs_flags_t flags,
+   qs_list_t *list)
 {
 
    /* allocate and initialize our new execution state. */
@@ -34,7 +34,7 @@ qs_execute_t *qs_execute_push (qs_execute_type_e type, qs_rlink_t *rlink,
    new->rlink      = rlink;
    new->action     = action;
    new->flags      = flags;
-   new->name_p     = name_p;
+   new->name_p     = name;
    new->list       = list;
 
    /* link to parent. */

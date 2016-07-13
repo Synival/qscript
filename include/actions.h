@@ -19,7 +19,7 @@ struct _qs_action_t {
 
 /* action functions. */
 int qs_action_parameters (qs_execute_t *exe, qs_action_t *action,
-   const char *func_name, qs_list_t *in, qs_list_t **out);
+   char *func_name, qs_list_t *in, qs_list_t **out);
 inline qs_value_t *qs_action_run (qs_execute_t *exe, qs_value_t *val,
    qs_action_t *action);
 qs_value_t *qs_action_call (qs_execute_t *exe, qs_value_t *val,
