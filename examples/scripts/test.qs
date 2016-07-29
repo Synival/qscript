@@ -1,6 +1,7 @@
 # Test a lot of stuff!
 main {
    # print_resource ();
+   return ();
 
    # Proper echo() behavior with some strings, numbers, and statements.
    echo ("Numbers and addition vs. concatenation tests:");

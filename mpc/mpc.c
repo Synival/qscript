@@ -80,6 +80,7 @@ typedef struct {
   mpc_state_t state;
   
   char *string;
+  int string_len;
   char *buffer;
   FILE *file;
   
@@ -108,8 +109,8 @@ static mpc_input_t *mpc_input_new_string(const char *filename, const char *strin
   
   i->state = mpc_state_new();
   
-  i->string = malloc(strlen(string) + 1);
-  strcpy(i->string, string);
+  i->string_len = strlen (string);
+  i->string = strdup (string);
   i->buffer = NULL;
   i->file = NULL;
   
@@ -137,6 +138,7 @@ static mpc_input_t *mpc_input_new_pipe(const char *filename, FILE *pipe) {
   i->type = MPC_INPUT_PIPE;
   i->state = mpc_state_new();
   
+  i->string_len = 0;
   i->string = NULL;
   i->buffer = NULL;
   i->file = pipe;
@@ -165,6 +167,7 @@ static mpc_input_t *mpc_input_new_file(const char *filename, FILE *file) {
   i->type = MPC_INPUT_FILE;
   i->state = mpc_state_new();
   
+  i->string_len = 0;
   i->string = NULL;
   i->buffer = NULL;
   i->file = file;
@@ -187,8 +190,13 @@ static void mpc_input_delete(mpc_input_t *i) {
   
   free(i->filename);
   
-  if (i->type == MPC_INPUT_STRING) { free(i->string); }
-  if (i->type == MPC_INPUT_PIPE) { free(i->buffer); }
+  if (i->type == MPC_INPUT_STRING) {
+    i->string_len = 0;
+    free(i->string);
+  }
+  else if (i->type == MPC_INPUT_PIPE) {
+    free(i->buffer);
+  }
   
   free(i->marks);
   free(i->lasts);
@@ -331,10 +339,25 @@ static char mpc_input_buffer_get(mpc_input_t *i) {
 }
 
 static int mpc_input_terminated(mpc_input_t *i) {
-  if (i->type == MPC_INPUT_STRING && i->state.pos == (long)strlen(i->string)) { return 1; }
+  switch (i->type) {
+    case MPC_INPUT_STRING:
+      if (i->state.pos == i->string_len)
+        return 1;
+      return 0;
+    case MPC_INPUT_FILE:
+    case MPC_INPUT_PIPE:
+      if (feof (i->file))
+        return 1;
+      return 0;
+    default:
+      return 0;
+  }
+#if 0
+  if (i->type == MPC_INPUT_STRING && i->state.pos == i->string_len) return 1;
   if (i->type == MPC_INPUT_FILE && feof(i->file)) { return 1; }
   if (i->type == MPC_INPUT_PIPE && feof(i->file)) { return 1; }
   return 0;
+#endif
 }
 
 static char mpc_input_getc(mpc_input_t *i) {
