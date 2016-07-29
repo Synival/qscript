@@ -127,6 +127,7 @@ P_FUNC (qs_language_value)
    v = malloc (sizeof (qs_value_t));
    memset (v, 0, sizeof (qs_value_t));
    v->node = node;
+   v->link_id = QS_LINK_LITERAL;
    node->data = v;
 
    /* process the rest of our arguments. */
