@@ -2061,7 +2061,7 @@ static mpc_val_t *mpcf_re_range(mpc_val_t *x) {
   size_t start, end;
   const char *tmp = NULL;
   const char *s = x;
-  int comp = s[0] == '^' ? 1 : 0;
+  int comp = s[0] == '^' ? 1 : 0, len = 0;
   char *range = calloc(1,1);
   
   if (s[0] == '\0') { free(x); return mpc_fail("Invalid Regex Range Expression"); } 
@@ -2074,37 +2074,41 @@ static mpc_val_t *mpcf_re_range(mpc_val_t *x) {
     if (s[i] == '\\') {
       tmp = mpc_re_range_escape_char(s[i+1]);
       if (tmp != NULL) {
-        range = realloc(range, strlen(range) + strlen(tmp) + 1);
+        len += strlen(tmp);
+        range = realloc(range, len + 1);
         strcat(range, tmp);
       } else {
-        range = realloc(range, strlen(range) + 1 + 1);
-        range[strlen(range) + 1] = '\0';
-        range[strlen(range) + 0] = s[i+1];      
+        len++;
+        range = realloc(range, len + 1);
+        range[len - 1] = s[i+1];      
+        range[len - 0] = '\0';
       }
       i++;
     }
-    
     /* Regex Range...Range */
     else if (s[i] == '-') {
       if (s[i+1] == '\0' || i == 0) {
-          range = realloc(range, strlen(range) + strlen("-") + 1);
-          strcat(range, "-");
+        len++;
+        range = realloc(range, len + 1);
+        range[len - 1] = '-';
+        range[len - 0] = '\0';
       } else {
+        int pos = len;
         start = s[i-1]+1;
         end = s[i+1]-1;
-        for (j = start; j <= end; j++) {
-          range = realloc(range, strlen(range) + 1 + 1 + 1);
-          range[strlen(range) + 1] = '\0';
-          range[strlen(range) + 0] = j;
-        }        
+        len += (end - start + 1);
+        range = realloc(range, len + 1);
+        for (j = start; j <= end; j++)
+          range[pos++] = j;
+        range[pos] = '\0';
       }
     }
-    
     /* Regex Range Normal */
     else {
-      range = realloc(range, strlen(range) + 1 + 1);
-      range[strlen(range) + 1] = '\0';
-      range[strlen(range) + 0] = s[i];
+      len++;
+      range = realloc(range, len + 1);
+      range[len - 1] = s[i];
+      range[len - 0] = '\0';
     }
   
   }
@@ -2298,9 +2302,8 @@ static mpc_val_t *mpcf_escape_new(mpc_val_t *x, const char *input, const char **
 
 static mpc_val_t *mpcf_unescape_new(mpc_val_t *x, const char *input, const char **output) {
   
-  int i;
+  int i, len = 0;
   int found = 0;
-  char buff[2];
   char *s = x;
   char *y = calloc(1, 1);
   
@@ -2312,9 +2315,10 @@ static mpc_val_t *mpcf_unescape_new(mpc_val_t *x, const char *input, const char 
     while (output[i]) {
       if ((*(s+0)) == output[i][0] &&
           (*(s+1)) == output[i][1]) {
-        y = realloc(y, strlen(y) + 1 + 1);
-        buff[0] = input[i]; buff[1] = '\0';
-        strcat(y, buff);
+        len++;
+        y = realloc(y, len + 1);
+        y[len - 1] = input[i];
+        y[len - 0] = '\0';
         found = 1;
         s++;
         break;
@@ -2323,9 +2327,10 @@ static mpc_val_t *mpcf_unescape_new(mpc_val_t *x, const char *input, const char 
     }
     
     if (!found) {
-      y = realloc(y, strlen(y) + 1 + 1);
-      buff[0] = *s; buff[1] = '\0';
-      strcat(y, buff);
+      len++;
+      y = realloc(y, len + 1);
+      y[len - 1] = *s;
+      y[len - 0] = '\0';
     }
     
     if (*s == '\0') { break; }
