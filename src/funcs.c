@@ -5,18 +5,18 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#include "actions.h"
-#include "execute.h"
-#include "language.h"
-#include "lists.h"
-#include "parser.h"
-#include "rlinks.h"
-#include "schemes.h"
-#include "stacks.h"
-#include "values.h"
-#include "variables.h"
+#include "qscript/actions.h"
+#include "qscript/execute.h"
+#include "qscript/language.h"
+#include "qscript/lists.h"
+#include "qscript/parser.h"
+#include "qscript/rlinks.h"
+#include "qscript/schemes.h"
+#include "qscript/stacks.h"
+#include "qscript/values.h"
+#include "qscript/variables.h"
 
-#include "funcs.h"
+#include "qscript/funcs.h"
 
 #define qs_arg_start(x) \
    qs_value_t *v; \
@@ -24,30 +24,53 @@
       return x;
 
 /* simple primitives. */
-inline char *qs_arg_string (qs_execute_t *exe, qs_value_t *val)
+char *qs_arg_string (qs_execute_t *exe, qs_value_t *val)
    { qs_arg_start ("<error>"); return v->val_s; }
-inline float qs_arg_float  (qs_execute_t *exe, qs_value_t *val)
+float qs_arg_float  (qs_execute_t *exe, qs_value_t *val)
    { qs_arg_start (0); return v->val_f; }
-inline int   qs_arg_int    (qs_execute_t *exe, qs_value_t *val)
+int   qs_arg_int    (qs_execute_t *exe, qs_value_t *val)
    { qs_arg_start (0); return v->val_i; }
 
 /* complex primitives. */
-inline qs_list_t *qs_arg_list (qs_execute_t *exe, qs_value_t *val)
-{
+qs_list_t *qs_arg_list (qs_execute_t *exe, qs_value_t *val) {
    qs_arg_start (NULL);
-   if (v->value_id != QS_VALUE_LIST)
-      return NULL;
-   return v->val_p;
+   return (v->value_id != QS_VALUE_LIST) ? NULL : v->val_p;
 }
-inline qs_object_t *qs_arg_object (qs_execute_t *exe, qs_value_t *val)
-{
+qs_object_t *qs_arg_object (qs_execute_t *exe, qs_value_t *val) {
    qs_arg_start (NULL);
-   if (v->value_id != QS_VALUE_OBJECT)
-      return NULL;
-   return qs_value_object (exe, val);
+   return (v->value_id != QS_VALUE_OBJECT) ? NULL : qs_value_object (exe, val);
 }
 
-inline int qs_func_error (qs_execute_t *exe, char *func_name, p_node_t *node,
+/* return value producing functions. */
+qs_value_t *qs_return_value (qs_scheme_t *scheme)
+   { return qs_scheme_heap_value (scheme); }
+qs_value_t *qs_return_string (qs_scheme_t *scheme, char *s) {
+   qs_value_t *r = qs_return_value (scheme);
+   qs_value_init (r, QS_VALUE_STRING, s);
+   return r;
+}
+qs_value_t *qs_return_int (qs_scheme_t *scheme, int i) {
+   qs_value_t *r = qs_return_value (scheme);
+   qs_value_init (r, QS_VALUE_INT, i);
+   return r;
+}
+qs_value_t *qs_return_float (qs_scheme_t *scheme, float f) {
+   qs_value_t *r = qs_return_value (scheme);
+   qs_value_init (r, QS_VALUE_FLOAT, f);
+   return r;
+}
+qs_value_t *qs_return_char (qs_scheme_t *scheme, char c) {
+   qs_value_t *r = qs_return_value (scheme);
+   qs_value_init (r, QS_VALUE_CHAR, c, NULL, NULL);
+   return r;
+}
+qs_value_t *qs_return_list (qs_scheme_t *scheme, int count) {
+   qs_value_t *r = qs_return_value (scheme);
+   qs_value_init (r, QS_VALUE_LIST, count);
+   return r;
+}
+
+int qs_func_error (qs_execute_t *exe, char *func_name, p_node_t *node,
    char *format, ...)
 {
    char buf[256];
@@ -62,47 +85,7 @@ inline int qs_func_error (qs_execute_t *exe, char *func_name, p_node_t *node,
    return p_error (node, "%s(): %s", func_name, buf);
 }
 
-inline qs_value_t *qs_return_value (qs_scheme_t *scheme)
-{
-   return qs_scheme_heap_value (scheme);
-}
-
-inline qs_value_t *qs_return_string (qs_scheme_t *scheme, char *s)
-{
-   qs_value_t *r = qs_return_value (scheme);
-   qs_value_init (r, QS_VALUE_STRING, s);
-   return r;
-}
-
-inline qs_value_t *qs_return_int (qs_scheme_t *scheme, int i)
-{
-   qs_value_t *r = qs_return_value (scheme);
-   qs_value_init (r, QS_VALUE_INT, i);
-   return r;
-}
-
-inline qs_value_t *qs_return_float (qs_scheme_t *scheme, float f)
-{
-   qs_value_t *r = qs_return_value (scheme);
-   qs_value_init (r, QS_VALUE_FLOAT, f);
-   return r;
-}
-
-inline qs_value_t *qs_return_char (qs_scheme_t *scheme, char c)
-{
-   qs_value_t *r = qs_return_value (scheme);
-   qs_value_init (r, QS_VALUE_CHAR, c, NULL, NULL);
-   return r;
-}
-
-inline qs_value_t *qs_return_list (qs_scheme_t *scheme, int count)
-{
-   qs_value_t *r = qs_return_value (scheme);
-   qs_value_init (r, QS_VALUE_LIST, count);
-   return r;
-}
-
-inline qs_value_t *qs_func_run (qs_execute_t *exe, qs_func_t *func)
+qs_value_t *qs_func_run (qs_execute_t *exe, qs_func_t *func)
 {
    /* are there enough arguments for this function? */
    if (exe->list->value_count < func->min_args) {

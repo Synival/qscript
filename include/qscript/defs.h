@@ -5,6 +5,10 @@
 #ifndef __QS_DEFS_H
 #define __QS_DEFS_H
 
+#ifdef __TARGET_QSCRIPT__
+   #include "qs_config.h"
+#endif
+
 #include <stdint.h>
 
 #include "parser_types.h"

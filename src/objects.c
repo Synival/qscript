@@ -6,18 +6,18 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "link.h"
-#include "execute.h"
-#include "parser.h"
-#include "properties.h"
-#include "resources.h"
-#include "rlinks.h"
-#include "schemes.h"
-#include "variables.h"
+#include "qscript/link.h"
+#include "qscript/execute.h"
+#include "qscript/parser.h"
+#include "qscript/properties.h"
+#include "qscript/resources.h"
+#include "qscript/rlinks.h"
+#include "qscript/schemes.h"
+#include "qscript/variables.h"
 
-#include "objects.h"
+#include "qscript/objects.h"
 
-inline qs_object_t *qs_object_new (qs_scheme_t *scheme, char *name)
+qs_object_t *qs_object_new (qs_scheme_t *scheme, char *name)
    { return qs_object_new_base (scheme, name); }
 
 qs_object_t *qs_object_instantiate (qs_resource_t *rsrc, char *name)

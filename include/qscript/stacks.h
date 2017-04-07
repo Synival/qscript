@@ -29,7 +29,6 @@ struct _qs_stack_t {
 #define qs_stack_new(type) \
    qs_stack_new_real (sizeof (type))
 qs_stack_t *qs_stack_new_real (size_t type_size);
-inline void *qs_stack_last (qs_stack_t *stack);
 void *qs_stack_last_n (qs_stack_t *stack, int n);
 void *qs_stack_push (qs_stack_t *stack, qs_stack_func *free_func);
 int qs_stack_pop (qs_stack_t *stack);
@@ -39,5 +38,9 @@ int qs_stack_free (qs_stack_t *stack);
 int qs_stack_data (qs_stack_t *stack, void *data, qs_stack_func *free_func);
 void *qs_stack_pop_get (qs_stack_t *stack, qs_stack_func **func);
 int qs_stack_pop_to_except (qs_stack_t *stack, void *to, void *except);
+
+/* inline functions. */
+inline void *qs_stack_last (qs_stack_t *stack)
+   { return qs_stack_last_n (stack, 0); }
 
 #endif

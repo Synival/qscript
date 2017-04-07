@@ -37,7 +37,7 @@ qs_rlink_t *qs_rlink_inject (qs_object_t *obj, qs_resource_t *resource,
 qs_rlink_t *qs_rlink_inject_at (qs_object_t *obj, qs_resource_t *resource,
    int priority, qs_rlink_t *parent, qs_rlink_t *prev, qs_execute_t *exe,
    qs_action_t *action);
-inline qs_value_t *qs_rlink_wind (qs_rlink_t *rlink);
+qs_value_t *qs_rlink_wind (qs_rlink_t *rlink);
 qs_value_t *qs_rlink_wind_from (qs_rlink_t *rlink, qs_execute_t *exe);
 int qs_rlink_unwind (qs_rlink_t *rlink);
 int qs_rlink_eject (qs_rlink_t *rlink);

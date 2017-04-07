@@ -6,20 +6,20 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "actions.h"
-#include "execute.h"
-#include "funcs.h"
-#include "language.h"
-#include "link.h"
-#include "objects.h"
-#include "parser.h"
-#include "properties.h"
-#include "resources.h"
-#include "schemes.h"
-#include "stacks.h"
-#include "variables.h"
+#include "qscript/actions.h"
+#include "qscript/execute.h"
+#include "qscript/funcs.h"
+#include "qscript/language.h"
+#include "qscript/link.h"
+#include "qscript/objects.h"
+#include "qscript/parser.h"
+#include "qscript/properties.h"
+#include "qscript/resources.h"
+#include "qscript/schemes.h"
+#include "qscript/stacks.h"
+#include "qscript/variables.h"
 
-#include "rlinks.h"
+#include "qscript/rlinks.h"
 
 qs_rlink_t *qs_rlink_inject (qs_object_t *obj, qs_resource_t *resource,
                            int priority)
@@ -94,8 +94,7 @@ qs_rlink_t *qs_rlink_inject_at (qs_object_t *obj, qs_resource_t *resource,
    return new;
 }
 
-inline qs_value_t *qs_rlink_wind (qs_rlink_t *rlink)
-{
+qs_value_t *qs_rlink_wind (qs_rlink_t *rlink) {
    return (rlink->parent ? QSV_UNDEFINED : qs_rlink_wind_from (rlink, NULL));
 }
 

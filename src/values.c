@@ -6,19 +6,19 @@
 #include <stdarg.h>
 #include <string.h>
 
-#include "actions.h"
-#include "execute.h"
-#include "language.h"
-#include "lists.h"
-#include "objects.h"
-#include "parser.h"
-#include "properties.h"
-#include "rlinks.h"
-#include "schemes.h"
-#include "stacks.h"
-#include "variables.h"
+#include "qscript/actions.h"
+#include "qscript/execute.h"
+#include "qscript/language.h"
+#include "qscript/lists.h"
+#include "qscript/objects.h"
+#include "qscript/parser.h"
+#include "qscript/properties.h"
+#include "qscript/rlinks.h"
+#include "qscript/schemes.h"
+#include "qscript/stacks.h"
+#include "qscript/variables.h"
 
-#include "values.h"
+#include "qscript/values.h"
 
 /* some constant return values used all the time. */
 #define QSV_ERR QS_VALUE_UNDEFINED
@@ -387,9 +387,9 @@ int qs_value_restring (qs_value_t *v, char *str)
    return 1;
 }
 
-inline int qs_value_can_modify (qs_execute_t *exe, qs_value_t *val)
+int qs_value_can_modify (qs_execute_t *exe, qs_value_t *val)
    { return (qs_value_lvalue_real (exe, val, 0)) ? 1 : 0; }
-inline qs_value_t *qs_value_lvalue (qs_execute_t *exe, qs_value_t *val)
+qs_value_t *qs_value_lvalue (qs_execute_t *exe, qs_value_t *val)
    { return qs_value_lvalue_real (exe, val, 1); }
 
 qs_value_t *qs_value_lvalue_real (qs_execute_t *exe, qs_value_t *val,

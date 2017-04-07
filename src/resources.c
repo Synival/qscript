@@ -6,15 +6,15 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "ids.h"
-#include "language.h"
-#include "link.h"
-#include "objects.h"
-#include "parser.h"
-#include "rlinks.h"
-#include "schemes.h"
+#include "qscript/ids.h"
+#include "qscript/language.h"
+#include "qscript/link.h"
+#include "qscript/objects.h"
+#include "qscript/parser.h"
+#include "qscript/rlinks.h"
+#include "qscript/schemes.h"
 
-#include "resources.h"
+#include "qscript/resources.h"
 
 qs_resource_t *qs_resource_new (qs_scheme_t *scheme, char *name,
                                 qs_list_t *block, qs_flags_t flags)

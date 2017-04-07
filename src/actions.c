@@ -5,21 +5,21 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "execute.h"
-#include "funcs.h"
-#include "language.h"
-#include "lists.h"
-#include "objects.h"
-#include "parser.h"
-#include "properties.h"
-#include "resources.h"
-#include "rlinks.h"
-#include "schemes.h"
-#include "stacks.h"
-#include "values.h"
-#include "variables.h"
+#include "qscript/execute.h"
+#include "qscript/funcs.h"
+#include "qscript/language.h"
+#include "qscript/lists.h"
+#include "qscript/objects.h"
+#include "qscript/parser.h"
+#include "qscript/properties.h"
+#include "qscript/resources.h"
+#include "qscript/rlinks.h"
+#include "qscript/schemes.h"
+#include "qscript/stacks.h"
+#include "qscript/values.h"
+#include "qscript/variables.h"
 
-#include "actions.h"
+#include "qscript/actions.h"
 
 int qs_action_parameters (qs_execute_t *exe, qs_action_t *action,
    char *func_name, qs_list_t *in, qs_list_t **out)
@@ -94,7 +94,7 @@ int qs_action_parameters (qs_execute_t *exe, qs_action_t *action,
    return 1;
 }
 
-inline qs_value_t *qs_action_run (qs_execute_t *exe, qs_value_t *val,
+qs_value_t *qs_action_run (qs_execute_t *exe, qs_value_t *val,
    qs_action_t *action)
 {
    /* what kind of action are we performing? */

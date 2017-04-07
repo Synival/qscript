@@ -1,0 +1,9 @@
+#!/bin/bash
+# ----------------------------------------------------------------------------
+# Callgrind testing tool for qscript.
+# ----------------------------------------------------------------------------
+# Want to see how (in)efficient qscript is?  Use this!
+
+rm callgrind.out.*
+valgrind --tool=callgrind ./build/qscript < examples/scripts/test.qs
+kcachegrind ./callgrind.out.*

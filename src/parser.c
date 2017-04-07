@@ -5,7 +5,11 @@
  *    Daniel Holden - contact@daniel-holden.com
  *    http://www.gameeducationpdx.com/ */
 
-#include "parser.h"
+#ifdef __TARGET_QSCRIPT__
+   #include "qscript/qs_config.h"
+#endif
+
+#include "qscript/parser.h"
 
 int p_language_new (p_symbol_t *symbol_list)
 {

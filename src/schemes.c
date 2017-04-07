@@ -6,20 +6,20 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "execute.h"
-#include "funcs.h"
-#include "language.h"
-#include "lists.h"
-#include "objects.h"
-#include "parser.h"
-#include "resources.h"
-#include "rlinks.h"
-#include "stacks.h"
-#include "standard.h"
-#include "values.h"
-#include "variables.h"
+#include "qscript/execute.h"
+#include "qscript/funcs.h"
+#include "qscript/language.h"
+#include "qscript/lists.h"
+#include "qscript/objects.h"
+#include "qscript/parser.h"
+#include "qscript/resources.h"
+#include "qscript/rlinks.h"
+#include "qscript/stacks.h"
+#include "qscript/standard.h"
+#include "qscript/values.h"
+#include "qscript/variables.h"
 
-#include "schemes.h"
+#include "qscript/schemes.h"
 
 qs_scheme_t *qs_scheme_new (void)
 {

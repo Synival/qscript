@@ -7,22 +7,22 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "actions.h"
-#include "execute.h"
-#include "funcs.h"
-#include "language.h"
-#include "lists.h"
-#include "objects.h"
-#include "print.h"
-#include "properties.h"
-#include "resources.h"
-#include "rlinks.h"
-#include "schemes.h"
-#include "stacks.h"
-#include "values.h"
-#include "variables.h"
+#include "qscript/actions.h"
+#include "qscript/execute.h"
+#include "qscript/funcs.h"
+#include "qscript/language.h"
+#include "qscript/lists.h"
+#include "qscript/objects.h"
+#include "qscript/print.h"
+#include "qscript/properties.h"
+#include "qscript/resources.h"
+#include "qscript/rlinks.h"
+#include "qscript/schemes.h"
+#include "qscript/stacks.h"
+#include "qscript/values.h"
+#include "qscript/variables.h"
 
-#include "standard.h"
+#include "qscript/standard.h"
 
 qs_func_t qs_func_list_standard[] = {
    { "print",   "<text1> [... <textn>]",   0, qsf_print,   0 },

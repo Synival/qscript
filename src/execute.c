@@ -5,19 +5,19 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "actions.h"
-#include "language.h"
-#include "link.h"
-#include "lists.h"
-#include "parser.h"
-#include "rlinks.h"
-#include "resources.h"
-#include "schemes.h"
-#include "stacks.h"
-#include "values.h"
-#include "variables.h"
+#include "qscript/actions.h"
+#include "qscript/language.h"
+#include "qscript/link.h"
+#include "qscript/lists.h"
+#include "qscript/parser.h"
+#include "qscript/rlinks.h"
+#include "qscript/resources.h"
+#include "qscript/schemes.h"
+#include "qscript/stacks.h"
+#include "qscript/values.h"
+#include "qscript/variables.h"
 
-#include "execute.h"
+#include "qscript/execute.h"
 
 qs_execute_t *qs_execute_push (qs_execute_type_e type, qs_rlink_t *rlink,
    qs_execute_t *exe, qs_action_t *action, char *name, qs_flags_t flags,

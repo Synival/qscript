@@ -6,15 +6,15 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "link.h"
-#include "objects.h"
-#include "parser.h"
-#include "resources.h"
-#include "rlinks.h"
-#include "stacks.h"
-#include "values.h"
+#include "qscript/link.h"
+#include "qscript/objects.h"
+#include "qscript/parser.h"
+#include "qscript/resources.h"
+#include "qscript/rlinks.h"
+#include "qscript/stacks.h"
+#include "qscript/values.h"
 
-#include "properties.h"
+#include "qscript/properties.h"
 
 qs_property_t *qs_property_new (qs_object_t *obj, char *name)
 {

@@ -3,7 +3,8 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "../include/qscript.h"
+#include "qscript/qs_config.h"
+#include "qscript/qscript.h"
 
 int main (void)
 {

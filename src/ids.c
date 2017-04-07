@@ -4,7 +4,7 @@
 
 #include <stdio.h>
 
-#include "ids.h"
+#include "qscript/ids.h"
 
 int qs_id_next (qs_id_manager_t *manager)
 {

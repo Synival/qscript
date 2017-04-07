@@ -5,16 +5,16 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "actions.h"
-#include "link.h"
-#include "lists.h"
-#include "objects.h"
-#include "parser.h"
-#include "resources.h"
-#include "schemes.h"
-#include "values.h"
+#include "qscript/actions.h"
+#include "qscript/link.h"
+#include "qscript/lists.h"
+#include "qscript/objects.h"
+#include "qscript/parser.h"
+#include "qscript/resources.h"
+#include "qscript/schemes.h"
+#include "qscript/values.h"
 
-#include "language.h"
+#include "qscript/language.h"
 
 #define QSCRIPT_SIMPLE_STRING_PATTERN \
    "[a-zA-Z0-9_!@#$%^&\\*+\\-\\.=\\/<>|?]+"

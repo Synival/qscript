@@ -10,7 +10,7 @@
 
 #include <stdint.h>
 
-#include "mpc.h"
+#include "mpc/mpc.h"
 #include "parser_types.h"
 
 /* symbol declarations for parsing and execution. */

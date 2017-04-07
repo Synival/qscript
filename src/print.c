@@ -4,13 +4,13 @@
 
 #include <stdio.h>
 
-#include "actions.h"
-#include "language.h"
-#include "lists.h"
-#include "resources.h"
-#include "values.h"
+#include "qscript/actions.h"
+#include "qscript/language.h"
+#include "qscript/lists.h"
+#include "qscript/resources.h"
+#include "qscript/values.h"
 
-#include "print.h"
+#include "qscript/print.h"
 
 int qs_print_value (qs_value_t *v, int indent)
 {

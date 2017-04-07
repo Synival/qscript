@@ -5,11 +5,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "parser.h"
-#include "schemes.h"
-#include "values.h"
+#include "qscript/parser.h"
+#include "qscript/schemes.h"
+#include "qscript/values.h"
 
-#include "lists.h"
+#include "qscript/lists.h"
 
 qs_list_t *qs_list_new (qs_scheme_t *scheme, int size)
 {

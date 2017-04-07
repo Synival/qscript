@@ -5,15 +5,15 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "execute.h"
-#include "funcs.h"
-#include "objects.h"
-#include "parser.h"
-#include "rlinks.h"
-#include "schemes.h"
-#include "values.h"
+#include "qscript/execute.h"
+#include "qscript/funcs.h"
+#include "qscript/objects.h"
+#include "qscript/parser.h"
+#include "qscript/rlinks.h"
+#include "qscript/schemes.h"
+#include "qscript/values.h"
 
-#include "variables.h"
+#include "qscript/variables.h"
 
 qs_variable_t *qs_variable_get (qs_execute_t *exe, char *name, int scope)
 {

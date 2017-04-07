@@ -2,7 +2,7 @@ OBJ=$(shell ls *.c | sed "s/\.c/.o/")
 CC=gcc
 EXE=objdump
 CFLAGS=-Iobjdump -Wall
-LFLAGS=-L. -Wl,-R,'$$ORIGIN' ./libqscript.so.0
+LFLAGS=-Wl,-R,'$$ORIGIN' -lqscript
 
 default: all
 
