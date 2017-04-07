@@ -8,3 +8,7 @@ qmaze: .FORCE
 objdump: .FORCE
 	cd objdump && make
 clean:
+
+clean:
+	cd qmaze   && make clean && cd ..
+	cd objdump && make clean && cd ..
