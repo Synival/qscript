@@ -2,7 +2,7 @@ OBJ=$(shell ls *.c | sed "s/\.c/.o/")
 CC=gcc
 EXE=qmaze
 CFLAGS=-Wall
-LFLAGS=-Wl,-R,'$$ORIGIN' -lqscript
+LFLAGS=-Wl,-R,'$$ORIGIN/../../../lib' -lqscript
 
 default: all
 

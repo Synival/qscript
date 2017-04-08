@@ -1,8 +1,8 @@
 OBJ=$(shell ls *.c | sed "s/\.c/.o/")
 CC=gcc
 EXE=objdump
-CFLAGS=-Iobjdump -Wall
-LFLAGS=-Wl,-R,'$$ORIGIN' -lqscript
+CFLAGS=-Wall
+LFLAGS=-Wl,-R,'$$ORIGIN/../../../lib' -lqscript
 
 default: all
 
