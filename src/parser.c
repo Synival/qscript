@@ -9,6 +9,8 @@
    #include "qscript/qs_config.h"
 #endif
 
+#include <signal.h>
+
 #include "qscript/parser.h"
 
 int p_language_new (p_symbol_t *symbol_list)
@@ -272,5 +274,7 @@ int p_error (p_node_t *node, char *format, ...)
    else
       printf ("\x1b[0;37;1m%s\x1b[0m", buf);
    fflush (stdout);
+
+   /* signals, wow! */
    return 1;
 }

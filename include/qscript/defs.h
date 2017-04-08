@@ -16,102 +16,105 @@
 /* list types. */
 typedef enum _qs_list_type_e {
    QS_LIST_UNDEFINED = 0,
-   QS_LIST_LIST,
-   QS_LIST_BLOCK,
-   QS_LIST_LAST,
+   QS_LIST_LIST      = 1,
+   QS_LIST_BLOCK     = 2,
+   QS_LIST_LAST      = 3,
 } qs_list_type_e;
 
 /* value types. */
 typedef enum _qs_value_type_e {
    /* simple real primitives. */
-   QS_VALUE_UNDEFINED = 0,
-   QS_VALUE_INT,
-   QS_VALUE_FLOAT,
-   QS_VALUE_STRING,
+   QS_VALUE_UNDEFINED      = 0,
+   QS_VALUE_INT            = 1,
+   QS_VALUE_FLOAT          = 2,
+   QS_VALUE_STRING         = 3,
 
    /* complex real primitives. */
-   QS_VALUE_CHAR,
-   QS_VALUE_LIST,
-   QS_VALUE_OBJECT,
+   QS_VALUE_CHAR           = 4,
+   QS_VALUE_LIST           = 5,
+   QS_VALUE_OBJECT         = 6,
 
    /* abstract primitives. */
-   QS_VALUE_BLOCK,
-   QS_VALUE_VARIABLE,
-   QS_VALUE_PROPERTY,
+   QS_VALUE_BLOCK          = 7,
+   QS_VALUE_VARIABLE       = 8,
+   QS_VALUE_PROPERTY       = 9,
+   QS_VALUE_PROPERTY_VALUE = 10,
 
    /* indicate the final one. */
-   QS_VALUE_LAST,
+   QS_VALUE_LAST           = 11
 } qs_value_type_e;
 
 /* variable scopes. */
 typedef enum _qs_execute_type_e {
    QS_EXECUTE_UNDEFINED = 0,
-   QS_EXECUTE_LAMBDA,
-   QS_EXECUTE_FUNC,
-   QS_EXECUTE_RESOURCE,
-   QS_EXECUTE_BLOCK,
-   QS_EXECUTE_LOOP,
-   QS_EXECUTE_LAST
+   QS_EXECUTE_LAMBDA    = 1,
+   QS_EXECUTE_FUNC      = 2,
+   QS_EXECUTE_RESOURCE  = 3,
+   QS_EXECUTE_BLOCK     = 4,
+   QS_EXECUTE_LOOP      = 5,
+   QS_EXECUTE_LAST      = 6
 } qs_execute_type_e;
 
 /* variable scopes. */
 typedef enum _qs_variable_scope_e {
-   QS_SCOPE_AUTO = -1,
+   QS_SCOPE_AUTO      = -1,
    QS_SCOPE_UNDEFINED = 0,
-   QS_SCOPE_RLINK,
-   QS_SCOPE_BLOCK,
-   QS_SCOPE_LAST
+   QS_SCOPE_RLINK     = 1,
+   QS_SCOPE_BLOCK     = 2,
+   QS_SCOPE_LAST      = 3,
 } qs_variable_scope_e;
 
 /* action types. */
 typedef enum _qs_action_type_e {
-   QS_ACTION_UNDEFINED = 0,
-   QS_ACTION_CALL,
-   QS_ACTION_INDEX,
-   QS_ACTION_PROPERTY,
-   QS_ACTION_LAST
+   QS_ACTION_UNDEFINED       = 0,
+   QS_ACTION_CALL            = 1,
+   QS_ACTION_INDEX           = 2,
+   QS_ACTION_PROPERTY        = 3,
+   QS_ACTION_PROPERTY_VALUE  = 4,
+   QS_ACTION_LAST            = 5
 } qs_action_type_e;
 
 /* our giant list of qscript tokens. */
 typedef enum _qs_tag_type_e {
-   QSCRIPT_MPC = -1,
-   QSCRIPT_UNDEFINED = 0,
-   QSCRIPT_ROOT,
-   QSCRIPT_COMMENT,
-   QSCRIPT_RESOURCE,
-   QSCRIPT_RFLAGS,
-   QSCRIPT_RNAME,
-   QSCRIPT_BLOCK,
-   QSCRIPT_LIST,
-   QSCRIPT_OUTER_LIST,
-   QSCRIPT_VALUE,
-   QSCRIPT_VFLAGS,
-   QSCRIPT_PRIMITIVE,
-   QSCRIPT_OUTER_BLOCK,
-   QSCRIPT_SEPARATOR,
-   QSCRIPT_STRING,
-   QSCRIPT_SIMPLE_STRING,
-   QSCRIPT_COMPLEX_STRING,
-   QSCRIPT_NUMBER,
-   QSCRIPT_FLOAT,
-   QSCRIPT_INT,
-   QSCRIPT_VARIABLE,
-   QSCRIPT_ACTION,
-   QSCRIPT_CALL,
-   QSCRIPT_INDEX,
-   QSCRIPT_CHAR,
-   QSCRIPT_OBJECT,
-   QSCRIPT_PROPERTY,
-   QSCRIPT_LAST,
+   QSCRIPT_MPC            = -1,
+   QSCRIPT_UNDEFINED      = 0,
+   QSCRIPT_ROOT           = 1,
+   QSCRIPT_COMMENT        = 2,
+   QSCRIPT_RESOURCE       = 3,
+   QSCRIPT_RFLAGS         = 4,
+   QSCRIPT_RNAME          = 5,
+   QSCRIPT_BLOCK          = 6,
+   QSCRIPT_LIST           = 7,
+   QSCRIPT_OUTER_LIST     = 8,
+   QSCRIPT_VALUE          = 9,
+   QSCRIPT_VFLAGS         = 10,
+   QSCRIPT_PRIMITIVE      = 11,
+   QSCRIPT_OUTER_BLOCK    = 12,
+   QSCRIPT_SEPARATOR      = 13,
+   QSCRIPT_STRING         = 14,
+   QSCRIPT_SIMPLE_STRING  = 15,
+   QSCRIPT_COMPLEX_STRING = 16,
+   QSCRIPT_NUMBER         = 17,
+   QSCRIPT_FLOAT          = 18,
+   QSCRIPT_INT            = 19,
+   QSCRIPT_VARIABLE       = 20,
+   QSCRIPT_ACTION         = 21,
+   QSCRIPT_CALL           = 22,
+   QSCRIPT_INDEX          = 23,
+   QSCRIPT_CHAR           = 24,
+   QSCRIPT_OBJECT         = 25,
+   QSCRIPT_PROPERTY       = 26,
+   QSCRIPT_PROPERTY_VALUE = 27,
+   QSCRIPT_LAST           = 28
 } qs_tag_type_e;
 
 /* value link types. */
 typedef enum _qs_value_link_e {
    QS_LINK_UNDEFINED = 0,
-   QS_LINK_LITERAL,
-   QS_LINK_VARIABLE,
-   QS_LINK_PROPERTY,
-   QS_LINK_LAST,
+   QS_LINK_LITERAL   = 1,
+   QS_LINK_VARIABLE  = 2,
+   QS_LINK_PROPERTY  = 3,
+   QS_LINK_LAST      = 4
 } qs_value_link_e;
 
 /* rlink states. */

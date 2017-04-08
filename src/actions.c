@@ -104,6 +104,7 @@ qs_value_t *qs_action_run (qs_execute_t *exe, qs_value_t *val,
       case QS_ACTION_INDEX:
          return qs_action_index (exe, val, action);
       case QS_ACTION_PROPERTY:
+      case QS_ACTION_PROPERTY_VALUE:
          return qs_action_property (exe, val, action);
       default:
          p_error (action->node, "unknown action type '%d'.\n",
@@ -279,13 +280,15 @@ qs_value_t *qs_action_property (qs_execute_t *exe, qs_value_t *val,
    }
 
    /* get the name of the property to return. */
-   qs_value_t *aval = qs_value_read (exe, action->data_p);
+   char *str = (action->action_id == QS_ACTION_PROPERTY)
+      ? action->data_p
+      : qs_value_read (exe, action->data_p)->val_s;
 
    /* try to get it. */
    qs_property_t *p;
-   if ((p = qs_property_get (obj, aval->val_s)) == NULL) {
+   if ((p = qs_property_get (obj, str)) == NULL) {
       p_error (action->node, "cannot get property '%s' from object "
-         "'%s' (#%d).\n", aval->val_s, obj->name, obj->id);
+         "'%s' (#%d).\n", str, obj->name, obj->id);
       return QSV_INVALID_PROPERTY;
    }
    return qs_property_value (p);

@@ -130,6 +130,7 @@ char *qs_value_type (qs_value_t *val)
       case QS_VALUE_BLOCK:     return "block";
       case QS_VALUE_VARIABLE:  return "variable";
       case QS_VALUE_PROPERTY:  return "property";
+      case QS_VALUE_PROPERTY_VALUE: return "property_value";
 
       /* who knows! */
       default:                return "unknown";
@@ -333,8 +334,12 @@ qs_value_t *qs_value_evaluate (qs_execute_t *exe, qs_value_t *val)
             rval = qs_variable_value (var);
          break;
       }
-      case QS_VALUE_PROPERTY: {
-         qs_property_t *p = qs_value_property (exe, val);
+      case QS_VALUE_PROPERTY:
+      case QS_VALUE_PROPERTY_VALUE: {
+         qs_value_t *pv = (val->value_id == QS_VALUE_PROPERTY)
+            ? val
+            : qs_value_evaluate (exe, val->val_p);
+         qs_property_t *p = qs_value_property (exe, pv);
          if (p == NULL) {
             p_error (val->node, "cannot get property for '%s'.\n",
                val->val_s);
@@ -348,7 +353,7 @@ qs_value_t *qs_value_evaluate (qs_execute_t *exe, qs_value_t *val)
       /* unhandled: */
       default:
          p_error (val->node, "cannot process value of type '%s' (%d).\n",
-            qs_value_type (val));
+            qs_value_type (val), val->value_id);
          return QSV_CANNOT_EXECUTE;
    }
 

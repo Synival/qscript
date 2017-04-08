@@ -1,7 +1,7 @@
 # Define version here, before initialization.
 m4_define(qs_version_major, 0)
-m4_define(qs_version_minor, 0)
-m4_define(qs_version_micro, 1)
+m4_define(qs_version_minor, 1)
+m4_define(qs_version_micro, 0)
 m4_define(qs_version, [qs_version_major.qs_version_minor.qs_version_micro])
 
 # Initialize.

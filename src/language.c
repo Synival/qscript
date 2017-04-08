@@ -17,7 +17,7 @@
 #include "qscript/language.h"
 
 #define QSCRIPT_SIMPLE_STRING_PATTERN \
-   "[a-zA-Z0-9_!@#$%^&\\*+\\.\\-=\\/<>|?]+"
+   "[a-zA-Z0-9_!@#$%^&\\*+\\-=\\/<>|?]+"
 #define QSCRIPT_VARIABLE_PATTERN \
    "[a-zA-Z0-9_]+"
 
@@ -40,8 +40,8 @@ static p_symbol_t static_qs_symbols[] = {
       qs_language_value, qs_language_value_f},
    {QSCRIPT_VFLAGS,     "vflags",   "/[~]*/", NULL},
    {QSCRIPT_PRIMITIVE,  "primitive",
-      "(<number> | <variable> | <property> | <outer_list> | <outer_block> | "
-       "<char> | <object> | <undefined> | <qstring>)"},
+      "(<number> | <variable> | <property_value> | <property> | <outer_list> | "
+       "<outer_block> | <char> | <object> | <undefined> | <qstring>)"},
    {QSCRIPT_OUTER_BLOCK,"outer_block", "'{' <block> '}'",
       qs_language_outer_list, qs_language_outer_list_f},
    {QSCRIPT_STRING,     "qstring", "(<complexstr>+ | <simplestr>)",
@@ -60,9 +60,10 @@ static p_symbol_t static_qs_symbols[] = {
    {QSCRIPT_OBJECT,     "object",
       "/[@]+" QSCRIPT_VARIABLE_PATTERN "/",
       qs_language_copy_contents},
-   {QSCRIPT_PROPERTY,   "property", "'.' <value> /[']?/"},
+   {QSCRIPT_PROPERTY,   "property", "'.' <qstring>"},
+   {QSCRIPT_PROPERTY_VALUE, "property_value", "'.' '(' <value> ')'"},
    {QSCRIPT_ACTION,     "action",
-      "<comment>* (<call> | <index> | <property>)",
+      "<comment>* (<call> | <index> | <property_value> | <property>)",
       qs_language_action, qs_language_action_f},
    {QSCRIPT_CALL,       "call",     "'(' <list> ')'"},
    {QSCRIPT_INDEX,      "index",    "'[' <value> ']'"},
@@ -181,8 +182,13 @@ P_FUNC (qs_language_value)
                                  n->contents + 1);
                   break;
                case QSCRIPT_PROPERTY:
-                  qs_value_init (v, QS_VALUE_PROPERTY, ((qs_value_t *)
-                     n->first_child->next->data)->val_s);
+                  qs_value_init (v, QS_VALUE_PROPERTY,
+                                 n->first_child->next->contents);
+                  break;
+               case QSCRIPT_PROPERTY_VALUE:
+                  v->value_id = QS_VALUE_PROPERTY_VALUE;
+                  v->val_s = strdup ("<property_value>");
+                  v->val_p = n->first_child->next->next->data;
                   break;
                case QSCRIPT_CHAR:
                   qs_value_init (v, QS_VALUE_CHAR, (int)
@@ -203,6 +209,8 @@ P_FUNC (qs_language_value)
                   v->val_s = strdup ("<block>");
                   v->val_p = n->data;
                   break;
+               default:
+                  p_error (vn, "Invalid primitive type '%d'.\n", n->type_id);
             }
             break;
          }
@@ -221,6 +229,9 @@ P_FUNC (qs_language_value)
             }
             a->parent_value = v;
             break;
+
+         default:
+            p_error (node, "Invalid value type '%d'.\n", vn->type_id);
       }
    }
 }
@@ -322,7 +333,11 @@ P_FUNC (qs_language_action)
             break;
          case QSCRIPT_PROPERTY:
             a->action_id = QS_ACTION_PROPERTY;
-            a->data_p = n->first_child->next->data;
+            a->data_p = n->first_child->next->contents;
+            break;
+         case QSCRIPT_PROPERTY_VALUE:
+            a->action_id = QS_ACTION_PROPERTY_VALUE;
+            a->data_p = n->first_child->next->next->data;
             break;
       }
    }
