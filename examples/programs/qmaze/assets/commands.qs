@@ -1,7 +1,6 @@
 # QMaze commands.
 
-command_look
-{
+command_look {
    # Are we looking at the room?
    vars ($target);
    if (== (args (), 0), {
@@ -21,32 +20,29 @@ command_look
    look_at ($target);
 }
 
-command_help
-{
+command_help {
    echo (multi (
-bar ('-'),
-"Basic Commands:",
-bar ('-'),
-"look           - Look at the room.",
-"look (object)  - Look at something in the room.",
-"help           - Show this message.",
-"hint           - Get a hint for this room.",
-"quit           - Leave QMaze without saving.",
-"",
-bar ('-'),
-"Actions:",
-bar ('-'),
-"punch (object) - Punch something with your fists.",
-"kick (object)  - Kick something with your foot.!",
-"push (object)  - Put your weight into it and PUSH!",
-"pull (object)  - Grab an object and pull it.",
-"poke (object)  - Tee hee!"
-));
-
+      bar ('-'),
+      "Basic Commands:",
+      bar ('-'),
+      "look           - Look at the room.",
+      "look (object)  - Look at something in the room.",
+      "help           - Show this message.",
+      "hint           - Get a hint for this room.",
+      "quit           - Leave QMaze without saving.",
+      "",
+      bar ('-'),
+      "Actions:",
+      bar ('-'),
+      "punch (object) - Punch something with your fists.",
+      "kick (object)  - Kick something with your foot.!",
+      "push (object)  - Put your weight into it and PUSH!",
+      "pull (object)  - Grab an object and pull it.",
+      "poke (object)  - Tee hee!"
+   ));
 }
 
-command_hint
-{
+command_hint {
    # What hint should we be looking at?
    = ($room_hints, [variable (+ ("$$hints_", $$room_name))]);
    if (== (undefined, $room_hints[0]),
@@ -65,8 +61,7 @@ command_hint
    });
 }
 
-command_quit
-{
+command_quit {
    echo ("Are you sure you want to quit?");
    print ("Type 'y' to quit: ");
    = ($prompt, prompt ());
@@ -76,8 +71,7 @@ command_quit
       echo ("Alright, let's keep playing."));
 }
 
-_command_action
-{
+_command_action {
    # If we only provided an action, complain.
    if (== (args (), 1), {
       = ($action, arg(0));

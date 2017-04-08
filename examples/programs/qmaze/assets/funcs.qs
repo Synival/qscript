@@ -1,6 +1,5 @@
 # Show the description of anything here.
-look_at
-{
+look_at {
    # What are we looking at?
    args ($target);
 

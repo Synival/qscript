@@ -2,7 +2,7 @@ ACLOCAL_AMFLAGS=-I m4
 
 lib_LTLIBRARIES = libqscript.la
 libqscript_la_LDFLAGS = \
-   -release 0.0.1 -lm
+   -release 0.1.0 -lm
 libqscript_la_CFLAGS = \
    -I$(top_srcdir)/include -Wall -std=c99 -D__TARGET_QSCRIPT__
 libqscript_la_SOURCES = \

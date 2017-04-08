@@ -40,8 +40,9 @@ static p_symbol_t static_qs_symbols[] = {
       qs_language_value, qs_language_value_f},
    {QSCRIPT_VFLAGS,     "vflags",   "/[~]*/", NULL},
    {QSCRIPT_PRIMITIVE,  "primitive",
-      "(<number> | <variable> | <property_value> | <property> | <outer_list> | "
-       "<outer_block> | <char> | <object> | <undefined> | <qstring>)"},
+      "(<property_value> | <property> | <number> | <variable> | "
+       "<outer_list> | <outer_block> | <char> | <object> | <undefined> | "
+       "<qstring>)"},
    {QSCRIPT_OUTER_BLOCK,"outer_block", "'{' <block> '}'",
       qs_language_outer_list, qs_language_outer_list_f},
    {QSCRIPT_STRING,     "qstring", "(<complexstr>+ | <simplestr>)",
@@ -135,6 +136,9 @@ P_FUNC (qs_language_value)
    p_node_t *vn;
    for (vn = node->first_child; vn != NULL; vn = vn->next) {
       switch (vn->type_id) {
+         case QSCRIPT_COMMENT:
+            break;
+
          case QSCRIPT_VFLAGS: {
             char *ch;
             for (ch = vn->first_child->contents; *ch != '\0'; ch++) {

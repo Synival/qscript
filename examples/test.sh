@@ -2,4 +2,4 @@
 SCRIPT=$(readlink -f "$0")
 SCRIPTPATH=$(dirname "$SCRIPT")
 cd "$SCRIPTPATH"/scripts
-cat test.qs | ../../qscript | less -R
+../../qscript ./test.qs | less -R

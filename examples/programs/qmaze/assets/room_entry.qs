@@ -1,6 +1,5 @@
 # Our first room.
-@room_entry
-{
+@room_entry {
    = (.name, "an empty, white room");
    = (.intro, multi (
 "   You awaken with a jolt, panicked, breathing heavily on the floor.  Your",
@@ -37,8 +36,7 @@ bar ('-'),
    ]);
 }
 
-@room_entry_wall
-{
+@room_entry_wall {
    = (.name, "the walls");
    = (.desc, multi (
 "   Each brick on each wall of this cubic room, including the ceiling and",
