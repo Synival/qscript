@@ -17,7 +17,7 @@
 #include "qscript/language.h"
 
 #define QSCRIPT_SIMPLE_STRING_PATTERN \
-   "[a-zA-Z0-9_!@#$%^&\\*+\\-=\\/<>|?]+"
+   "[a-zA-Z0-9_!@#$%^&\\*+\\.\\-=\\/<>|?]+"
 #define QSCRIPT_VARIABLE_PATTERN \
    "[a-zA-Z0-9_]+"
 
