@@ -31,6 +31,7 @@ qs_value_t *qs_return_int (qs_scheme_t *scheme, int i);
 qs_value_t *qs_return_float (qs_scheme_t *scheme, float f);
 qs_value_t *qs_return_char (qs_scheme_t *scheme, char c);
 qs_value_t *qs_return_list (qs_scheme_t *scheme, int count);
+qs_value_t *qs_return_undefined (qs_scheme_t *scheme, char *s);
 
 /* arg processing functions. */
 int qs_func_error (qs_execute_t *exe, char *func_name, p_node_t *node,

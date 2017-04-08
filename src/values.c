@@ -50,6 +50,7 @@ QSV_DEFINE (QSV_INVALID_VALUE,      QSV_ERR, "<invalid value>",     0, 0.00f);
 QSV_DEFINE (QSV_NO_OBJECT,          QSV_ERR, "<no object>",         0, 0.00f);
 QSV_DEFINE (QSV_ALREADY_WOUND,      QSV_ERR, "<already wound>",     0, 0.00f);
 QSV_DEFINE (QSV_INVALID_PROPERTY,   QSV_ERR, "<invalid property>",  0, 0.00f);
+QSV_DEFINE (QSV_INVALID_ARGS,       QSV_ERR, "<invalid args>",      0, 0.00f);
 
 int qs_value_copy (qs_execute_t *exe, qs_value_t *dest, qs_value_t *src)
    { return qs_value_copy_real (exe, dest, src, 0); }

@@ -93,5 +93,6 @@ extern qs_value_t *QSV_INVALID_VALUE;
 extern qs_value_t *QSV_NO_OBJECT;
 extern qs_value_t *QSV_ALREADY_WOUND;
 extern qs_value_t *QSV_INVALID_PROPERTY;
+extern qs_value_t *QSV_INVALID_ARGS;
 
 #endif

@@ -69,6 +69,11 @@ qs_value_t *qs_return_list (qs_scheme_t *scheme, int count) {
    qs_value_init (r, QS_VALUE_LIST, count);
    return r;
 }
+qs_value_t *qs_return_undefined (qs_scheme_t *scheme, char *s) {
+   qs_value_t *r = qs_return_value (scheme);
+   qs_value_init (r, QS_VALUE_UNDEFINED, s);
+   return r;
+}
 
 int qs_func_error (qs_execute_t *exe, char *func_name, p_node_t *node,
    char *format, ...)

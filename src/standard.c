@@ -58,7 +58,8 @@ qs_func_t qs_func_list_standard[] = {
    { "!||",     "<left> <right> [...]",    2, qsf_boolean, 3 },
    { "!&&",     "<left> <right> [...]",    2, qsf_boolean, 4 },
    { "!^^",     "<left> <right> [...]",    2, qsf_boolean, 5 },
-   { "?",       "<value>",                 1, qsf_truth,   0 },
+   { "?",       "<value> [<if!prev> [...]]",1,qsf_truth,   0 },
+   { "??",      "<value1> <value2> [...]", 2, qsf_first,   0 },
    { "!",       "<value>",                 1, qsf_truth,   1 },
    { "inv",     "<value>",                 1, qsf_inv,     0 },
    { "return",  "[<value>]",               0, qsf_return,  0 },
@@ -92,14 +93,15 @@ qs_func_t qs_func_list_standard[] = {
    { "char",    "<value>",                 1, qsf_cast,    QS_VALUE_CHAR },
    { "object",  "<value>",                 1, qsf_cast,    QS_VALUE_OBJECT },
    { "this",    "",                        0, qsf_this,    0 },
-   { "id",      "[<object>]",              1, qsf_id,      0 },
-   { "name",    "[<object>]",              1, qsf_id,      1 },
+   { "id",      "[<object>]",              0, qsf_id,      0 },
+   { "name",    "[<object>]",              0, qsf_id,      1 },
    { "func_exists", "<value>",             1, qsf_func_exists, 0 },
    { "tokenize","<value>",                 1, qsf_tokenize,0 },
    { "multi",   "[<line1> ... <linen>]",   0, qsf_multi,   0 },
    { "for_each","<list> <storage> <action>",1,qsf_for_each,0 },
    { "new", "<name> [list(<resource> [<priority>])1 ... listn]",
                                            1, qsf_new,     0 },
+   { "error",   "<string>",                1, qsf_error,   0 },
    { NULL },
 };
 
@@ -344,7 +346,7 @@ QS_FUNC (qsf_if)
    int i;
 
    /* evaluate all '<condition> <then>' pairs until <condition> is true. */
-   for (i = 0; i < args - 1; i+= 2)
+   for (i = 0; i < args - 1; i += 2)
       if (qs_value_truth (exe, QS_ARGV (i)))
          return QS_ARGV (i + 1);
 
@@ -904,10 +906,37 @@ QS_FUNC (qsf_property)
 QS_FUNC (qsf_truth)
 {
    switch (sub_func) {
-      case 0:  return qs_value_truth (exe, QS_ARGV (0)) ? QSV_ONE :  QSV_ZERO;
-      case 1:  return qs_value_truth (exe, QS_ARGV (0)) ? QSV_ZERO : QSV_ONE;
-      default: return QSV_INVALID_SUB_FUNC;
+      case 0:
+         if (args == 1)
+            return qs_value_truth (exe, QS_ARGV (0))
+               ? QSV_ONE
+               : QSV_ZERO;
+         else if (args == 3) {
+            return qs_value_truth (exe, QS_ARGV (0))
+               ? QS_ARGV (1)
+               : QS_ARGV (2);
+         }
+         else {
+            QS_ARG_ERROR (0, "invalid arg count; must be 1 or 3.\n", args);
+            return QSV_INVALID_ARGS;
+         }
+      case 1:
+         return qs_value_truth (exe, QS_ARGV (0))
+            ? QSV_ZERO
+            : QSV_ONE;
+      default:
+         return QSV_INVALID_SUB_FUNC;
    }
+}
+
+QS_FUNC (qsf_first)
+{
+   int i;
+   qs_value_t *v;
+   for (i = 0; i < args; i++)
+      if ((v = QS_ARGV (i))->value_id != QS_VALUE_UNDEFINED)
+         return v;
+   return QSV_UNDEFINED;
 }
 
 QS_FUNC (qsf_inv)
@@ -1202,17 +1231,24 @@ QS_FUNC (qsf_cast)
 
 QS_FUNC (qsf_id)
 {
-   /* make sure are argument is type 'object'. */
-   qs_value_t *val = QS_ARGV (0);
-   if (val->value_id != QS_VALUE_OBJECT) {
-      QS_ARG_ERROR (0, "value is type '%s' instead of 'object'.\n",
-         qs_value_type (val));
-      return QSV_INVALID_TYPE;
+   qs_object_t *obj;
+
+   /* if no argument provided, use ourselves. */
+   if (args == 0)
+      obj = object;
+   /* otherwise, make sure are argument is type 'object'. */
+   else {
+      qs_value_t *val = QS_ARGV (0);
+      if (val->value_id != QS_VALUE_OBJECT) {
+         QS_ARG_ERROR (0, "value is type '%s' instead of 'object'.\n",
+            qs_value_type (val));
+         return QSV_INVALID_TYPE;
+      }
+      obj = qs_value_object (exe, val);
    }
 
    /* get our object.  if we couldn't find it, return zero to indicate
     * 'no object'. */
-   qs_object_t *obj = qs_value_object (exe, val);
    if (obj == NULL)
       return QSV_NO_OBJECT;
 
@@ -1401,4 +1437,11 @@ QS_FUNC (qsf_new)
 
    /* return the new object's id. */
    return QS_RETI (new->id);
+}
+
+QS_FUNC (qsf_error)
+{
+   char *val = QS_ARGS (0), buf[256];
+   snprintf (buf, sizeof (buf), "<%s>", val);
+   return QS_RETU (buf);
 }

@@ -42,9 +42,14 @@ int qs_print_value (qs_value_t *v, int indent)
          count += qs_print_list (v->val_p, indent);
          putchar (']');
          break;
-      case QS_VALUE_OBJECT:
-         printf ("\x1b[0;32m@\x1b[1m%s\x1b[0m", (char *) v->val_p);
+      case QS_VALUE_OBJECT: {
+         char *name = v->data;
+         if (*name == '@')
+            printf ("\x1b[0;32m@@\x1b[1m%s\x1b[0m", name + 1);
+         else
+            printf ("\x1b[0;32m@\x1b[1m%s\x1b[0m", name);
          break;
+      }
 
       /* abstract primitives. */
       case QS_VALUE_BLOCK:
