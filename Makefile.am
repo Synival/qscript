@@ -4,7 +4,7 @@ lib_LTLIBRARIES = libqscript.la
 libqscript_la_LDFLAGS = \
    -release 0.1.0 -lm
 libqscript_la_CFLAGS = \
-   -I$(top_srcdir)/include -Wall -std=c99 -D__TARGET_QSCRIPT__
+   -I$(top_srcdir)/include -Wall -D__TARGET_QSCRIPT__
 libqscript_la_SOURCES = \
    src/actions.c \
    src/execute.c \
@@ -52,5 +52,5 @@ otherinclude_HEADERS = \
 
 bin_PROGRAMS = qscript
 qscript_SOURCES = parser/main.c
-qscript_CFLAGS  = -I$(top_srcdir)/include -Wall -std=c99
+qscript_CFLAGS  = -I$(top_srcdir)/include -Wall 
 qscript_LDFLAGS = -L../lib -lqscript

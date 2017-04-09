@@ -2,8 +2,13 @@
  * ----------
  * processing of the qscript language into resources. */
 
+#include <fcntl.h>
+#include <limits.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include "qscript/actions.h"
 #include "qscript/link.h"
@@ -418,18 +423,46 @@ int qs_parse_init (void)
 p_node_t *qs_parse_file (qs_scheme_t *scheme, char *filename)
 {
    /* attempt to open the file. */
-   FILE *file;
-   if ((file = fopen (filename, "r")) == NULL)
-      return NULL;
+   int fd = -1;
+   FILE *file = NULL;
+
+#define PF_BAIL_IF(cond, ...) \
+   do { \
+      errno = 0; \
+      if (cond) { \
+         p_error (NULL, __VA_ARGS__); \
+         errno = 0; \
+         if (file) \
+            fclose (file); \
+         else if (fd < 0) { \
+            close (fd); \
+         } \
+         return NULL; \
+      } \
+   } while (0)
+
+   PF_BAIL_IF ((fd = open (filename, O_RDONLY)) == -1,
+      "couldn't open file '%s' for reading: %s\n", filename, strerror (errno));
+   struct stat sbuf;
+   fstat (fd, &sbuf);
+   PF_BAIL_IF (!S_ISREG (sbuf.st_mode),
+      "file '%s' is not a regular file.\n", filename);
+   PF_BAIL_IF ((file = fdopen (fd, "r")) == NULL,
+      "couldn't convert fd -> file for '%s': %s\n", filename, strerror (errno));
 
    /* get file length. */
-   fseek (file, 0, SEEK_END);
-   size_t len = ftell (file);
+   PF_BAIL_IF (fseek (file, 0, SEEK_END) != 0,
+      "couldn't seek to end of file '%s': %s\n", filename, strerror (errno));
+   long len = ftell (file);
+   PF_BAIL_IF (len == -1l || len == LONG_MAX,
+      "couldn't get content length for '%s': %s\n", filename, strerror (errno));
    fseek (file, 0, SEEK_SET);
 
    /* get file contents. */
    char *contents = malloc (sizeof (char) * (len + 1));
    size_t len_read = fread (contents, sizeof (char), len, file);
+   PF_BAIL_IF (ferror (file) != 0,
+      "error reading from '%s'.\n", filename);
    contents[len] = '\0';
    fclose (file);
 
