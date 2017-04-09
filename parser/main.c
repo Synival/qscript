@@ -10,59 +10,59 @@ int main (int argc, char **argv)
 {
    char *filename;
    FILE *file;
-   int file_close;
-   if (argc >= 2) {
-      filename = argv[1];
-      if ((file = fopen (filename, "r")) == NULL) {
-         char buf[256];
-         snprintf (buf, sizeof (buf), "Couldn't open '%s' for reading",
-            filename);
-         perror (buf);
-         exit (errno);
-      }
-      file_close = 1;
-   }
-   else {
-      filename   = "stdin";
-      file       = stdin;
-      file_close = 0;
-   }
+   int file_close, i;
 
    /* create a scheme for our scripts. */
    qs_scheme_t *scheme;
    scheme = qs_scheme_new ();
 
-   /* get all of our content. */
-   char *content = strdup ("");
-   char buf[256];
-   size_t len = 0, total = 1;
-
-   while (fgets (buf, sizeof (buf), file)) {
-      len = strlen (buf);
-      total += len;
-
-      char *old = content;
-      if ((content = realloc (content, total)) == NULL) {
-         perror ("Couldn't realloc() content");
-         free (old);
-         exit (errno);
+   /* load all files specified in the filename.  if no arguments are provided,
+    * read from stdin. */
+   for (i = 1; i < argc || i == 1; i++) {
+      if (i < argc) {
+         filename = argv[i];
+         if ((file = fopen (filename, "r")) == NULL) {
+            char buf[256];
+            snprintf (buf, sizeof (buf), "Couldn't open '%s' for reading",
+               filename);
+            perror (buf);
+            exit (errno);
+         }
+         file_close = 1;
       }
-      strcat (content, buf);
-   }
-   if (file_close)
-      fclose (file);
-
-   /* read from our file. */
-   errno = 0;
-   int res = (qs_parse_content (scheme, filename, content) ? 1 : 0);
-   free (content);
-   if (!res) {
-      if (errno != 0) {
-         perror ("Unable to parse content");
-         exit (errno);
+      else {
+         filename   = "stdin";
+         file       = stdin;
+         file_close = 0;
       }
-      else
-         exit (1);
+
+      /* get all of our content. */
+      char *content = strdup ("");
+      size_t len = 0, total = 1;
+      char buf[256];
+      while (fgets (buf, sizeof (buf), file)) {
+         len = strlen (buf);
+         total += len;
+   
+         char *old = content;
+         if ((content = realloc (content, total)) == NULL) {
+            perror ("Couldn't realloc() content");
+            free (old);
+            exit (errno);
+         }
+         strcat (content, buf);
+      }
+      if (file_close)
+         fclose (file);
+   
+      /* read from our file. */
+      errno = 0;
+      int res = (qs_parse_content (scheme, filename, content) ? 1 : 0);
+      if (!res && errno != 0)
+            perror ("Unable to parse content");
+
+      /* clean-up. */
+      free (content);
    }
 
    /* finish linking compiled scripts. */
