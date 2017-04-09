@@ -26,7 +26,7 @@ int main (int argc, char **argv)
             snprintf (buf, sizeof (buf), "Couldn't open '%s' for reading",
                filename);
             perror (buf);
-            exit (errno);
+            continue;
          }
          file_close = 1;
       }
@@ -35,34 +35,14 @@ int main (int argc, char **argv)
          file       = stdin;
          file_close = 0;
       }
-
-      /* get all of our content. */
-      char *content = strdup ("");
-      size_t len = 0, total = 1;
-      char buf[256];
-      while (fgets (buf, sizeof (buf), file)) {
-         len = strlen (buf);
-         total += len;
-   
-         char *old = content;
-         if ((content = realloc (content, total)) == NULL) {
-            perror ("Couldn't realloc() content");
-            free (old);
-            exit (errno);
-         }
-         strcat (content, buf);
-      }
-      if (file_close)
-         fclose (file);
    
       /* read from our file. */
       errno = 0;
-      int res = (qs_parse_content (scheme, filename, content) ? 1 : 0);
+      int res = (qs_parse_fstream (scheme, filename, file) ? 1 : 0);
       if (!res && errno != 0)
-            perror ("Unable to parse content");
-
-      /* clean-up. */
-      free (content);
+         perror ("Unable to parse content");
+      if (file_close)
+         fclose (file);
    }
 
    /* finish linking compiled scripts. */

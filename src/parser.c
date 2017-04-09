@@ -269,11 +269,12 @@ int p_error (p_node_t *node, char *format, ...)
    va_end (va_args);
 
    /* print! */
-   if (node)
-      printf ("\x1b[0;37;1m%d,%d: %s\x1b[0m", node->row, node->col, buf);
-   else
-      printf ("\x1b[0;37;1m%s\x1b[0m", buf);
    fflush (stdout);
+   if (node)
+      fprintf (stderr, "%d,%d: %s", node->row, node->col, buf);
+   else
+      fprintf (stderr, "%s", buf);
+   fflush (stderr);
 
    /* signals, wow! */
    return 1;

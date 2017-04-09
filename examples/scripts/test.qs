@@ -354,10 +354,9 @@ main {
    # Everything here should call an error!  Use lambda for convenience.
    echo ("Error tests: ");
    = ($error_test, [{
-         print ("   ");
          args ($check);
          = ($error, $check);
-         echo  ("      $error = ", $error);
+         echo  ("   $error = ", $error);
       }]
    );
    $error_test (+ ());

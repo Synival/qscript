@@ -5,6 +5,8 @@
 #ifndef __QS_LANGUAGE_H
 #define __QS_LANGUAGE_H
 
+#include <stdio.h>
+
 #include "defs.h"
 
 P_FUNC (qs_language_resource);
@@ -25,5 +27,6 @@ P_FUNC (qs_language_action_f);
 int qs_parse_init (void);
 p_node_t *qs_parse_file (qs_scheme_t *scheme, char *filename);
 p_node_t *qs_parse_content (qs_scheme_t *scheme, char *file, char *content);
+p_node_t *qs_parse_fstream (qs_scheme_t *scheme, char *filename, FILE *file);
 
 #endif

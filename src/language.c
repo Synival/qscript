@@ -447,7 +447,6 @@ p_node_t *qs_parse_file (qs_scheme_t *scheme, char *filename)
 
 p_node_t *qs_parse_content (qs_scheme_t *scheme, char *file, char *content)
 {
-
    /* initialize our language if we haven't already. */
    if (qs_parse_init () == -1)
       return NULL;
@@ -464,4 +463,28 @@ p_node_t *qs_parse_content (qs_scheme_t *scheme, char *file, char *content)
                                 scheme->node_count);
    scheme->node_list[scheme->node_count - 1] = p;
    return p;
+}
+
+p_node_t *qs_parse_fstream (qs_scheme_t *scheme, char *filename, FILE *file)
+{
+   /* get all of our content. */
+   char *content = strdup ("");
+   size_t len = 0, total = 1;
+   char buf[256];
+   while (fgets (buf, sizeof (buf), file)) {
+      len = strlen (buf);
+      total += len;
+
+      char *old = content;
+      if ((content = realloc (content, total)) == NULL) {
+         perror ("Couldn't realloc() content");
+         free (old);
+         exit (errno);
+      }
+      strcat (content, buf);
+   }
+
+   /* load the content. */
+   return qs_parse_content (scheme, filename, content);
+   free (content);
 }
