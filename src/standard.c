@@ -84,7 +84,7 @@ qs_func_t qs_func_list_standard[] = {
    { "vars",    "<var1> [... <varn>]",     1, qsf_vars,    0 },
    { "run",     "<func> [<arg1> ... <argn>]",1,qsf_run,    0 },
    { "print_resource", "[<resource>]",     0, qsf_print_r, 0 },
-   { "print_value",    "[<value>",         1, qsf_print_v, 0 },
+   { "print_value",    "<value>",          1, qsf_print_v, 0 },
    { "eval",    "<arg1> [... <argn>]",     1, qsf_eval,    0 },
    { "length",  "<string | list>",         1, qsf_length,  0 },
    { "string",  "<value>",                 1, qsf_cast,    QS_VALUE_STRING },
@@ -95,6 +95,7 @@ qs_func_t qs_func_list_standard[] = {
    { "this",    "",                        0, qsf_this,    0 },
    { "id",      "[<object>]",              0, qsf_id,      0 },
    { "name",    "[<object>]",              0, qsf_id,      1 },
+   { "print_json", "[<object>]",           0, qsf_id,      2 },
    { "func_exists", "<value>",             1, qsf_func_exists, 0 },
    { "tokenize","<value>",                 1, qsf_tokenize,0 },
    { "multi",   "[<line1> ... <linen>]",   0, qsf_multi,   0 },
@@ -973,6 +974,7 @@ QS_FUNC (qsf_run)
 
    /* create a temporary list referencing parameters 1+ (not 0). */
    qs_list_t *l = malloc (sizeof (qs_list_t));
+   l->scheme = exe->scheme;
    l->value_count = args - 1;
    l->values = arg + 1;
 
@@ -1253,10 +1255,20 @@ QS_FUNC (qsf_id)
       return QSV_NO_OBJECT;
 
    /* return our object's name/id. */
-   if (sub_func == 0)
-      return QS_RETI (obj->id);
-   else
-      return QS_RETS (obj->name);
+   switch (sub_func) {
+      case 0:
+         return QS_RETI (obj->id);
+      case 1:
+         return QS_RETS (obj->name);
+      case 2: {
+         char buf[65536];
+         qs_print_object_json (obj, buf, sizeof (buf));
+         printf ("%s", buf);
+         return QSV_ONE;
+      }
+      default:
+         return QSV_INVALID_SUB_FUNC;
+   }
 }
 
 QS_FUNC (qsf_func_exists)
@@ -1301,6 +1313,7 @@ QS_FUNC (qsf_tokenize)
             memset (lval, 0, sizeof (qs_value_t));
             list->values[count] = lval;
             list->values_data[count] = lval;
+            lval->scheme = exe->scheme;
             lval->value_id = QS_VALUE_STRING;
             lval->list = list;
             lval->flags |= QS_VALUE_MUTABLE;

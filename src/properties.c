@@ -24,6 +24,7 @@ qs_property_t *qs_property_new (qs_object_t *obj, char *name)
    new->name = strdup (name);
 
    /* set a default uninitialized value. */
+   new->value_default.scheme  = obj->scheme;
    new->value_default.link_id = QS_LINK_PROPERTY;
    new->value_default.link    = new;
    new->value_default.flags  |= QS_VALUE_MUTABLE;
@@ -106,6 +107,7 @@ qs_modify_t *qs_property_push (qs_property_t *p, qs_rlink_t *rlink)
 
    /* initialize the value.  make it a mutable property, with the same value
     * as the last stack value. */
+   new->value.scheme  = rlink->scheme;
    new->value.link_id = QS_LINK_PROPERTY;
    new->value.link    = p;
    new->value.flags  |= QS_VALUE_MUTABLE;

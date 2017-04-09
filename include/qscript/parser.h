@@ -33,7 +33,6 @@ struct _p_node_t {
    int row, col, pos;
 };
 
-
 /* function declarations. */
 int p_language_new (p_symbol_t *symbol_list);
 p_node_t *p_node_new (p_symbol_t *symbols, p_node_t **parent, mpc_ast_t *ast,

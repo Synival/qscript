@@ -481,6 +481,9 @@ int qs_value_update_from_string (qs_value_t *val)
 }
 
 qs_object_t *qs_value_object (qs_execute_t *exe, qs_value_t *val)
+   { return qs_value_object_scheme (exe->scheme, val); }
+
+qs_object_t *qs_value_object_scheme (qs_scheme_t *scheme, qs_value_t *val)
 {
    qs_object_t *obj;
 
@@ -489,7 +492,7 @@ qs_object_t *qs_value_object (qs_execute_t *exe, qs_value_t *val)
       return NULL;
 
    /* first, look for an object by id.  this will be ultra-quick. */
-   if ((obj = qs_object_get_by_id (exe->scheme, val->val_i)) != NULL) {
+   if ((obj = qs_object_get_by_id (scheme, val->val_i)) != NULL) {
       /* update the string if necessary. */
       if (val->data == NULL || strcmp (val->data, obj->name) != 0) {
          free (val->data);
@@ -499,7 +502,7 @@ qs_object_t *qs_value_object (qs_execute_t *exe, qs_value_t *val)
    }
 
    /* is there an object by name? */
-   if ((obj = qs_object_get (exe->scheme, val->data)) == NULL)
+   if ((obj = qs_object_get (scheme, val->data)) == NULL)
       return NULL;
 
    /* we found an object! update our id reference and return it. */

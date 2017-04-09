@@ -128,6 +128,7 @@ P_FUNC (qs_language_value)
    /* link an empty value. */
    v = malloc (sizeof (qs_value_t));
    memset (v, 0, sizeof (qs_value_t));
+   v->scheme = node->parse_data;
    v->node = node;
    v->link_id = QS_LINK_LITERAL;
    node->data = v;

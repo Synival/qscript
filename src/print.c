@@ -3,10 +3,13 @@
  * printing qscripts out to stdout. */
 
 #include <stdio.h>
+#include <stdarg.h>
 
 #include "qscript/actions.h"
 #include "qscript/language.h"
 #include "qscript/lists.h"
+#include "qscript/objects.h"
+#include "qscript/properties.h"
 #include "qscript/resources.h"
 #include "qscript/values.h"
 
@@ -160,4 +163,103 @@ int qs_print_resource (qs_resource_t *r)
    int rval = qs_print_list (r->block, 3);
    printf ("}\n");
    return rval;
+}
+
+size_t qs_print_object_json_append (char *out, size_t size, size_t len,
+   int indent, char *format, ...)
+{
+   if (indent > 0 && (len == 0 || out[len - 1] == '\n'))
+      len += snprintf (out + len, size - len, "%*s", indent * 3, "");
+
+   /* print to our buffer. */
+   va_list args;
+   va_start (args, format);
+   len += vsnprintf (out + len, size - len, format, args);
+   va_end (args);
+
+   return len;
+}
+
+size_t qs_print_object_json_list (qs_list_t *list, JSON_ARGS)
+{
+   int i;
+   JSON_APPEND ("[\n");
+   indent++;
+   for (i = 0; i < list->value_count; i++) {
+      len = qs_print_object_json_value (list->values[i], JSON_ARGS_OUT);
+      JSON_APPEND ("%s\n", i + 1 < list->value_count ? "," : "");
+   }
+   indent--;
+   JSON_APPEND ("]");
+   return len;
+}
+
+size_t qs_print_object_json_value (qs_value_t *val, JSON_ARGS)
+{
+   switch (val->value_id) {
+      case QS_VALUE_UNDEFINED:
+         JSON_APPEND ("null");
+         break;
+
+      case QS_VALUE_INT:
+      case QS_VALUE_FLOAT:
+         JSON_APPEND ("%s", val->val_s);
+         break;
+
+      case QS_VALUE_STRING:
+      case QS_VALUE_CHAR:
+         JSON_APPEND ("\"%s\"", val->val_s);
+         break;
+
+      case QS_VALUE_LIST: {
+         qs_list_t *list = val->val_p;
+         len = qs_print_object_json_list (list, JSON_ARGS_OUT);
+         break;
+      }
+
+      /* TODO: recursive nightmare! */
+      case QS_VALUE_OBJECT: {
+         qs_object_t *obj = qs_value_object_scheme (val->scheme, val);
+         if (obj)
+            JSON_APPEND ("\"__obj_%d\"", obj->id);
+         else
+            JSON_APPEND ("\"__obj_no_object\"");
+         break;
+      }
+
+      default:
+         JSON_APPEND ("(unhandled '%d')", val->value_id);
+   }
+   return len;
+}
+
+size_t qs_print_object_json_object (qs_object_t *obj, JSON_ARGS)
+{
+   JSON_APPEND ("{\n");
+   qs_property_t *p;
+   indent++;
+
+   /* internal properties. */
+   JSON_APPEND ("\"__id\": %d,\n", obj->id);
+   JSON_APPEND ("\"__name\": \"%s\"%s\n", obj->name,
+      obj->property_list_front ? "," : "");
+
+   /* user-defined properties. */
+   for (p = obj->property_list_front; p != NULL; p = p->next) {
+      JSON_APPEND ("\"%s\": ", p->name);
+      len = qs_print_object_json_value (p->value, JSON_ARGS_OUT);
+      JSON_APPEND ("%s\n", p->next ? "," : "");
+   }
+   indent--;
+   JSON_APPEND ("}");
+
+   return len;
+}
+
+char *qs_print_object_json (qs_object_t *obj, char *out, size_t size)
+{
+   int indent = 0;
+   size_t len = 0;
+   len = qs_print_object_json_object (obj, JSON_ARGS_OUT);
+   return out;
 }
