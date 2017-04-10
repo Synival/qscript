@@ -33,6 +33,10 @@ struct _qs_scheme_t {
    qs_id_manager_t object_ids;
    qs_object_t *object_list_front, *object_list_back;
    int object_count;
+
+   /* variables. */
+   qs_variable_t *variable_list_front, *variable_list_back;
+   int variable_count;
 };
 
 /* function declarations. */

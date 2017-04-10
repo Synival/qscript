@@ -43,6 +43,7 @@ QSV_DEFINE (QSV_CANNOT_UNWRAP,      QSV_ERR, "<cannot unwrap>",     0, 0.00f);
 QSV_DEFINE (QSV_SCOPE_LITERAL,      QSV_ERR, "literal",             0, 0.00f);
 QSV_DEFINE (QSV_SCOPE_RLINK,        QSV_ERR, "rlink",               0, 0.00f);
 QSV_DEFINE (QSV_SCOPE_BLOCK,        QSV_ERR, "block",               0, 0.00f);
+QSV_DEFINE (QSV_SCOPE_SCHEME,       QSV_ERR, "scheme",              0, 0.00f);
 QSV_DEFINE (QSV_SCOPE_PROPERTY,     QSV_ERR, "property",            0, 0.00f);
 QSV_DEFINE (QSV_SCOPE_UNKNOWN,      QSV_ERR, "unknown",             0, 0.00f);
 QSV_DEFINE (QSV_UNDEFINED,QS_VALUE_UNDEFINED,"<undefined>",         0, 0.00f);
@@ -151,6 +152,10 @@ qs_variable_t *qs_value_variable (qs_execute_t *exe, qs_value_t *v)
          if (*str == '$') {
             str++;
             scope = QS_SCOPE_RLINK;
+         }
+         else if (*str == '@') {
+            str++;
+            scope = QS_SCOPE_SCHEME;
          }
          if (*str == '\0')
             return NULL;
@@ -417,6 +422,7 @@ qs_value_t *qs_value_lvalue_real (qs_execute_t *exe, qs_value_t *val,
 
    /* properties have additional checks. */
    if (val->link_id == QS_LINK_PROPERTY) {
+      /* we can't modify lvalues of objects that aren't ourselves. */
       qs_property_t *p = val->link;
       if (exe != NULL && p->object != exe->object)
          return NULL;
@@ -618,17 +624,17 @@ int qs_value_init (qs_value_t *val, qs_value_type_e type, ...)
          val->val_f = val->val_i;
          char *str = va_arg (va, char *);
          if (val->val_i == QS_SCOPE_AUTO) {
+            val->val_i = QS_SCOPE_BLOCK;
             if (str[0] == '$') {
-               qs_value_restring (val, str + 1);
+               str++;
                val->val_i = QS_SCOPE_RLINK;
             }
-            else {
-               qs_value_restring (val, str);
-               val->val_i = QS_SCOPE_BLOCK;
+            else if (str[0] == '@') {
+               str++;
+               val->val_i = QS_SCOPE_SCHEME;
             }
          }
-         else
-            qs_value_restring (val, str);
+         qs_value_restring (val, str);
          break;
       }
       case QS_VALUE_PROPERTY:

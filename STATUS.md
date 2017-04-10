@@ -4,9 +4,9 @@
 
 1. Source for *libqscript* (contains [mpc](https://github.com/orangeduck/mpc))
 2. qscript parser that instantiates object `main`.
-3. qscript *test.qs* script to test various functions.
-4. Example project *QMaze*.
-5. Example project *objdump*.
+3. qscript *examples/test.sh* script to test various functions.
+4. Example project *examples/projects/QMaze*.
+5. Example project *examples/projects/objdump*.
 
 ## What's done:
 

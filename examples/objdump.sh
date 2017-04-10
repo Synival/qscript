@@ -1,5 +1,2 @@
 #!/bin/sh
-SCRIPT=$(readlink -f "$0")
-SCRIPTPATH=$(dirname "$SCRIPT")
-cd "$SCRIPTPATH"/programs/objdump
-./objdump
+projects/run_project.sh objdump

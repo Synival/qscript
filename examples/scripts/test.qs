@@ -8,6 +8,7 @@ main {
    echo ("   add:  ", + (1, 2, 3));
    echo ("   cat:  ", + ("", 1, 2, 3));
    echo ("   cat2: ", + ("test", "1", "2", "4", ** (2, 3)));
+   echo ("   str*: ", * ('/\', 5));
    echo ();
 
    # Math evaluation demonstration for integers vs. floating points.
@@ -84,10 +85,14 @@ main {
    echo ("   $c = ", $c, " (", scope ($c), ")");
    echo ("   $d = ", $d, " (", scope ($d), ")");
    echo ("   $e = ", $e, " (", scope ($e), ")");
-   = ($$global, "one");
-   echo ("   $$global = ", $$global, " (", scope ($$gobal), ")");
-   += ($$global, " two");
-   echo ("   $$global = ", $$global, " (", scope ($$gobal), ")");
+   = ($$rlink, "one");
+   echo ("   $$rlink = ", $$rlink, " (", scope ($$rlink), ")");
+   += ($$rlink, " two");
+   echo ("   $$rlink = ", $$rlink, " (", scope ($$rlink), ")");
+   = ($@global, "foo");
+   echo ("   $@global = ", $@global, " (", scope ($@global), ")");
+   += ($@global, " bar");
+   echo ("   $@global = ", $@global, " (", scope ($@global), ")");
    echo ();
 
    # func1() runs func2() and func3() in a funky order.
@@ -111,19 +116,21 @@ main {
 
    # Show off our language types and variable scoping.
    echo ("Type tests:");
-   echo ("   undefined | ", type (undefined));
-   echo ("   string    | ", type (string));
-   echo ("   'a'       | ", type ('a'), " (", index ('a'), ")");
-   echo ("   string[1] | ", type (string[1]), " (", index (string[1]), ")");
-   echo ("   0         | ", type (0));
-   echo ("   1.00      | ", type (1.00));
-   echo ("   [string]  | ", type ([string]));
-   echo ("   @@object  | ", type (@@object));
-   echo ("   ~[string] | ", type (~[string]));
-   echo ("   ----------|---------------");
-   echo ("     x:      | ", type (  a), " (", scope (  a), ")");
-   echo ("    $x:      | ", type ( $a), " (", scope ( $a), ")");
-   echo ("   $$x:      | ", type ($$a), " (", scope ($$a), ")");
+   echo ("   undefined   | ", type (undefined));
+   echo ("   text        | ", type (text));
+   echo ("   'a'         | ", type ('a'), " (", index ('a'), ")");
+   echo ("   text[1]     | ", type (text[1]), " (", index (text[1]), ")");
+   echo ("   0           | ", type (0));
+   echo ("   1.00        | ", type (1.00));
+   echo ("   [text]      | ", type ([text]));
+   echo ("   [text][0]   | ", type ([text][0]), " (", index ([text][0]), ")");
+   echo ("   @@object    | ", type (@@object));
+   echo ("   ~[text]     | ", type (~[text]));
+   echo ("   ------------|---------------");
+   echo ("     x:        | ", type (  x), " (", scope (  x), ")");
+   echo ("    $x:        | ", type ( $x), " (", scope ( $x), ")");
+   echo ("   $$x:        | ", type ($$x), " (", scope ($$x), ")");
+   echo ("   $@x:        | ", type ($@x), " (", scope ($@x), ")");
    echo ();
 
    # Complex variable assignments with unwrap (~) tokens and pointer functions.

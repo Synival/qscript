@@ -61,7 +61,7 @@ static p_symbol_t static_qs_symbols[] = {
    {QSCRIPT_FLOAT,      "float",    "/[-+]?[0-9]+\\.[0-9]+/"},
    {QSCRIPT_INT,        "int",      "/[-+]?[0-9]+/"},
    {QSCRIPT_VARIABLE,   "variable",
-      "/[\\$]+" QSCRIPT_VARIABLE_PATTERN "/",
+      "/\\$[$@]?" QSCRIPT_VARIABLE_PATTERN "/",
       qs_language_copy_contents},
    {QSCRIPT_OBJECT,     "object",
       "/[@]+" QSCRIPT_VARIABLE_PATTERN "/",

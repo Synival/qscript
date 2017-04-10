@@ -61,7 +61,8 @@ typedef enum _qs_variable_scope_e {
    QS_SCOPE_UNDEFINED = 0,
    QS_SCOPE_RLINK     = 1,
    QS_SCOPE_BLOCK     = 2,
-   QS_SCOPE_LAST      = 3,
+   QS_SCOPE_SCHEME    = 3,
+   QS_SCOPE_LAST      = 4,
 } qs_variable_scope_e;
 
 /* action types. */

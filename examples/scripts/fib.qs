@@ -1,28 +1,39 @@
 main {
-   echo ("Go!");
-   echo (fibonacci_recurse (1));
-   echo (fibonacci_recurse (2));
-   echo (fibonacci_recurse (3));
-   echo (fibonacci_recurse (4));
-   echo (fibonacci_recurse (5));
-   echo (fibonacci_recurse (6));
-   echo (fibonacci_recurse (7));
-   echo (fibonacci_recurse (8));
-   echo (fibonacci_recurse (9));
-   echo (fibonacci_recurse (10));
-   echo (fibonacci_recurse (11));
-   echo (fibonacci_recurse (12));
-   echo (fibonacci_recurse (13));
-   echo (fibonacci_recurse (14));
-   echo (fibonacci_recurse (15));
-   echo ("Whew.");
+   for (= ($i, 1), <= ($i, 40), ++($i),
+      echo (_padded_str ($i, 2), ': ', fibonacci_recurse ($i)));
+}
+
+_padded_str {
+   args ($val, $len);
+   = ($str, string ($val));
+   + (* (" ", - ($len, length ($str))), $str);
 }
 
 fibonacci_recurse {
    args ($n);
    if (<= ($n, 1), return ($n));      # Stop at zero and one.
-   + (                                # Otherwise, return:
+
+   if (= ($fstored, _fib_fetch ($n)), # If this number has already been
+      return ($fstored));             # calculated, use it.
+
+   = ($rval, + (                      # Otherwise, calculate:
       fibonacci_recurse (- ($n, 1)),  #  f(n-1) + f(n-2)
       fibonacci_recurse (- ($n, 2))
-   );
+   ));
+
+   _fib_store ($rval);
+   return ($rval);
+}
+
+_fib_fetch {
+   args ($n);
+   if (== (undefined, $@_fib_array),
+      = ($@_fib_array, [1, 1]));
+   ? (>= (- (length ($@_fib_array), 1), $n),
+      $@_fib_array[$n],
+      undefined);
+}
+
+_fib_store {
+   += ($@_fib_array, arg(0));
 }

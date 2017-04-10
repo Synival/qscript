@@ -306,6 +306,30 @@ QS_FUNC (qsf_math)
                                 QS_ARGS (i));
             rval = QS_RETS (buf);
          }
+         else if (math_func == 2) {
+            char buf1[65536], buf2[65536];
+            char *in = val->val_s, *out = buf1;
+            size_t len;
+            int j, mult;
+            for (i = start; i < args; i++) {
+               mult = QS_ARGI (i);
+               len = 0;
+               out[0] = '\0';
+               for (j = 0; j < mult; j++) {
+                  len += snprintf (out + len, sizeof (char) * 65536 - len,
+                     "%s", in);
+               }
+               if (out == buf1) {
+                  out = buf2;
+                  in  = buf1;
+               }
+               else {
+                  out = buf1;
+                  in  = buf2;
+               }
+            }
+            rval = QS_RETS (in);
+         }
          else {
             QS_ARG_ERROR (0, "invalid operation.\n");
             return QSV_INVALID_OPER;
@@ -642,9 +666,10 @@ QS_FUNC (qsf_scope)
       case QS_LINK_VARIABLE: {
          qs_variable_t *var = val->link;
          switch (var->scope_id) {
-            case QS_SCOPE_RLINK: return QSV_SCOPE_RLINK;
-            case QS_SCOPE_BLOCK: return QSV_SCOPE_BLOCK;
-            default:             return QSV_SCOPE_UNKNOWN;
+            case QS_SCOPE_RLINK:  return QSV_SCOPE_RLINK;
+            case QS_SCOPE_BLOCK:  return QSV_SCOPE_BLOCK;
+            case QS_SCOPE_SCHEME: return QSV_SCOPE_SCHEME;
+            default:              return QSV_SCOPE_UNKNOWN;
          }
       }
       case QS_LINK_PROPERTY:

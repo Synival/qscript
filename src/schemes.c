@@ -92,6 +92,10 @@ int qs_scheme_free (qs_scheme_t *scheme)
    while (scheme->resource_list_front)
       qs_resource_free (scheme->resource_list_front);
 
+   /* free global variables. */
+   while (scheme->variable_list_front)
+      qs_variable_free (scheme->variable_list_front);
+
    /* free all nodes. */
    for (i = 0; i < scheme->node_count; i++)
       p_node_free (scheme->node_list[i]);

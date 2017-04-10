@@ -19,6 +19,10 @@ qs_variable_t *qs_variable_get (qs_execute_t *exe, char *name, int scope)
 {
    qs_variable_t *v;
    switch (scope) {
+      case QS_SCOPE_SCHEME:
+         if ((v = qs_variable_get_scheme (exe->scheme, name)) == NULL)
+            return qs_variable_new_scheme (exe->scheme, name);
+         return v;
       case QS_SCOPE_RLINK:
          if ((v = qs_variable_get_rlink (exe->rlink, name)) == NULL)
             return qs_variable_new_rlink (exe->rlink, name);
@@ -54,6 +58,15 @@ qs_variable_t *qs_variable_get_execute (qs_execute_t *exe, char *name)
          break;
       exe = exe->parent;
    }
+   return NULL;
+}
+
+qs_variable_t *qs_variable_get_scheme (qs_scheme_t *scheme, char *name)
+{
+   qs_variable_t *v;
+   for (v = scheme->variable_list_back; v != NULL; v = v->prev)
+      if (strcmp (v->name, name) == 0)
+         return v;
    return NULL;
 }
 
@@ -118,6 +131,27 @@ qs_variable_t *qs_variable_new_execute (qs_execute_t *exe, char *name)
    return new;
 }
 
+qs_variable_t *qs_variable_new_scheme (qs_scheme_t *scheme, char *name)
+{
+   qs_variable_t *new;
+
+   /* create a variable that will stick around until the scheme is
+    * destroyed. */
+   new = qs_variable_new_base (scheme, name);
+
+   /* link to the end of the scheme. */
+   new->scope_id = QS_SCOPE_SCHEME;
+   new->parent = scheme;
+   new->prev = scheme->variable_list_back;
+   if (new->prev) new->prev->next             = new;
+   else           scheme->variable_list_front = new;
+   scheme->variable_list_back = new;
+   scheme->variable_count++;
+
+   /* return our new variable. */
+   return new;
+}
+
 qs_value_t *qs_variable_value (qs_variable_t *variable)
    { return &(variable->value); }
 
@@ -130,6 +164,16 @@ int qs_variable_free (qs_variable_t *v)
 
    /* remove from whatever list this variable is attached to. */
    switch (v->scope_id) {
+      case QS_SCOPE_SCHEME: {
+         qs_scheme_t *s = v->parent;
+         if (v->next) v->next->prev          = v->prev;
+         else         s->variable_list_back  = v->prev;
+         if (v->prev) v->prev->next          = v->next;
+         else         s->variable_list_front = v->next;
+         s->variable_count--;
+         break;
+      }
+
       case QS_SCOPE_RLINK: {
          qs_rlink_t *r = v->parent;
          if (v->next) v->next->prev          = v->prev;

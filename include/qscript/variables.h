@@ -24,9 +24,11 @@ struct _qs_variable_t {
 qs_variable_t *qs_variable_get (qs_execute_t *exe, char *name, int scope);
 qs_variable_t *qs_variable_get_rlink (qs_rlink_t *rlink, char *name);
 qs_variable_t *qs_variable_get_execute (qs_execute_t *exe, char *name);
+qs_variable_t *qs_variable_get_scheme (qs_scheme_t *scheme, char *name);
 qs_variable_t *qs_variable_new_base (qs_scheme_t *scheme, char *name);
 qs_variable_t *qs_variable_new_rlink (qs_rlink_t *rlink, char *name);
 qs_variable_t *qs_variable_new_execute (qs_execute_t *exe, char *name);
+qs_variable_t *qs_variable_new_scheme (qs_scheme_t *scheme, char *name);
 qs_value_t *qs_variable_value (qs_variable_t *variable);
 int qs_variable_free (qs_variable_t *v);
 int qs_variable_free_after (qs_execute_t *exe, qs_variable_t *v,

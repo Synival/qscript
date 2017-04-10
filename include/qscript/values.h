@@ -87,6 +87,7 @@ extern qs_value_t *QSV_CANNOT_UNWRAP;
 extern qs_value_t *QSV_SCOPE_LITERAL;
 extern qs_value_t *QSV_SCOPE_RLINK;
 extern qs_value_t *QSV_SCOPE_BLOCK;
+extern qs_value_t *QSV_SCOPE_SCHEME;
 extern qs_value_t *QSV_SCOPE_PROPERTY;
 extern qs_value_t *QSV_SCOPE_UNKNOWN;
 extern qs_value_t *QSV_UNDEFINED;

@@ -30,9 +30,10 @@ int main (void)
    qs_object_t *o;
    qs_property_t *p;
    qs_value_t *v;
-   char *type;
+   char *type, json_buf[65536];
    for (o = scheme->object_list_front; o != NULL; o = o->next) {
-      printf ("%s:\n", o->name);
+      /* vanilla. */
+      printf ("'%s' using qs_print_value():\n", o->name);
       for (p = o->property_list_front; p != NULL; p = p->next) {
          v = qs_property_value (p);
          type = qs_value_type (v);
@@ -44,6 +45,10 @@ int main (void)
       if (o->property_list_front == NULL)
          printf ("   (no properties)\n");
       printf ("\n");
+
+      /* JSON! */
+      printf ("'%s' using qs_print_object_json():\n%s\n\n", o->name,
+         qs_print_object_json (o, json_buf, sizeof (json_buf)));
    }
 
    /* clean-up time!  free all objects, resources, and the scheme itself. */

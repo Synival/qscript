@@ -1,5 +1,2 @@
 #!/bin/sh
-SCRIPT=$(readlink -f "$0")
-SCRIPTPATH=$(dirname "$SCRIPT")
-cd "$SCRIPTPATH"/programs/qmaze
-./qmaze
+projects/run_project.sh qmaze
