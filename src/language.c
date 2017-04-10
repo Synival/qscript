@@ -2,6 +2,7 @@
  * ----------
  * processing of the qscript language into resources. */
 
+#include <dirent.h>
 #include <fcntl.h>
 #include <limits.h>
 #include <stdio.h>
@@ -442,27 +443,27 @@ p_node_t *qs_parse_file (qs_scheme_t *scheme, char *filename)
    } while (0)
 
    PF_BAIL_IF ((fd = open (filename, O_RDONLY)) == -1,
-      "couldn't open file '%s' for reading: %s\n", filename, strerror (errno));
+      "Couldn't open file '%s' for reading: %s\n", filename, strerror (errno));
    struct stat sbuf;
    fstat (fd, &sbuf);
    PF_BAIL_IF (!S_ISREG (sbuf.st_mode),
-      "file '%s' is not a regular file.\n", filename);
+      "File '%s' is not a regular file.\n", filename);
    PF_BAIL_IF ((file = fdopen (fd, "r")) == NULL,
-      "couldn't convert fd -> file for '%s': %s\n", filename, strerror (errno));
+      "Couldn't convert fd -> file for '%s': %s\n", filename, strerror (errno));
 
    /* get file length. */
    PF_BAIL_IF (fseek (file, 0, SEEK_END) != 0,
-      "couldn't seek to end of file '%s': %s\n", filename, strerror (errno));
+      "Couldn't seek to end of file '%s': %s\n", filename, strerror (errno));
    long len = ftell (file);
    PF_BAIL_IF (len == -1l || len == LONG_MAX,
-      "couldn't get content length for '%s': %s\n", filename, strerror (errno));
+      "Couldn't get content length for '%s': %s\n", filename, strerror (errno));
    fseek (file, 0, SEEK_SET);
 
    /* get file contents. */
    char *contents = malloc (sizeof (char) * (len + 1));
    size_t len_read = fread (contents, sizeof (char), len, file);
    PF_BAIL_IF (ferror (file) != 0,
-      "error reading from '%s'.\n", filename);
+      "Error reading from '%s'.\n", filename);
    contents[len] = '\0';
    fclose (file);
 
@@ -476,6 +477,47 @@ p_node_t *qs_parse_file (qs_scheme_t *scheme, char *filename)
    p_node_t *nodes = qs_parse_content (scheme, filename, contents);
    free (contents);
    return nodes;
+}
+
+int qs_parse_directory (qs_scheme_t *scheme, char *directory, int recurse)
+{
+   int count = 0;
+   DIR *d;
+   struct dirent *dir;
+
+   /* attempt to open the directory. */
+   if ((d = opendir (directory)) == NULL) {
+      p_error (NULL, "Couldn't open directory '%s': %s\n", directory,
+         strerror (errno));
+      return -1;
+   }
+
+   /* look at children. */
+   struct stat stat_buf;
+   char fbuf[1024];
+   while ((dir = readdir (d)) != NULL) {
+      if (dir->d_name[0] == '.')
+         continue;
+      snprintf (fbuf, sizeof (fbuf), "%s/%s", directory, dir->d_name);
+      if (stat (fbuf, &stat_buf) != 0)
+         continue;
+      if (S_ISDIR (stat_buf.st_mode)) {
+         if (recurse)
+            count += qs_parse_directory (scheme, fbuf, recurse);
+         continue;
+      }
+      if (S_ISREG (stat_buf.st_mode)) {
+         char *ext = strrchr (dir->d_name, '.');
+         if (ext != NULL && strcasecmp (ext, ".qs") == 0) {
+            qs_parse_file (scheme, fbuf);
+            count++;
+         }
+         continue;
+      }
+   }
+
+   /* return the number of directories processed. */
+   return count;
 }
 
 p_node_t *qs_parse_content (qs_scheme_t *scheme, char *file, char *content)

@@ -26,6 +26,7 @@ P_FUNC (qs_language_action_f);
 /* various kinds of processing functions. */
 int qs_parse_init (void);
 p_node_t *qs_parse_file (qs_scheme_t *scheme, char *filename);
+int qs_parse_directory (qs_scheme_t *scheme, char *directory, int recurse);
 p_node_t *qs_parse_content (qs_scheme_t *scheme, char *file, char *content);
 p_node_t *qs_parse_fstream (qs_scheme_t *scheme, char *filename, FILE *file);
 
