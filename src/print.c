@@ -183,11 +183,12 @@ size_t qs_print_object_json_append (char *out, size_t size, size_t len,
 size_t qs_print_object_json_list (qs_list_t *list, JSON_ARGS)
 {
    int i;
-   JSON_APPEND ("[\n");
+   JSON_APPEND ("[%s", list->value_count <= 1 ? "" : "\n");
    indent++;
    for (i = 0; i < list->value_count; i++) {
       len = qs_print_object_json_value (list->values[i], JSON_ARGS_OUT);
-      JSON_APPEND ("%s\n", i + 1 < list->value_count ? "," : "");
+      if (list->value_count > 1)
+         JSON_APPEND ("%s\n", i + 1 < list->value_count ? "," : "");
    }
    indent--;
    JSON_APPEND ("]");
@@ -217,7 +218,6 @@ size_t qs_print_object_json_value (qs_value_t *val, JSON_ARGS)
          break;
       }
 
-      /* TODO: recursive nightmare! */
       case QS_VALUE_OBJECT: {
          qs_object_t *obj = qs_value_object_scheme (val->scheme, val);
          if (obj)
@@ -226,6 +226,10 @@ size_t qs_print_object_json_value (qs_value_t *val, JSON_ARGS)
             JSON_APPEND ("\"__obj_no_object\"");
          break;
       }
+
+      case QS_VALUE_BLOCK:
+         JSON_APPEND ("\"__code\"");
+         break;
 
       default:
          JSON_APPEND ("(unhandled '%d')", val->value_id);
