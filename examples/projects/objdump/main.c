@@ -11,7 +11,7 @@ int main (void)
 {
    /* create our scheme, load its resources, and update changes. */
    qs_scheme_t *scheme = qs_scheme_new ();
-   qs_parse_file (scheme, "my_resources.qs");
+   qs_parse_directory (scheme, ".", 1);
    qs_scheme_update (scheme);
 
    /* instantiate our player and add rlinks to its resource chain. */
@@ -33,7 +33,8 @@ int main (void)
    char *type, json_buf[65536];
    for (o = scheme->object_list_front; o != NULL; o = o->next) {
       /* vanilla. */
-      printf ("\e[37;1m'%s' using qs_print_value():\e[0m\n", o->name);
+      printf ("\e[37;1m%s (%d) using qs_print_value():\e[0m\n",
+         o->name, o->id);
       for (p = o->property_list_front; p != NULL; p = p->next) {
          v = qs_property_value (p);
          type = qs_value_type (v);
@@ -47,8 +48,9 @@ int main (void)
       printf ("\n");
 
       /* JSON! */
-      printf ("\e[37;1m'%s' using qs_print_object_json():\e[0m\n%s\n\n",
-         o->name, qs_print_object_json (o, json_buf, sizeof (json_buf)));
+      printf ("\e[37;1m%s (%d) using qs_print_object_json():\e[0m\n%s\n\n",
+         o->name, o->id,
+         qs_print_object_json (o, json_buf, sizeof (json_buf)));
    }
 
    /* clean-up time!  free all objects, resources, and the scheme itself. */
