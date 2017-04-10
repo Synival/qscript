@@ -23,22 +23,22 @@ int qs_print_value (qs_value_t *v, int indent)
    switch (v->value_id) {
       /* simple real primitives. */
       case QS_VALUE_UNDEFINED:
-         printf ("\x1b[0;31;1mundefined\x1b[0m");
+         printf ("\e[0;31;1mundefined\e[0m");
          break;
       case QS_VALUE_INT:
       case QS_VALUE_FLOAT:
-         printf ("\x1b[0;35;1m%s\x1b[0m", v->val_s);
+         printf ("\e[0;35;1m%s\e[0m", v->val_s);
          break;
       case QS_VALUE_STRING:
          if (v->action_list && v->action_list->action_id == QS_ACTION_CALL)
-            printf ("\x1b[0;33;1m%s\x1b[0m", v->val_s);
+            printf ("\e[0;33;1m%s\e[0m", v->val_s);
          else
-            printf ("\x1b[0;35m\"\x1b[1m%s\x1b[0;35m\"\x1b[0m", v->val_s);
+            printf ("\e[0;35m\"\e[1m%s\e[0;35m\"\e[0m", v->val_s);
          break;
 
       /* complex real primitives. */
       case QS_VALUE_CHAR:
-         printf ("'\x1b[0;37;1m%s\x1b[0m'", v->val_s);
+         printf ("'\e[0;37;1m%s\e[0m'", v->val_s);
          break;
       case QS_VALUE_LIST:
          putchar ('[');
@@ -48,9 +48,9 @@ int qs_print_value (qs_value_t *v, int indent)
       case QS_VALUE_OBJECT: {
          char *name = v->data;
          if (*name == '@')
-            printf ("\x1b[0;32m@@\x1b[1m%s\x1b[0m", name + 1);
+            printf ("\e[0;32m@@\e[1m%s\e[0m", name + 1);
          else
-            printf ("\x1b[0;32m@\x1b[1m%s\x1b[0m", name);
+            printf ("\e[0;32m@\e[1m%s\e[0m", name);
          break;
       }
 
@@ -63,25 +63,25 @@ int qs_print_value (qs_value_t *v, int indent)
       case QS_VALUE_VARIABLE:
          switch (v->val_i) {
             case QS_SCOPE_RLINK:
-               printf ("\x1b[0;36m$$\x1b[1m%s\x1b[0m", v->val_s);
+               printf ("\e[0;36m$$\e[1m%s\e[0m", v->val_s);
                break;
             case QS_SCOPE_BLOCK:
-               printf ("\x1b[0;36m$\x1b[1m%s\x1b[0m", v->val_s);
+               printf ("\e[0;36m$\e[1m%s\e[0m", v->val_s);
                break;
          }
          break;
       case QS_VALUE_PROPERTY:
-         printf ("\x1b[0;34;1m.%s\x1b[0m", v->val_s);
+         printf ("\e[0;34;1m.%s\e[0m", v->val_s);
          break;
       case QS_VALUE_PROPERTY_VALUE:
-         printf ("\x1b[0;34;1m.(\x1b[0m");
+         printf ("\e[0;34;1m.(\e[0m");
          count += qs_print_value (v->val_p, indent);
-         printf ("\x1b[0;34;1m)\x1b[0m");
+         printf ("\e[0;34;1m)\e[0m");
          break;
 
       /* unhandled value type. */
       default:
-         printf ("\x1b[0;31;1m<unknown value>\x1b[0m");
+         printf ("\e[0;31;1m<unknown value>\e[0m");
          break;
    }
    qs_action_t *a;
@@ -106,17 +106,17 @@ int qs_print_action (qs_action_t *a, int indent)
          break;
       case QS_ACTION_PROPERTY: {
          char *val = a->data_p;
-         printf ("\x1b[0;34;1m.%s\x1b[0m", val);
+         printf ("\e[0;34;1m.%s\e[0m", val);
          break;
       }
       case QS_ACTION_PROPERTY_VALUE: {
-         printf ("\x1b[0;34;1m.(\x1b[0m");
+         printf ("\e[0;34;1m.(\e[0m");
          count += qs_print_value (a->data_p, indent);
-         printf ("\x1b[0;34;1m)\x1b[0m");
+         printf ("\e[0;34;1m)\e[0m");
          break;
       }
       default:
-         printf (" \x1b[0;31;1m<unknown action>\x1b[0m");
+         printf (" \e[0;31;1m<unknown action>\e[0m");
          break;
    }
    return 1;
@@ -155,9 +155,9 @@ int qs_print_resource (qs_resource_t *r)
 
    /* print our resource title. */
    if (len > 0)
-      printf ("\x1b[0;32;1m%s\x1b[37m%s\x1b[0m {\n", flag_str, r->name);
+      printf ("\e[0;32;1m%s\e[37m%s\e[0m {\n", flag_str, r->name);
    else
-      printf ("\x1b[0;37;1m%s\x1b[0m {\n", r->name);
+      printf ("\e[0;37;1m%s\e[0m {\n", r->name);
 
    /* print our block. */
    int rval = qs_print_list (r->block, 3);

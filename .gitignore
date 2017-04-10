@@ -20,5 +20,5 @@
 /ltmain.sh
 /m4
 /missing
-/examples/programs/qmaze/qmaze
-/examples/programs/objdump/objdump
+/examples/projects/qmaze/qmaze
+/examples/projects/objdump/objdump
