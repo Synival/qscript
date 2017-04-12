@@ -90,7 +90,7 @@ _command_action {
 
    # Perform our action.
    echo ("You ", $action, " ", $object.name, ".");
-   = ($func, $object.$action);
+   = ($func, $object.($action));
    if (== (undefined, $func), {
       echo ("Nothing happens.");
    }, {

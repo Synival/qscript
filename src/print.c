@@ -25,6 +25,7 @@ int qs_print_value (qs_value_t *v, int indent)
       case QS_VALUE_UNDEFINED:
          printf ("\e[0;31;1mundefined\e[0m");
          break;
+      case QS_VALUE_BOOLEAN:
       case QS_VALUE_INT:
       case QS_VALUE_FLOAT:
          printf ("\e[0;35;1m%s\e[0m", v->val_s);
@@ -81,7 +82,7 @@ int qs_print_value (qs_value_t *v, int indent)
 
       /* unhandled value type. */
       default:
-         printf ("\e[0;31;1m<unknown value>\e[0m");
+         printf ("\e[0;31;1m<unknown value type '%d'>\e[0m", v->value_id);
          break;
    }
    qs_action_t *a;
@@ -202,6 +203,7 @@ size_t qs_print_object_json_value (qs_value_t *val, JSON_ARGS)
          JSON_APPEND ("null");
          break;
 
+      case QS_VALUE_BOOLEAN:
       case QS_VALUE_INT:
       case QS_VALUE_FLOAT:
          JSON_APPEND ("%s", val->val_s);

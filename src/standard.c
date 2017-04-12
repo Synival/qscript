@@ -87,9 +87,10 @@ qs_func_t qs_func_list_standard[] = {
    { "print_value",    "<value>",          1, qsf_print_v, 0 },
    { "eval",    "<arg1> [... <argn>]",     1, qsf_eval,    0 },
    { "length",  "<string | list>",         1, qsf_length,  0 },
-   { "string",  "<value>",                 1, qsf_cast,    QS_VALUE_STRING },
+   { "boolean", "<value>",                 1, qsf_cast,    QS_VALUE_BOOLEAN },
    { "int",     "<value>",                 1, qsf_cast,    QS_VALUE_INT },
    { "float",   "<value>",                 1, qsf_cast,    QS_VALUE_FLOAT },
+   { "string",  "<value>",                 1, qsf_cast,    QS_VALUE_STRING },
    { "char",    "<value>",                 1, qsf_cast,    QS_VALUE_CHAR },
    { "object",  "<value>",                 1, qsf_cast,    QS_VALUE_OBJECT },
    { "this",    "",                        0, qsf_this,    0 },
@@ -161,10 +162,23 @@ QS_FUNC (qsf_math)
 
    /* perform different calculations based on type. */
    switch (val->value_id) {
+      /* only '^' is allowed for booleans. */
+      case QS_VALUE_BOOLEAN: {
+         if (math_func != 7) {
+            QS_ARG_ERROR (0, "invalid operation for 'boolean'.\n");
+            return QSV_INVALID_OPER;
+         }
+         int v = val->val_i;
+         for (i = start; i < args; i++)
+            v ^= QS_ARGB (i);
+         rval = QS_RETB (v);
+         break;
+      }
+
       /* only '+' is allowed for lists. */
       case QS_VALUE_LIST: {
          if (math_func != 0) {
-            QS_ARG_ERROR (0, "invalid operation.\n");
+            QS_ARG_ERROR (0, "invalid operation for 'list'.\n");
             return QSV_INVALID_OPER;
          }
 
@@ -220,7 +234,7 @@ QS_FUNC (qsf_math)
                      v %= (int) rch;
                   break;
                default:
-                  QS_ARG_ERROR (0, "invalid operation.\n");
+                  QS_ARG_ERROR (0, "invalid operation for 'char'.\n");
                   return QSV_INVALID_OPER;
             }
             if (v < 1 || v > 255) {
@@ -258,7 +272,7 @@ QS_FUNC (qsf_math)
                      v %= r;
                   break;
                default:
-                  QS_ARG_ERROR (0, "invalid operation.\n");
+                  QS_ARG_ERROR (0, "invalid operation for 'int'.\n");
                   return QSV_INVALID_OPER;
             }
          }
@@ -288,7 +302,7 @@ QS_FUNC (qsf_math)
                      v = fmodf (v, r);
                   break;
                default:
-                  QS_ARG_ERROR (0, "invalid operation.\n");
+                  QS_ARG_ERROR (0, "invalid operation for 'float'.\n");
                   return QSV_INVALID_OPER;
             }
          }
@@ -331,7 +345,7 @@ QS_FUNC (qsf_math)
             rval = QS_RETS (in);
          }
          else {
-            QS_ARG_ERROR (0, "invalid operation.\n");
+            QS_ARG_ERROR (0, "invalid operation for 'string'.\n");
             return QSV_INVALID_OPER;
          }
          break;
@@ -398,6 +412,19 @@ QS_FUNC (qsf_compare)
 
       /* check for equality based on type. */
       switch (first_val->value_id) {
+         /* boolean: ==, != */
+         case QS_VALUE_BOOLEAN: {
+            rvalue = qs_value_truth (exe, val2);
+            switch (sub_func) {
+               case 0: rvalue = (rvalue == val1->val_i); break;
+               case 1: rvalue = (rvalue != val1->val_i); break;
+               default:
+                  QS_ARG_ERROR (i, "invalid operation on 'boolean'.\n");
+                  return QSV_INVALID_OPER;
+            }
+            break;
+         }
+
          /* char: ==, !=, >, >=, <, <= */
          case QS_VALUE_CHAR: {
             char *lch, rch;
@@ -418,7 +445,7 @@ QS_FUNC (qsf_compare)
                case 4: rvalue = (*lch <  rch) ? 1 : 0; break;
                case 5: rvalue = (*lch <= rch) ? 1 : 0; break;
                default:
-                  QS_ARG_ERROR (i, "invalid operation.\n");
+                  QS_ARG_ERROR (i, "invalid operation on 'char'.\n");
                   return QSV_INVALID_OPER;
             }
             break;
@@ -435,7 +462,7 @@ QS_FUNC (qsf_compare)
                case 4: rvalue = (rvalue <  0 ? 1 : 0); break;
                case 5: rvalue = (rvalue <= 0 ? 1 : 0); break;
                default:
-                  QS_ARG_ERROR (i, "invalid operation.\n");
+                  QS_ARG_ERROR (i, "invalid operation on 'string'.\n");
                   return QSV_INVALID_OPER;
             }
             break;
@@ -450,7 +477,7 @@ QS_FUNC (qsf_compare)
                case 4: rvalue = (val1->val_i <  val2->val_i) ? 1 : 0; break;
                case 5: rvalue = (val1->val_i <= val2->val_i) ? 1 : 0; break;
                default:
-                  QS_ARG_ERROR (i, "invalid operation.\n");
+                  QS_ARG_ERROR (i, "invalid operation on 'int'.\n");
                   return QSV_INVALID_OPER;
             }
             break;
@@ -465,7 +492,7 @@ QS_FUNC (qsf_compare)
                case 4: rvalue = (val1->val_f <  val2->val_f) ? 1 : 0; break;
                case 5: rvalue = (val1->val_f <= val2->val_f) ? 1 : 0; break;
                default:
-                  QS_ARG_ERROR (i, "invalid operation.\n");
+                  QS_ARG_ERROR (i, "invalid operation on 'float'.\n");
                   return QSV_INVALID_OPER;
             }
             break;
@@ -474,7 +501,7 @@ QS_FUNC (qsf_compare)
          case QS_VALUE_OBJECT: {
             /* filter out bad comparisons early. */
             if (sub_func != 0 && sub_func != 1) {
-               QS_ARG_ERROR (i, "invalid operation.\n");
+               QS_ARG_ERROR (i, "invalid operation on 'object'.\n");
                return QSV_INVALID_OPER;
             }
 
@@ -511,7 +538,7 @@ QS_FUNC (qsf_compare)
                   rvalue = (val2->value_id == QS_VALUE_UNDEFINED) ? 0 : 1;
                   break;
                default:
-                  QS_ARG_ERROR (i, "invalid operation.\n");
+                  QS_ARG_ERROR (i, "invalid operation on 'undefined'.\n");
                   return QSV_INVALID_OPER;
             }
             break;
@@ -523,13 +550,13 @@ QS_FUNC (qsf_compare)
             return QSV_INVALID_TYPE;
       }
 
-      /* stop immediately as soon as something fails and return 0 (false). */
+      /* stop immediately as soon as something fails and return 'false'. */
       if (rvalue == 0)
-         return QSV_ZERO;
+         return QSV_FALSE;
    }
 
-   /* all checks passed; return 1 (true). */
-   return QSV_ONE;
+   /* all checks passed; return 'true'. */
+   return QSV_TRUE;
 }
 
 QS_FUNC (qsf_return)
@@ -542,7 +569,7 @@ QS_FUNC (qsf_return)
    if (args >= 1)
       return QS_ARGV (0);
    else
-      return QSV_ZERO;
+      return QSV_FALSE;
 }
 
 QS_FUNC (qsf_let)
@@ -783,7 +810,7 @@ QS_FUNC (qsf_args)
       /* if we're calling args(), we can safely return zero to indicate
        * that we're not a function. */
       if (args == 0)
-         return QSV_ZERO;
+         return QSV_FALSE;
       /* otherwise, toss an error. */
       else {
          qs_func_error (exe, func->name, action->node,
@@ -935,8 +962,8 @@ QS_FUNC (qsf_truth)
       case 0:
          if (args == 1)
             return qs_value_truth (exe, QS_ARGV (0))
-               ? QSV_ONE
-               : QSV_ZERO;
+               ? QSV_TRUE
+               : QSV_FALSE;
          else if (args == 3) {
             return qs_value_truth (exe, QS_ARGV (0))
                ? QS_ARGV (1)
@@ -948,8 +975,8 @@ QS_FUNC (qsf_truth)
          }
       case 1:
          return qs_value_truth (exe, QS_ARGV (0))
-            ? QSV_ZERO
-            : QSV_ONE;
+            ? QSV_FALSE
+            : QSV_TRUE;
       default:
          return QSV_INVALID_SUB_FUNC;
    }
@@ -1027,9 +1054,9 @@ QS_FUNC (qsf_boolean)
    val1 = qs_value_truth (exe, QS_ARGV (0));
    for (i = 1; i < args; i++, val1 = res) {
       if (!val1 && sub_func == 1)
-         return QS_RETI (0);
+         return QSV_FALSE;
       else if (val1 && sub_func == 0)
-         return QS_RETI (1);
+         return QSV_TRUE;
       val2 = qs_value_truth (exe, QS_ARGV (i));
       switch (sub_func) {
          case 0: res =  (val1 || val2); break;
@@ -1040,8 +1067,7 @@ QS_FUNC (qsf_boolean)
          case 5: res = !(val1 ^  val2); break;
       }
    }
-
-   return QS_RETI (res);
+   return res ? QSV_TRUE : QSV_FALSE;
 }
 
 QS_FUNC (qsf_print_r)
@@ -1063,14 +1089,14 @@ QS_FUNC (qsf_print_r)
 
    /* print and return 1 for success. */
    qs_print_resource (r);
-   return QSV_ONE;
+   return QSV_TRUE;
 }
 
 QS_FUNC (qsf_print_v)
 {
    qs_print_value (QS_ARGV(0), 0);
    printf ("\n");
-   return QSV_ONE;
+   return QSV_TRUE;
 }
 
 QS_FUNC (qsf_eval)
@@ -1129,7 +1155,7 @@ QS_FUNC (qsf_switch)
    if (i < args)
       return QS_ARGV (i);
    else
-      return QSV_ZERO;
+      return QSV_FALSE;
 }
 
 QS_FUNC (qsf_length)
@@ -1168,9 +1194,10 @@ QS_FUNC (qsf_cast)
    /* looks like we have to pull some shenanegins. */
    switch (sub_func) {
       /* standard primitives. */
-      case QS_VALUE_STRING: return QS_RETS (val->val_s);
-      case QS_VALUE_INT:    return QS_RETI (val->val_i);
-      case QS_VALUE_FLOAT:  return QS_RETF (val->val_f);
+      case QS_VALUE_BOOLEAN: return QS_RETB (qs_value_truth (exe, val));
+      case QS_VALUE_INT:     return QS_RETI (val->val_i);
+      case QS_VALUE_FLOAT:   return QS_RETF (val->val_f);
+      case QS_VALUE_STRING:  return QS_RETS (val->val_s);
 
       /* complex primitives.  start with 'char'. */
       case QS_VALUE_CHAR: {
@@ -1289,7 +1316,7 @@ QS_FUNC (qsf_id)
          char buf[65536];
          qs_print_object_json (obj, buf, sizeof (buf));
          printf ("%s", buf);
-         return QSV_ONE;
+         return QSV_TRUE;
       }
       default:
          return QSV_INVALID_SUB_FUNC;
@@ -1300,11 +1327,11 @@ QS_FUNC (qsf_func_exists)
 {
    qs_value_t *val = QS_ARGV(0);
    if (qs_resource_get (exe->scheme, val->val_s))
-      return QSV_ONE;
+      return QSV_TRUE;
    else if (qs_scheme_get_func (exe->scheme, val->val_s))
-      return QSV_ONE;
+      return QSV_TRUE;
    else
-      return QSV_ZERO;
+      return QSV_FALSE;
 }
 
 QS_FUNC (qsf_tokenize)

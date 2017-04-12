@@ -1,7 +1,5 @@
 # Test a lot of stuff!
 main {
-   # print_resource ();
-
    # Proper echo() behavior with some strings, numbers, and statements.
    echo ("Numbers and addition vs. concatenation tests:");
    echo ("   nums: ", 1, ", ", 2.00, ", ", -3.250);
@@ -28,29 +26,52 @@ main {
 
    # Test standard logic.
    echo ("Comparison functions:");
-   echo ("   a == b: ", == (a, b), " | 1 == 2: ", == (1, 2));
-   echo ("   a != b: ", != (a, b), " | 1 != 2: ", != (1, 2));
-   echo ("   a <  b: ", <  (a, b), " | 1 <  2: ", <  (1, 2));
-   echo ("   a <= b: ", <= (a, b), " | 1 <= 2: ", <= (1, 2));
-   echo ("   a >  b: ", >  (a, b), " | 1 >  2: ", >  (1, 2));
-   echo ("   a >= b: ", >= (a, b), " | 1 >= 2: ", >= (1, 2));
+   echo ("   a == b: ", == (a, b),  " | 1 == 2: ", == (1, 2));
+   echo ("   a != b: ", != (a, b), "  | 1 != 2: ", != (1, 2));
+   echo ("   a <  b: ", <  (a, b), "  | 1 <  2: ", <  (1, 2));
+   echo ("   a <= b: ", <= (a, b), "  | 1 <= 2: ", <= (1, 2));
+   echo ("   a >  b: ", >  (a, b),  " | 1 >  2: ", >  (1, 2));
+   echo ("   a >= b: ", >= (a, b),  " | 1 >= 2: ", >= (1, 2));
    echo ();
 
    # Test and demonstrate logical operators.
    echo ("Logical operators:");
    echo ("   ?(0) = ", ?(0), ", ?(5) = ", ?(5));
    echo ("   !(0) = ", !(0), ", !(5) = ", !(5));
-   echo ("   ----------------------------");
-   echo ("    ||: (0,0)=",  || (0,0)," (0,1)=", || (0,1)," (1,1)=", || (1,1));
-   echo ("    &&: (0,0)=",  && (0,0)," (0,1)=", && (0,1)," (1,1)=", && (1,1));
-   echo ("    ^^: (0,0)=",  ^^ (0,0)," (0,1)=", ^^ (0,1)," (1,1)=", ^^ (1,1));
-   echo ("   !||: (0,0)=", !|| (0,0)," (0,1)=",!|| (0,1)," (1,1)=",!|| (1,1));
-   echo ("   !&&: (0,0)=", !&& (0,0)," (0,1)=",!&& (0,1)," (1,1)=",!&& (1,1));
-   echo ("   !^^: (0,0)=", !^^ (0,0)," (0,1)=",!^^ (0,1)," (1,1)=",!^^ (1,1));
+   echo ("   ----------------------------------------");
+   echo ("    ||: (0,0)=",  || (0,0), " (0,1)=", || (0,1),"  (1,1)=", || (1,1));
+   echo ("    &&: (0,0)=",  && (0,0), " (0,1)=", && (0,1), " (1,1)=", && (1,1));
+   echo ("    ^^: (0,0)=",  ^^ (0,0), " (0,1)=", ^^ (0,1),"  (1,1)=", ^^ (1,1));
+   echo ("   !||: (0,0)=", !|| (0,0),"  (0,1)=",!|| (0,1), " (1,1)=",!|| (1,1));
+   echo ("   !&&: (0,0)=", !&& (0,0),"  (0,1)=",!&& (0,1),"  (1,1)=",!&& (1,1));
+   echo ("   !^^: (0,0)=", !^^ (0,0),"  (0,1)=",!^^ (0,1), " (1,1)=",!^^ (1,1));
    echo ("     7 |  12 = ", | (7, 12));
    echo ("     7 &  12 = ", & (7, 12));
    echo ("     7 ^  12 = ", ^ (7, 12));
    echo ("     7 & ~12 = ", & (7, inv(12)));
+   echo ();
+
+   # Boolean logic.
+   echo ("Boolean type logic:");
+   echo ("    true  ==  true: ", == (true,  true));
+   echo ("    true  == false: ", == (true,  false));
+   echo ("   false  ==  true: ", == (false, true));
+   echo ("   false  == false: ", == (false, false));
+   echo ("-------------------------");
+   echo ("    true  !=  true: ", != (true,  true));
+   echo ("    true  != false: ", != (true,  false));
+   echo ("   false  !=  true: ", != (false, true));
+   echo ("   false  != false: ", != (false, false));
+   echo ("-------------------------");
+   echo ("    true  ^^  true: ", ^^ (true,  true));
+   echo ("    true  ^^ false: ", ^^ (true,  false));
+   echo ("   false  ^^  true: ", ^^ (false, true));
+   echo ("   false  ^^ false: ", ^^ (false, false));
+   echo ("-------------------------");
+   echo ("    true !^^  true: ", !^^ (true,  true));
+   echo ("    true !^^ false: ", !^^ (true,  false));
+   echo ("   false !^^  true: ", !^^ (false, true));
+   echo ("   false !^^ false: ", !^^ (false, false));
    echo ();
 
    echo ("Logic / math tests:");
@@ -117,11 +138,12 @@ main {
    # Show off our language types and variable scoping.
    echo ("Type tests:");
    echo ("   undefined   | ", type (undefined));
+   echo ("   true        | ", type (true));
+   echo ("   0           | ", type (0));
+   echo ("   1.00        | ", type (1.00));
    echo ("   text        | ", type (text));
    echo ("   'a'         | ", type ('a'), " (", index ('a'), ")");
    echo ("   text[1]     | ", type (text[1]), " (", index (text[1]), ")");
-   echo ("   0           | ", type (0));
-   echo ("   1.00        | ", type (1.00));
    echo ("   [text]      | ", type ([text]));
    echo ("   [text][0]   | ", type ([text][0]), " (", index ([text][0]), ")");
    echo ("   @@object    | ", type (@@object));
@@ -164,9 +186,11 @@ main {
 
    # Short-circuit logic gates && and ||.
    echo ("Short-circuit logic tests:");
-   print ("   && (1,1,0,1): "); && (print(1), print(1), print(0), print(1));
+   print ("   && (1,1,0,1,foo): ");
+      && (print(1), print(1), print(0), print(1), print ('foo'));
       echo ();
-   print ("   || (0,0,1,0): "); || (print(0), print(0), print(1), print(0));
+   print ("   || (0,0,1,0,bar): ");
+      || (print(0), print(0), print(1), print(0), print ('bar'));
       echo ();
    echo ();
 
@@ -296,10 +320,10 @@ main {
    echo ("   $obj3 != @@bad : ", != ($obj3, @@bad), " <-- should pass");
    echo ("   $obj3 != $obj3 : ", != ($obj3, $obj3));
    echo ("   ----------------------------------");
-   echo ("   ? ($obj1)  : ", ? ($obj1), " <-- should pass");
-   echo ("   ! ($obj1)  : ", ! ($obj1));
-   echo ("   ? (@@bad)  : ", ? (@@bad));
-   echo ("   ! (@@bad)  : ", ! (@@bad), " <-- should pass");
+   echo ("   ? ($obj1) : ", ? ($obj1), " <-- should pass");
+   echo ("   ! ($obj1) : ", ! ($obj1));
+   echo ("   ? (@@bad) : ", ? (@@bad));
+   echo ("   ! (@@bad) : ", ! (@@bad), " <-- should pass");
    echo ();
 
    # Do some fancy stuff with properties.
@@ -320,6 +344,14 @@ main {
    = ($string, "This is a block variable of type 'string'.");
    = ($$string, "This is an rlink variable of type 'string'.");
    echo ("Casting tests:");
+   echo ("   boolean ('true')          = ", boolean ('true'));
+   echo ("   boolean ('false')         = ", boolean ('false'));
+   echo ("   boolean ('yes')           = ", boolean ('yes'));
+   echo ("   boolean ('no')            = ", boolean ('no'));
+   echo ("   boolean (1)               = ", boolean (1));
+   echo ("   boolean (0)               = ", boolean (0));
+   echo ("   boolean ('TRUE')          = ", boolean ('TRUE'));
+   echo ("   boolean ('FALSE')         = ", boolean ('FALSE'));
    echo ("   + (int ('12340'), 5)      = ", + (int ('12340'), 5));
    echo ("   * (float (4), 1.5)        = ", * (float (4), 1.5));
    echo ("   char ('string')           = ", char ('string'));
@@ -344,7 +376,7 @@ main {
    echo ("   First ", $count, " numbers in the Fibonacci sequence:");
    = ($recurse, [{
       = ($limit, arg (0));
-      print ("   ");
+      print ("   ", arg (2));
       for (= ($i, 1), <= ($i, $limit), ++ ($i), {
          print (arg (1) ($i));
          if (== ($i, $limit),
@@ -353,9 +385,9 @@ main {
       });
    }]);
 
-   $recurse ($count, fibonacci_recurse_1);
-   $recurse ($count, fibonacci_recurse_2);
-   $recurse ($count, fibonacci_recurse_3);
+   $recurse ($count, fibonacci_recurse_1, "Method 1: ");
+   $recurse ($count, fibonacci_recurse_2, "Method 2: ");
+   $recurse ($count, fibonacci_recurse_3, "Method 3: ");
    echo ();
 
    # Everything here should call an error!  Use lambda for convenience.
@@ -394,7 +426,10 @@ main {
    $error_test (= (this(), @@my_object));
    $error_test (new (derp, [resource-that-doesnt-exist]));
    $error_test (new (derp, [my_object, derp]));
-   echo ("   Error test concluded.");
+   $error_test (+ (true, false));
+   echo ();
+
+   echo ("Error test concluded.");
    echo ();
 }
 

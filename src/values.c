@@ -22,8 +22,8 @@
 
 /* some constant return values used all the time. */
 #define QSV_ERR QS_VALUE_UNDEFINED
-QSV_DEFINE (QSV_ZERO,          QS_VALUE_INT, "0",                   0, 0.00f);
-QSV_DEFINE (QSV_ONE,           QS_VALUE_INT, "1",                   1, 1.00f);
+QSV_DEFINE (QSV_FALSE,     QS_VALUE_BOOLEAN, "false",               0, 0.00f);
+QSV_DEFINE (QSV_TRUE,      QS_VALUE_BOOLEAN, "true",                1, 1.00f);
 QSV_DEFINE (QSV_INVALID_TYPE,       QSV_ERR, "<invalid type>",      0, 0.00f);
 QSV_DEFINE (QSV_NOT_VARIABLE,       QSV_ERR, "<not variable>",      0, 0.00f);
 QSV_DEFINE (QSV_NOT_PROPERTY,       QSV_ERR, "<not property>",      0, 0.00f);
@@ -122,6 +122,7 @@ char *qs_value_type (qs_value_t *val)
       case QS_VALUE_INT:       return "int";
       case QS_VALUE_FLOAT:     return "float";
       case QS_VALUE_STRING:    return "string";
+      case QS_VALUE_BOOLEAN:   return "boolean";
 
       /* ---complex: */
       case QS_VALUE_CHAR:      return "char";
@@ -233,7 +234,9 @@ int qs_value_free (qs_value_t *value)
 
 int qs_value_truth (qs_execute_t *exe, qs_value_t *val)
 {
-   if (val->val_f != 0.00f && 
+   if (val->value_id == QS_VALUE_BOOLEAN)
+      return val->val_i;
+   else if (val->val_f != 0.00f && 
       (val->value_id == QS_VALUE_INT ||
        val->value_id == QS_VALUE_FLOAT ||
        val->value_id == QS_VALUE_STRING))
@@ -316,6 +319,7 @@ qs_value_t *qs_value_evaluate (qs_execute_t *exe, qs_value_t *val)
    switch (val->value_id) {
       /* real primitives: */
       case QS_VALUE_UNDEFINED:
+      case QS_VALUE_BOOLEAN:
       case QS_VALUE_INT:
       case QS_VALUE_FLOAT:
       case QS_VALUE_STRING:
@@ -358,7 +362,7 @@ qs_value_t *qs_value_evaluate (qs_execute_t *exe, qs_value_t *val)
 
       /* unhandled: */
       default:
-         p_error (val->node, "cannot process value of type '%s' (%d).\n",
+         p_error (val->node, "cannot evaluate value of type '%s' (%d).\n",
             qs_value_type (val), val->value_id);
          return QSV_CANNOT_EXECUTE;
    }
@@ -560,6 +564,20 @@ int qs_value_init (qs_value_t *val, qs_value_type_e type, ...)
       case QS_VALUE_UNDEFINED: {
          char *str = va_arg (va, char *);
          qs_value_restring (val, str ? str : "<undefined>");
+         break;
+      }
+      case QS_VALUE_BOOLEAN: {
+         int b = va_arg (va, int);
+         if (b) {
+            qs_value_restring (val, "true");
+            val->val_i = 1;
+            val->val_f = 1.00f;
+         }
+         else {
+            qs_value_restring (val, "false");
+            val->val_i = 0;
+            val->val_f = 0.00f;
+         }
          break;
       }
       case QS_VALUE_INT: {

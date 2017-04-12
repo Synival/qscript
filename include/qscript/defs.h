@@ -25,23 +25,24 @@ typedef enum _qs_list_type_e {
 typedef enum _qs_value_type_e {
    /* simple real primitives. */
    QS_VALUE_UNDEFINED      = 0,
-   QS_VALUE_INT            = 1,
-   QS_VALUE_FLOAT          = 2,
-   QS_VALUE_STRING         = 3,
+   QS_VALUE_BOOLEAN        = 1,
+   QS_VALUE_INT            = 2,
+   QS_VALUE_FLOAT          = 3,
+   QS_VALUE_STRING         = 4,
 
    /* complex real primitives. */
-   QS_VALUE_CHAR           = 4,
-   QS_VALUE_LIST           = 5,
-   QS_VALUE_OBJECT         = 6,
+   QS_VALUE_CHAR           = 5,
+   QS_VALUE_LIST           = 6,
+   QS_VALUE_OBJECT         = 7,
 
    /* abstract primitives. */
-   QS_VALUE_BLOCK          = 7,
-   QS_VALUE_VARIABLE       = 8,
-   QS_VALUE_PROPERTY       = 9,
-   QS_VALUE_PROPERTY_VALUE = 10,
+   QS_VALUE_BLOCK          = 8,
+   QS_VALUE_VARIABLE       = 9,
+   QS_VALUE_PROPERTY       = 10,
+   QS_VALUE_PROPERTY_VALUE = 11,
 
    /* indicate the final one. */
-   QS_VALUE_LAST           = 11
+   QS_VALUE_LAST           = 12
 } qs_value_type_e;
 
 /* variable scopes. */
@@ -106,7 +107,8 @@ typedef enum _qs_tag_type_e {
    QSCRIPT_OBJECT         = 25,
    QSCRIPT_PROPERTY       = 26,
    QSCRIPT_PROPERTY_VALUE = 27,
-   QSCRIPT_LAST           = 28
+   QSCRIPT_BOOLEAN        = 28,
+   QSCRIPT_LAST           = 29
 } qs_tag_type_e;
 
 /* value link types. */
@@ -175,17 +177,19 @@ typedef QS_FUNC(qs_func);
 typedef QS_STACK_FUNC(qs_stack_func);
 
 #define QS_ARGV(x) (qs_value_read   (exe, arg[x]))
-#define QS_ARGS(x) (qs_arg_string   (exe, arg[x]))
-#define QS_ARGF(x) (qs_arg_float    (exe, arg[x]))
+#define QS_ARGB(x) (qs_arg_boolean  (exe, arg[x]))
 #define QS_ARGI(x) (qs_arg_int      (exe, arg[x]))
+#define QS_ARGF(x) (qs_arg_float    (exe, arg[x]))
+#define QS_ARGS(x) (qs_arg_string   (exe, arg[x]))
 #define QS_ARGL(x) (qs_arg_list     (exe, arg[x]))
 #define QS_ARGO(x) (qs_arg_object   (exe, arg[x]))
 #define QS_ARG_ERROR(x,...) \
    (qs_func_error (exe, func->name, arg[x]->node, __VA_ARGS__))
 
-#define QS_RETS(x)    qs_return_string    (rlink->scheme, x)
-#define QS_RETF(x)    qs_return_float     (rlink->scheme, x)
+#define QS_RETB(x)    qs_return_boolean   (rlink->scheme, x)
 #define QS_RETI(x)    qs_return_int       (rlink->scheme, x)
+#define QS_RETF(x)    qs_return_float     (rlink->scheme, x)
+#define QS_RETS(x)    qs_return_string    (rlink->scheme, x)
 #define QS_RETC(x)    qs_return_char      (rlink->scheme, x)
 #define QS_RETL(x)    qs_return_list      (rlink->scheme, x)
 #define QS_RETU(x)    qs_return_undefined (rlink->scheme, x)

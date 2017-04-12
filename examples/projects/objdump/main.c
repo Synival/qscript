@@ -38,8 +38,8 @@ int main (void)
       for (p = o->property_list_front; p != NULL; p = p->next) {
          v = qs_property_value (p);
          type = qs_value_type (v);
-         printf ("   %-6s (%s)%*s = ", p->name, type,
-            6 - (int) strlen (type), "");
+         printf ("   %-9s (%s)%*s = ", p->name, type,
+            7 - (int) strlen (type), "");
          qs_print_value (v, 0);
          printf ("\n");
       }

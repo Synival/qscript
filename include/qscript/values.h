@@ -66,8 +66,8 @@ qs_list_t *qs_value_list (qs_value_t *value);
    qs_value_evaluate (x, y)
 
 /* internal, constant return values. */
-extern qs_value_t *QSV_ZERO;
-extern qs_value_t *QSV_ONE;
+extern qs_value_t *QSV_FALSE;
+extern qs_value_t *QSV_TRUE;
 extern qs_value_t *QSV_INVALID_TYPE;
 extern qs_value_t *QSV_NOT_VARIABLE;
 extern qs_value_t *QSV_NOT_PROPERTY;

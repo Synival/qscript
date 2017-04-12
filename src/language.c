@@ -46,7 +46,7 @@ static p_symbol_t static_qs_symbols[] = {
       qs_language_value, qs_language_value_f},
    {QSCRIPT_VFLAGS,     "vflags",   "/[~]*/", NULL},
    {QSCRIPT_PRIMITIVE,  "primitive",
-      "(<property_value> | <property> | <number> | <variable> | "
+      "(<boolean> | <property_value> | <property> | <number> | <variable> | "
        "<outer_list> | <outer_block> | <char> | <object> | <undefined> | "
        "<qstring>)"},
    {QSCRIPT_OUTER_BLOCK,"outer_block", "'{' <block> '}'",
@@ -59,6 +59,7 @@ static p_symbol_t static_qs_symbols[] = {
    {QSCRIPT_COMPLEX_STRING, "complexstr", "(/\"[^\"]*\"/ | /'[^']*'/)",
       qs_language_complex_string},
    {QSCRIPT_NUMBER,     "number",   "(<float> | <int>)"},
+   {QSCRIPT_BOOLEAN,    "boolean",  "(\"true\" | \"false\")"},
    {QSCRIPT_FLOAT,      "float",    "/[-+]?[0-9]+\\.[0-9]+/"},
    {QSCRIPT_INT,        "int",      "/[-+]?[0-9]+/"},
    {QSCRIPT_VARIABLE,   "variable",
@@ -220,8 +221,12 @@ P_FUNC (qs_language_value)
                   v->val_s = strdup ("<block>");
                   v->val_p = n->data;
                   break;
+               case QSCRIPT_BOOLEAN:
+                  qs_value_init (v, QS_VALUE_BOOLEAN,
+                     strcmp (n->first_child->contents, "true") == 0);
+                  break;
                default:
-                  p_error (vn, "Invalid primitive type '%d'.\n", n->type_id);
+                  p_error (vn, "invalid primitive type '%d'.\n", n->type_id);
             }
             break;
          }
@@ -242,7 +247,7 @@ P_FUNC (qs_language_value)
             break;
 
          default:
-            p_error (node, "Invalid value type '%d'.\n", vn->type_id);
+            p_error (node, "invalid value type '%d'.\n", vn->type_id);
       }
    }
 }

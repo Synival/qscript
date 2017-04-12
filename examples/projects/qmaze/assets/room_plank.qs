@@ -39,7 +39,7 @@ bar (-),
 "                                   THE END",
 "                              Thanks for playing!",
 bar (-),
-"Wait, that's it?  This has been a tech demo of QScript v0.0.1.  Thank you",
+"Wait, that's it?  This has been a tech demo of QScript v0.1.0.  Thank you",
 "for checking it out!  Maybe check out hints in the room before you go?"));
 }
 
