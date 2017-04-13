@@ -16,12 +16,12 @@ int main (int argc, char **argv)
    int file_count = 0, i;
    for (i = 1; i < argc; i++) {
       file_count++;
-      qs_parse_file (scheme, argv[i]);
+      qs_file_new (scheme, argv[i]);
    }
 
    /* if no files were matches, read from stdin. */
    if (file_count == 0)
-      qs_parse_fstream (scheme, "stdin", stdin);
+      qs_file_new_fstream (scheme, "stdin", stdin);
 
    /* finish linking compiled scripts. */
    qs_scheme_update (scheme);

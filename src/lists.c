@@ -17,16 +17,13 @@ qs_list_t *qs_list_new (qs_scheme_t *scheme, int size)
    int mem_size = (size > 0) ? size : 1;
 
    /* allocate our list. */
-   new = malloc (sizeof (qs_list_t));
-   memset (new, 0, sizeof (qs_list_t));
+   new = calloc (1, sizeof (qs_list_t));
    new->scheme = scheme;
    new->value_count = size;
 
    /* populate it with blank values. */
-   new->values      = malloc (sizeof (qs_value_t *) * mem_size);
-   new->values_data = malloc (sizeof (qs_value_t *) * mem_size);
-   memset (new->values,      0, sizeof (qs_value_t *) * mem_size);
-   memset (new->values_data, 0, sizeof (qs_value_t *) * mem_size);
+   new->values      = calloc (mem_size, sizeof (qs_value_t *));
+   new->values_data = calloc (mem_size, sizeof (qs_value_t *));
 
    /* return the new list. */
    return new;
@@ -45,8 +42,7 @@ int qs_list_internalize (qs_list_t *list)
          qs_value_free (list->values_data[i]);
 
       /* allocate our internal data... */
-      list->values_data[i] = malloc (sizeof (qs_value_t));
-      memset (list->values_data[i], 0, sizeof (qs_value_t));
+      list->values_data[i] = calloc (1, sizeof (qs_value_t));
       list->values_data[i]->scheme = list->scheme;
 
       /* ...and copy external data to it.  use that instead from now on. */

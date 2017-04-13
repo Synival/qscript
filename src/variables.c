@@ -73,8 +73,7 @@ qs_variable_t *qs_variable_get_scheme (qs_scheme_t *scheme, char *name)
 qs_variable_t *qs_variable_new_base (qs_scheme_t *scheme, char *name)
 {
    /* allocate a new variable of default type 'int'. */
-   qs_variable_t *new = malloc (sizeof (qs_variable_t));
-   memset (new, 0, sizeof (qs_variable_t));
+   qs_variable_t *new = calloc (1, sizeof (qs_variable_t));
    new->name = strdup (name);
    new->value.link_id  = QS_LINK_VARIABLE;
    new->value.link     = new;

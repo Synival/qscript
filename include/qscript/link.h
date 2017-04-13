@@ -79,4 +79,41 @@
       (list)->type##_count--; \
    } while (0)
 
+#define QS_LINK_FRONT_EXTRA(list, obj, type, extra_type) \
+   do { \
+      obj->extra_type##_prev = NULL; \
+      obj->extra_type##_next = (list)->type##_list_front; \
+      (list)->type##_list_front = obj; \
+      if (obj->extra_type##_next) \
+         obj->extra_type##_next->extra_type##_prev = obj; \
+      else \
+         (list)->type##_list_back = obj; \
+      (list)->type##_count++; \
+   } while (0)
+
+#define QS_LINK_BACK_EXTRA(list, obj, type, extra_type) \
+   do { \
+      obj->extra_type##_prev = (list)->type##_list_back; \
+      obj->extra_type##_next = NULL; \
+      (list)->type##_list_back = obj; \
+      if (obj->extra_type##_prev) \
+         obj->extra_type##_prev->extra_type##_next = obj; \
+      else \
+         (list)->type##_list_front = obj; \
+      (list)->type##_count++; \
+   } while (0)
+
+#define QS_UNLINK_EXTRA(list, obj, type, extra_type) \
+   do { \
+      if (obj->extra_type##_prev) \
+         obj->extra_type##_prev->extra_type##_next = obj->extra_type##_next; \
+      else \
+         (list)->type##_list_front = obj->extra_type##_next; \
+      if (obj->extra_type##_next) \
+         obj->extra_type##_next->extra_type##_prev = obj->extra_type##_prev; \
+      else (list)->type##_list_back \
+         = obj->extra_type##_prev; \
+      (list)->type##_count--; \
+   } while (0)
+
 #endif

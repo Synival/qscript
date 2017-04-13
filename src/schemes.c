@@ -7,6 +7,7 @@
 #include <string.h>
 
 #include "qscript/execute.h"
+#include "qscript/files.h"
 #include "qscript/funcs.h"
 #include "qscript/language.h"
 #include "qscript/lists.h"
@@ -26,9 +27,7 @@ qs_scheme_t *qs_scheme_new (void)
    qs_scheme_t *new;
 
    /* allocate our new scheme. */
-   new = malloc (sizeof (qs_scheme_t));
-   memset (new, 0, sizeof (qs_scheme_t));
-   new->node_list = calloc (1, sizeof (p_node_t *));
+   new = calloc (1, sizeof (qs_scheme_t));
 
    /* attach our standard function set. */
    qs_scheme_funcs (new, qs_func_list_standard);
@@ -82,8 +81,6 @@ qs_func_t *qs_scheme_get_func (qs_scheme_t *scheme, char *name)
 
 int qs_scheme_free (qs_scheme_t *scheme)
 {
-   int i;
-
    /* free objects. */
    while (scheme->object_list_front)
       qs_object_free (scheme->object_list_front);
@@ -96,10 +93,9 @@ int qs_scheme_free (qs_scheme_t *scheme)
    while (scheme->variable_list_front)
       qs_variable_free (scheme->variable_list_front);
 
-   /* free all nodes. */
-   for (i = 0; i < scheme->node_count; i++)
-      p_node_free (scheme->node_list[i]);
-   free (scheme->node_list);
+   /* free all files. */
+   while (scheme->file_list_front)
+      qs_file_free (scheme->file_list_front);
 
    /* deallocate our heap. */
    if (scheme->stack_values)
@@ -165,6 +161,9 @@ int qs_scheme_update (qs_scheme_t *scheme)
    /* return the number of resources instantiated. */
    return count;
 }
+
+qs_scheme_t *qs_scheme_from_node (p_node_t *node)
+   { return ((qs_file_t *) node->parse_data)->scheme; }
 
 QS_STACK_FUNC (qs_scheme_sf_values)
    { return qs_value_free (data); }

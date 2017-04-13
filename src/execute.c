@@ -23,7 +23,6 @@ qs_execute_t *qs_execute_push (qs_execute_type_e type, qs_rlink_t *rlink,
    qs_execute_t *exe, qs_action_t *action, char *name, qs_flags_t flags,
    qs_list_t *list)
 {
-
    /* allocate and initialize our new execution state. */
    qs_execute_t *new = qs_stack_push (rlink->scheme->stack_executes,
       qs_execute_sf);

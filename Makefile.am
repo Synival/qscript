@@ -8,6 +8,7 @@ libqscript_la_CFLAGS = \
 libqscript_la_SOURCES = \
    src/actions.c \
    src/execute.c \
+   src/files.c \
    src/funcs.c \
    src/ids.c \
    src/language.c \
@@ -33,6 +34,7 @@ otherinclude_HEADERS = \
    include/qscript/defs.h \
    include/qscript/actions.h \
    include/qscript/execute.h \
+   include/qscript/files.h \
    include/qscript/funcs.h \
    include/qscript/ids.h \
    include/qscript/language.h \

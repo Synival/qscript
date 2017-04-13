@@ -30,22 +30,23 @@ struct _p_node_t {
    p_node_t *parent, *first_child, *last_child;
    p_node_t *prev, *next;
    int child_count, depth;
+   char *file;
    int row, col, pos;
 };
 
 /* function declarations. */
 int p_language_new (p_symbol_t *symbol_list);
 p_node_t *p_node_new (p_symbol_t *symbols, p_node_t **parent, mpc_ast_t *ast,
-                      char *tag, char *contents, void *data);
+   char *file, char *tag, char *contents, void *data);
 int p_node_free (p_node_t *node);
 int p_node_print (p_node_t *node);
 int p_node_print_recurse (p_node_t *node, int indent);
-p_node_t *p_node_build (p_symbol_t *symbols, mpc_ast_t *ast, char *top_symbol,
-                        void *data);
+p_node_t *p_node_build (p_symbol_t *symbols, mpc_ast_t *ast, char *file,
+   char *top_symbol, void *data);
 int p_node_build_recurse (p_symbol_t *symbols, p_node_t **parent,
-                          mpc_ast_t *ast, char *tag, void *data);
-p_node_t *p_parse_content (char *file, char *content, p_symbol_t *symbols,
-                           p_symbol_t *head, void *data);
+   mpc_ast_t *ast, char *file, char *tag, void *data);
+p_node_t *p_parse_content (char *filename, char *content, p_symbol_t *symbols,
+   p_symbol_t *head, void *data);
 int p_node_process (p_node_t *node);
 int p_error (p_node_t *node, char *format, ...);
 

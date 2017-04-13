@@ -56,7 +56,7 @@ int p_language_new (p_symbol_t *symbol_list)
 }
 
 p_node_t *p_node_new (p_symbol_t *symbols, p_node_t **parent, mpc_ast_t *ast,
-   char *tag, char *contents, void *data)
+   char *file, char *tag, char *contents, void *data)
 {
    p_node_t *new;
    p_symbol_t *s;
@@ -69,15 +69,14 @@ p_node_t *p_node_new (p_symbol_t *symbols, p_node_t **parent, mpc_ast_t *ast,
       s = NULL;
 
    /* allocate and initialize our new stack type. */
-   new = malloc (sizeof (p_node_t));
-   memset (new, 0, sizeof (p_node_t));
-   new->symbol      = s;
-   new->tag         = tag      ? strdup (tag)      : NULL;
-   new->contents    = contents ? strdup (contents) : NULL;
-   new->parse_data  = data;
-   new->row         = ast->state.row + 1;
-   new->col         = ast->state.col + 1;
-   new->pos         = ast->state.pos;
+   new = calloc (1, sizeof (p_node_t));
+   new->symbol     = s;
+   new->tag        = tag      ? strdup (tag)      : NULL;
+   new->contents   = contents ? strdup (contents) : NULL;
+   new->parse_data = data;
+   new->row        = ast->state.row + 1;
+   new->col        = ast->state.col + 1;
+   new->pos        = ast->state.pos;
 
    /* record type. */
    if (new->symbol)
@@ -90,6 +89,7 @@ p_node_t *p_node_new (p_symbol_t *symbols, p_node_t **parent, mpc_ast_t *ast,
       *parent = new;
       new->prev = NULL;
       new->next = NULL;
+      new->file = file ? strdup (file) : NULL;
    }
    else {
       new->parent->child_count++;
@@ -101,6 +101,7 @@ p_node_t *p_node_new (p_symbol_t *symbols, p_node_t **parent, mpc_ast_t *ast,
          new->parent->first_child = new;
       new->parent->last_child = new;
       new->depth = new->parent->depth + 1;
+      new->file = new->parent->file;
    }
 
    /* return success. */
@@ -124,14 +125,15 @@ int p_node_free (p_node_t *node)
       node->symbol->free_func (node);
    else if (node->data)
       free (node->data);
+   if (node->parent == NULL && node->file)
+      free (node->file);
 
    /* remove from the list. */
-   if (node->prev) node->prev->next                 = node->next;
+   if      (node->prev)   node->prev->next          = node->next;
    else if (node->parent) node->parent->first_child = node->next;
-   if (node->next) node->next->prev                 = node->prev;
+   if      (node->next)   node->next->prev          = node->prev;
    else if (node->parent) node->parent->last_child  = node->prev;
-   if (node->parent)
-      node->parent->child_count--;
+   if      (node->parent) node->parent->child_count--;
 
    /* free the node itself. */
    free (node);
@@ -165,17 +167,17 @@ int p_node_print_recurse (p_node_t *node, int indent)
    return count;
 }
 
-p_node_t *p_node_build (p_symbol_t *symbols, mpc_ast_t *ast, char *top_symbol,
-                        void *data)
+p_node_t *p_node_build (p_symbol_t *symbols, mpc_ast_t *ast, char *file,
+   char *top_symbol, void *data)
 {
    p_node_t *head = NULL;
-   p_node_new (symbols, &head, ast, top_symbol, NULL, data);
-   p_node_build_recurse (symbols, &head, ast, NULL, data);
+   p_node_new (symbols, &head, ast, file, top_symbol, NULL, data);
+   p_node_build_recurse (symbols, &head, ast, file, NULL, data);
    return head;
 }
 
 int p_node_build_recurse (p_symbol_t *symbols, p_node_t **parent,
-                          mpc_ast_t *ast, char *tag, void *data)
+   mpc_ast_t *ast, char *file, char *tag, void *data)
 {
    p_node_t *node = NULL;
    char tag_buf[256], *next;
@@ -191,19 +193,19 @@ int p_node_build_recurse (p_symbol_t *symbols, p_node_t **parent,
    if ((next = strchr (tag_buf, '|'))) {
       *next = '\0';
       next++;
-      node = p_node_new (symbols, parent, ast, tag_buf, NULL, data);
-      result += p_node_build_recurse (symbols, &node, ast, next, data);
+      node = p_node_new (symbols, parent, ast, file, tag_buf, NULL, data);
+      result += p_node_build_recurse (symbols, &node, ast, file, next, data);
       result++;
    }
    /* no child symbols in tag; are there actual child symbols? */
    else if (ast->children_num > 0) {
       for (i = 0; i < ast->children_num; ++i)
          result += p_node_build_recurse (symbols, parent, ast->children[i],
-                                         NULL, data);
+            file, NULL, data);
    }
    /* no children. simply create the node with its contents. */
    else {
-      p_node_new (symbols, parent, ast, tag_buf, ast->contents, data);
+      p_node_new (symbols, parent, ast, file, tag_buf, ast->contents, data);
       result++;
    }
 
@@ -211,15 +213,15 @@ int p_node_build_recurse (p_symbol_t *symbols, p_node_t **parent,
    return result;
 }
 
-p_node_t *p_parse_content (char *file, char *content, p_symbol_t *symbols,
-                           p_symbol_t *head, void *data)
+p_node_t *p_parse_content (char *filename, char *content, p_symbol_t *symbols,
+   p_symbol_t *head, void *data)
 {
    p_node_t *new = NULL;
    mpc_result_t r;
 
    /* attempt to parse. */
-   if (mpc_parse (file, content, head->parser, &r)) {
-      new = p_node_build (symbols, r.output, head->tag, data);
+   if (mpc_parse (filename, content, head->parser, &r)) {
+      new = p_node_build (symbols, r.output, filename, head->tag, data);
       mpc_ast_delete (r.output);
    }
    /* print errors if mpc_parse didn't work. */
@@ -271,7 +273,7 @@ int p_error (p_node_t *node, char *format, ...)
    /* print! */
    fflush (stdout);
    if (node)
-      fprintf (stderr, "%d,%d: %s", node->row, node->col, buf);
+      fprintf (stderr, "%s (%d,%d): %s", node->file, node->row, node->col, buf);
    else
       fprintf (stderr, "%s", buf);
    fflush (stderr);

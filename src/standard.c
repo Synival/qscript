@@ -1031,8 +1031,7 @@ QS_FUNC (qsf_run)
    l->values = arg + 1;
 
    /* create a temporary action representing this function call. */
-   qs_action_t *a = malloc (sizeof (qs_action_t));
-   memset (a, 0, sizeof (qs_action_t));
+   qs_action_t *a = calloc (1, sizeof (qs_action_t));
    a->action_id = QS_ACTION_CALL;
    a->data_p = l;
    a->parent_value = action->parent_value;
@@ -1361,8 +1360,7 @@ QS_FUNC (qsf_tokenize)
       if (str[i] == ' ' || str[i] == '\n' || str[i] == '\0') {
          if (ws == 0) {
             /* add a new value to the list. */
-            qs_value_t *lval = malloc (sizeof (qs_value_t));
-            memset (lval, 0, sizeof (qs_value_t));
+            qs_value_t *lval = calloc (1, sizeof (qs_value_t));
             list->values[count] = lval;
             list->values_data[count] = lval;
             lval->scheme = exe->scheme;

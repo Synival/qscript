@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "qscript/files.h"
 #include "qscript/ids.h"
 #include "qscript/language.h"
 #include "qscript/link.h"
@@ -16,21 +17,22 @@
 
 #include "qscript/resources.h"
 
-qs_resource_t *qs_resource_new (qs_scheme_t *scheme, char *name,
+qs_resource_t *qs_resource_new (qs_file_t *file, char *name,
                                 qs_list_t *block, qs_flags_t flags)
 {
    qs_resource_t *new;
 
    /* allocate our reosurce and assign data. */
-   new = malloc (sizeof (qs_resource_t));
-   memset (new, 0, sizeof (qs_resource_t));
-   new->scheme = scheme;
+   new = calloc (1, sizeof (qs_resource_t));
+   new->scheme = file->scheme;
+   new->file   = file;
    new->name   = strdup (name);
    new->block  = block;
    new->flags  = flags;
 
-   /* assign an id and link. */
-   QS_LINK_BACK (scheme, new, resource);
+   /* assign an id and link to both the scheme and the file. */
+   QS_LINK_BACK       (file->scheme, new, resource);
+   QS_LINK_BACK_EXTRA (file,         new, resource, file);
 
    /* return our new resource. */
    return new;
@@ -77,8 +79,9 @@ int qs_resource_free (qs_resource_t *resource)
    if (resource->node)
       resource->node->data = NULL;
 
-   /* unlink from the scheme's resource list. */
-   QS_UNLINK (resource->scheme, resource, resource);
+   /* unlink from the scheme and file resource list. */
+   QS_UNLINK       (resource->scheme, resource, resource);
+   QS_UNLINK_EXTRA (resource->file,   resource, resource, file);
 
    /* free our own memory. */
    if (resource->name)

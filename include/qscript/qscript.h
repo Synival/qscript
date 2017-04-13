@@ -6,6 +6,7 @@
 
 #include "actions.h"
 #include "execute.h"
+#include "files.h"
 #include "funcs.h"
 #include "ids.h"
 #include "language.h"

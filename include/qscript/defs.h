@@ -166,6 +166,7 @@ typedef struct _qs_action_t    qs_action_t;
 typedef struct _qs_stack_t     qs_stack_t;
 typedef struct _qs_property_t  qs_property_t;
 typedef struct _qs_modify_t    qs_modify_t;
+typedef struct _qs_file_t      qs_file_t;
 
 /* function types. */
 #define QS_FUNC(x) qs_value_t *x (qs_object_t *object, qs_rlink_t *rlink, \

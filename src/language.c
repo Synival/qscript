@@ -2,14 +2,14 @@
  * ----------
  * processing of the qscript language into resources. */
 
-#include <dirent.h>
-#include <fcntl.h>
-#include <limits.h>
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
+//#include <dirent.h>
+//#include <fcntl.h>
+//#include <limits.h>
+//#include <stdio.h>
+//#include <string.h>
+//#include <unistd.h>
+//#include <sys/types.h>
+//#include <sys/stat.h>
 
 #include "qscript/actions.h"
 #include "qscript/link.h"
@@ -28,7 +28,7 @@
    "[a-zA-Z0-9_]+"
 
 /* list of all symbols for qscripts. */
-static p_symbol_t static_qs_symbols[] = {
+p_symbol_t global_qs_symbols[] = {
    {QSCRIPT_ROOT,       "qscript",  "/^/ (<resource> | <comment>)* /$/"},
    {QSCRIPT_COMMENT,    "comment",  "'#' /[^\\n]*/"},
    {QSCRIPT_RESOURCE,   "resource", "(<rflags> <rname>) <outer_block>",
@@ -133,9 +133,8 @@ P_FUNC (qs_language_value)
    qs_action_t *a = NULL;
 
    /* link an empty value. */
-   v = malloc (sizeof (qs_value_t));
-   memset (v, 0, sizeof (qs_value_t));
-   v->scheme = node->parse_data;
+   v = calloc (1, sizeof (qs_value_t));
+   v->scheme = qs_scheme_from_node (node);
    v->node = node;
    v->link_id = QS_LINK_LITERAL;
    node->data = v;
@@ -272,9 +271,8 @@ P_FUNC (qs_language_outer_list)
     *        perhaps there's a cleaner way? */
    else {
       /* allocate an empty list and link it to this node. */
-      qs_list_t *l = malloc (sizeof (qs_list_t));
-      memset (l, 0, sizeof (qs_list_t));
-      l->scheme = node->parse_data;
+      qs_list_t *l = calloc (1, sizeof (qs_list_t));
+      l->scheme = qs_scheme_from_node (node);
       l->values = malloc (sizeof (qs_value_t *));
       l->node = node;
       node->data = l;
@@ -295,9 +293,8 @@ P_FUNC (qs_language_list)
    int index = 0;
 
    /* create an empty list. */
-   qs_list_t *l = malloc (sizeof (qs_list_t));
-   memset (l, 0, sizeof (qs_list_t));
-   l->scheme = node->parse_data;
+   qs_list_t *l = calloc (1, sizeof (qs_list_t));
+   l->scheme = qs_scheme_from_node (node);
    l->node = node;
    node->data = l;
 
@@ -330,8 +327,7 @@ P_FUNC (qs_language_list_f)
 P_FUNC (qs_language_action)
 {
    /* allocate a simple action type. */
-   qs_action_t *a = malloc (sizeof (qs_action_t));
-   memset (a, 0, sizeof (qs_action_t));
+   qs_action_t *a = calloc (1, sizeof (qs_action_t));
    a->node = node;
    node->data = a;
 
@@ -410,7 +406,7 @@ P_FUNC (qs_language_copy_contents)
    node->first_child->contents = NULL;
 }
 
-int qs_parse_init (void)
+int qs_language_init (void)
 {
    /* create our language if we haven't already.
     * if it fails, return -1 from now on. */
@@ -419,152 +415,9 @@ int qs_parse_init (void)
       return -1;
    else if (language_built == 1)
       return 0;
-   if (!p_language_new (static_qs_symbols))
+   if (!p_language_new (global_qs_symbols))
       language_built = -1;
    else
       language_built = 1;
    return language_built;
-}
-
-p_node_t *qs_parse_file (qs_scheme_t *scheme, char *filename)
-{
-   /* attempt to open the file. */
-   int fd = -1;
-   FILE *file = NULL;
-
-#define PF_BAIL_IF(cond, ...) \
-   do { \
-      errno = 0; \
-      if (cond) { \
-         p_error (NULL, __VA_ARGS__); \
-         errno = 0; \
-         if (file) \
-            fclose (file); \
-         else if (fd < 0) { \
-            close (fd); \
-         } \
-         return NULL; \
-      } \
-   } while (0)
-
-   PF_BAIL_IF ((fd = open (filename, O_RDONLY)) == -1,
-      "Couldn't open file '%s' for reading: %s\n", filename, strerror (errno));
-   struct stat sbuf;
-   fstat (fd, &sbuf);
-   PF_BAIL_IF (!S_ISREG (sbuf.st_mode),
-      "File '%s' is not a regular file.\n", filename);
-   PF_BAIL_IF ((file = fdopen (fd, "r")) == NULL,
-      "Couldn't convert fd -> file for '%s': %s\n", filename, strerror (errno));
-
-   /* get file length. */
-   PF_BAIL_IF (fseek (file, 0, SEEK_END) != 0,
-      "Couldn't seek to end of file '%s': %s\n", filename, strerror (errno));
-   long len = ftell (file);
-   PF_BAIL_IF (len == -1l || len == LONG_MAX,
-      "Couldn't get content length for '%s': %s\n", filename, strerror (errno));
-   fseek (file, 0, SEEK_SET);
-
-   /* get file contents. */
-   char *contents = malloc (sizeof (char) * (len + 1));
-   size_t len_read = fread (contents, sizeof (char), len, file);
-   PF_BAIL_IF (ferror (file) != 0,
-      "Error reading from '%s'.\n", filename);
-   contents[len] = '\0';
-   fclose (file);
-
-   /* did we read the right number of bytes? */ 
-   if (len_read != len) {
-      free (contents);
-      return NULL;
-   }
-
-   /* parse contents, free allocated memory, and return our nodes. */
-   p_node_t *nodes = qs_parse_content (scheme, filename, contents);
-   free (contents);
-   return nodes;
-}
-
-int qs_parse_directory (qs_scheme_t *scheme, char *directory, int recurse)
-{
-   int count = 0;
-   DIR *d;
-   struct dirent *dir;
-
-   /* attempt to open the directory. */
-   if ((d = opendir (directory)) == NULL) {
-      p_error (NULL, "Couldn't open directory '%s': %s\n", directory,
-         strerror (errno));
-      return -1;
-   }
-
-   /* look at children. */
-   struct stat stat_buf;
-   char fbuf[1024];
-   while ((dir = readdir (d)) != NULL) {
-      if (dir->d_name[0] == '.')
-         continue;
-      snprintf (fbuf, sizeof (fbuf), "%s/%s", directory, dir->d_name);
-      if (stat (fbuf, &stat_buf) != 0)
-         continue;
-      if (S_ISDIR (stat_buf.st_mode)) {
-         if (recurse)
-            count += qs_parse_directory (scheme, fbuf, recurse);
-         continue;
-      }
-      if (S_ISREG (stat_buf.st_mode)) {
-         char *ext = strrchr (dir->d_name, '.');
-         if (ext != NULL && strcasecmp (ext, ".qs") == 0) {
-            qs_parse_file (scheme, fbuf);
-            count++;
-         }
-         continue;
-      }
-   }
-
-   /* return the number of directories processed. */
-   return count;
-}
-
-p_node_t *qs_parse_content (qs_scheme_t *scheme, char *file, char *content)
-{
-   /* initialize our language if we haven't already. */
-   if (qs_parse_init () == -1)
-      return NULL;
-
-   /* parse the results.  return an error if it didn't work. */
-   p_node_t *p = p_parse_content (file, content, static_qs_symbols,
-                                  static_qs_symbols, scheme);
-   if (p == NULL)
-      return NULL;
-
-   /* add to our list of root-level nodes. */
-   scheme->node_count++;
-   scheme->node_list = realloc (scheme->node_list, sizeof (p_node_t *) *
-                                scheme->node_count);
-   scheme->node_list[scheme->node_count - 1] = p;
-   return p;
-}
-
-p_node_t *qs_parse_fstream (qs_scheme_t *scheme, char *filename, FILE *file)
-{
-   /* get all of our content. */
-   char *content = strdup ("");
-   size_t len = 0, total = 1;
-   char buf[256];
-   while (fgets (buf, sizeof (buf), file)) {
-      len = strlen (buf);
-      total += len;
-
-      char *old = content;
-      if ((content = realloc (content, total)) == NULL) {
-         perror ("Couldn't realloc() content");
-         free (old);
-         exit (errno);
-      }
-      strcat (content, buf);
-   }
-
-   /* load the content. */
-   return qs_parse_content (scheme, filename, content);
-   free (content);
 }

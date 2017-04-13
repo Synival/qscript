@@ -68,8 +68,7 @@ qs_object_t *qs_object_new_base (qs_scheme_t *scheme, char *name)
    qs_object_t *new;
 
    /* allocate our new object. */
-   new = malloc (sizeof (qs_object_t));
-   memset (new, 0, sizeof (qs_object_t));
+   new = calloc (1, sizeof (qs_object_t));
    new->name = strdup (name);
    new->scheme = scheme;
    new->flags |= QS_OBJECT_GLOBAL;

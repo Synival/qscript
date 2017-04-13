@@ -84,8 +84,7 @@ int qs_action_parameters (qs_execute_t *exe, qs_action_t *action,
    free (vals);
 
    /* create a new list. */
-   *out = malloc (sizeof (qs_list_t));
-   memset (*out, 0, sizeof (qs_list_t));
+   *out = calloc (1, sizeof (qs_list_t));
    (*out)->scheme      = exe->scheme;
    (*out)->value_count = new_args;
    (*out)->values      = new_arg;
@@ -116,7 +115,7 @@ qs_value_t *qs_action_run (qs_execute_t *exe, qs_value_t *val,
 qs_value_t *qs_action_call (qs_execute_t *exe, qs_value_t *val,
    qs_action_t *action)
 {
-   qs_scheme_t *scheme = action->node->parse_data;
+   qs_scheme_t *scheme = qs_scheme_from_node (action->node);
    qs_func_t *func;
    qs_resource_t *r;
    qs_execute_t *e;

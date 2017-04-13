@@ -49,8 +49,7 @@ qs_rlink_t *qs_rlink_inject_at (qs_object_t *obj, qs_resource_t *resource,
       return NULL;
 
    /* allocate an empty rlink. */
-   new = malloc (sizeof (qs_rlink_t));
-   memset (new, 0, sizeof (qs_rlink_t));
+   new = calloc (1, sizeof (qs_rlink_t));
    new->resource = resource;
    new->object   = obj;
    new->scheme   = resource->scheme;

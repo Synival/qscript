@@ -19,8 +19,7 @@
 qs_property_t *qs_property_new (qs_object_t *obj, char *name)
 {
    /* create a new property. */
-   qs_property_t *new = malloc (sizeof (qs_property_t));
-   memset (new, 0, sizeof (qs_property_t));
+   qs_property_t *new = calloc (1, sizeof (qs_property_t));
    new->name = strdup (name);
 
    /* set a default uninitialized value. */

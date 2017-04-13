@@ -20,9 +20,10 @@ struct _qs_scheme_t {
    qs_execute_t *exe_list_front, *exe_list_back;
    int exe_count;
 
-   /* root nodes for scripts applied. */
-   p_node_t **node_list;
-   int node_count;
+   /* files. */
+   qs_id_manager_t file_ids;
+   qs_file_t *file_list_front, *file_list_back;
+   int file_count;
 
    /* resources. */
    qs_id_manager_t resource_ids;
@@ -47,6 +48,7 @@ int qs_scheme_free (qs_scheme_t *scheme);
 qs_value_t *qs_scheme_heap_value (qs_scheme_t *scheme);
 int qs_scheme_cleanup (qs_scheme_t *scheme);
 int qs_scheme_update (qs_scheme_t *scheme);
+qs_scheme_t *qs_scheme_from_node (p_node_t *node);
 
 /* stack free functions. */
 QS_STACK_FUNC (qs_scheme_sf_values);

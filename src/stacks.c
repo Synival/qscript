@@ -10,8 +10,7 @@
 qs_stack_t *qs_stack_new_real (size_t type_size)
 {
    /* allocate our stack. */
-   qs_stack_t *new = malloc (sizeof (qs_stack_t));
-   memset (new, 0, sizeof (qs_stack_t));
+   qs_stack_t *new = calloc (1, sizeof (qs_stack_t));
    new->type_size = type_size;
    new->size       = 1;
    new->count      = 0;
