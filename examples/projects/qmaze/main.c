@@ -68,10 +68,8 @@ int init_script_load (const char *fpath, const struct stat *sb, int tflag,
       return FTW_CONTINUE;
 
    /* process the fail.  bail if it didn't work. */
-   char *mname = strdup (name);
-   p_node_t *n = qs_parse_file (g_scheme, mname);
-   free (mname);
-   if (n == NULL)
+   qs_file_t *f = qs_file_new (g_scheme, (char *) name);
+   if (f == NULL)
       return FTW_STOP;
 
    /* we did it! keep going. */

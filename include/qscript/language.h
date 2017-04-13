@@ -8,7 +8,7 @@
 #include <stdio.h>
 
 #include "defs.h"
-#include "parser.h"
+#include "parser_types.h"
 
 P_FUNC (qs_language_resource);
 P_FUNC (qs_language_resource_f);
@@ -26,8 +26,6 @@ P_FUNC (qs_language_action_f);
 
 /* various kinds of processing functions. */
 int qs_language_init (void);
-
-/* evil global variables. */
-extern p_symbol_t global_qs_symbols[];
+p_symbol_t *qs_language_symbols (void);
 
 #endif

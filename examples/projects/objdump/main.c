@@ -11,7 +11,7 @@ int main (void)
 {
    /* create our scheme, load its resources, and update changes. */
    qs_scheme_t *scheme = qs_scheme_new ();
-   qs_parse_directory (scheme, ".", 1);
+   qs_file_new_directory (scheme, ".", 1);
    qs_scheme_update (scheme);
 
    /* instantiate our player and add rlinks to its resource chain. */

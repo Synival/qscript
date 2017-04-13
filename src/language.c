@@ -28,7 +28,7 @@
    "[a-zA-Z0-9_]+"
 
 /* list of all symbols for qscripts. */
-p_symbol_t global_qs_symbols[] = {
+static p_symbol_t static_qs_language_symbols[] = {
    {QSCRIPT_ROOT,       "qscript",  "/^/ (<resource> | <comment>)* /$/"},
    {QSCRIPT_COMMENT,    "comment",  "'#' /[^\\n]*/"},
    {QSCRIPT_RESOURCE,   "resource", "(<rflags> <rname>) <outer_block>",
@@ -415,9 +415,14 @@ int qs_language_init (void)
       return -1;
    else if (language_built == 1)
       return 0;
-   if (!p_language_new (global_qs_symbols))
+   if (!p_language_new (qs_language_symbols ()))
       language_built = -1;
    else
       language_built = 1;
    return language_built;
+}
+
+p_symbol_t *qs_language_symbols (void)
+{
+   return static_qs_language_symbols;
 }

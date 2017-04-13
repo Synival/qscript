@@ -29,8 +29,8 @@ qs_file_t *qs_file_new_content (qs_scheme_t *scheme, char *name, char *content)
    new->name = strdup (name);
 
    /* parse the results.  bail out here if it didn't work. */
-   new->node = p_parse_content (name, content, global_qs_symbols,
-                                global_qs_symbols, new);
+   p_symbol_t *symbols = qs_language_symbols ();
+   new->node = p_parse_content (name, content, symbols, symbols, new);
    if (new->node == NULL) {
       free (new->name);
       free (new);
