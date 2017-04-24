@@ -7,6 +7,8 @@
 
 #include "defs.h"
 
+#include <stdio.h>
+
 /* structure for each file loaded in a scheme. */
 struct _qs_file_t {
    /* file info. */
