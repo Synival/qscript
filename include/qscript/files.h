@@ -29,5 +29,6 @@ qs_file_t *qs_file_new (qs_scheme_t *scheme, char *filename);
 int qs_file_new_directory (qs_scheme_t *scheme, char *directory, int recurse);
 qs_file_t *qs_file_new_fstream (qs_scheme_t *scheme, char *name, FILE *file);
 int qs_file_free (qs_file_t *file);
+qs_file_t *qs_file_get (qs_scheme_t *scheme, char *name);
 
 #endif

@@ -24,6 +24,11 @@ qs_file_t *qs_file_new_content (qs_scheme_t *scheme, char *name, char *content)
    if (qs_language_init () == -1)
       return NULL;
 
+   /* if there are files with this name already, deallocate them. */
+   qs_file_t *old;
+   while ((old = qs_file_get (scheme, name)) != NULL)
+      qs_file_free (old);
+
    qs_file_t *new = calloc (1, sizeof (qs_file_t));
    new->scheme = scheme;
    new->name = strdup (name);
@@ -186,4 +191,13 @@ int qs_file_free (qs_file_t *file)
    /* free structure itself and return success. */
    free (file);
    return 1;
+}
+
+qs_file_t *qs_file_get (qs_scheme_t *scheme, char *name)
+{
+   qs_file_t *f;
+   for (f = scheme->file_list_front; f != NULL; f = f->next)
+      if (strcmp (f->name, name) == 0)
+         return f;
+   return NULL;
 }
