@@ -8,6 +8,7 @@
 #include "execute.h"
 #include "files.h"
 #include "funcs.h"
+#include "hooks.h"
 #include "ids.h"
 #include "language.h"
 #include "link.h"
