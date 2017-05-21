@@ -38,6 +38,11 @@ struct _qs_scheme_t {
    /* variables. */
    qs_variable_t *variable_list_front, *variable_list_back;
    int variable_count;
+
+   /* function hooks. */
+   qs_id_manager_t hook_ids;
+   qs_hook_t *hook_list_front, *hook_list_back;
+   int hook_count;
 };
 
 /* function declarations. */

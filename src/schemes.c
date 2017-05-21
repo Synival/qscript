@@ -9,6 +9,7 @@
 #include "qscript/execute.h"
 #include "qscript/files.h"
 #include "qscript/funcs.h"
+#include "qscript/hooks.h"
 #include "qscript/language.h"
 #include "qscript/lists.h"
 #include "qscript/objects.h"
@@ -81,6 +82,10 @@ qs_func_t *qs_scheme_get_func (qs_scheme_t *scheme, char *name)
 
 int qs_scheme_free (qs_scheme_t *scheme)
 {
+   /* free hooks. */
+   while (scheme->hook_list_front)
+      qs_hook_free (scheme->hook_list_front);
+
    /* free objects. */
    while (scheme->object_list_front)
       qs_object_free (scheme->object_list_front);

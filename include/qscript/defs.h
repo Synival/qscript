@@ -9,6 +9,7 @@
    #include "qs_config.h"
 #endif
 
+#include <stdio.h>
 #include <stdint.h>
 
 #include "parser_types.h"
@@ -120,6 +121,11 @@ typedef enum _qs_value_link_e {
    QS_LINK_LAST      = 4
 } qs_value_link_e;
 
+/* hooks called by specific events. */
+#define QS_HOOK_OBJECT_NEW       0x01
+#define QS_HOOK_OBJECT_UPDATE    0x02
+#define QS_HOOK_OBJECT_FREE      0x04
+
 /* rlink states. */
 #define QS_RLINK_ON              0x01
 
@@ -150,6 +156,7 @@ typedef enum _qs_value_link_e {
 /* simple types. */
 typedef uint32_t qs_id_t;
 typedef uint32_t qs_flags_t;
+typedef uint32_t qs_hook_signal_t;
 typedef struct _qs_id_manager_t qs_id_manager_t;
 
 /* typedefs. */
@@ -167,6 +174,7 @@ typedef struct _qs_stack_t     qs_stack_t;
 typedef struct _qs_property_t  qs_property_t;
 typedef struct _qs_modify_t    qs_modify_t;
 typedef struct _qs_file_t      qs_file_t;
+typedef struct _qs_hook_t      qs_hook_t;
 
 /* function types. */
 #define QS_FUNC(x) qs_value_t *x (qs_object_t *object, qs_rlink_t *rlink, \
@@ -176,6 +184,10 @@ typedef QS_FUNC(qs_func);
 
 #define QS_STACK_FUNC(x) int x (qs_stack_t *stack, void *data)
 typedef QS_STACK_FUNC(qs_stack_func);
+
+#define QS_HOOK_FUNC(x) int *x (qs_scheme_t *scheme, qs_hook_t *hook, \
+   qs_hook_signal_t signal, void *data, size_t data_size)
+typedef QS_HOOK_FUNC(qs_hook_func);
 
 #define QS_ARGV(x) (qs_value_read   (exe, arg[x]))
 #define QS_ARGB(x) (qs_arg_boolean  (exe, arg[x]))

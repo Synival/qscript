@@ -10,6 +10,7 @@ libqscript_la_SOURCES = \
    src/execute.c \
    src/files.c \
    src/funcs.c \
+   src/hooks.c \
    src/ids.c \
    src/language.c \
    src/lists.c \
@@ -36,6 +37,7 @@ otherinclude_HEADERS = \
    include/qscript/execute.h \
    include/qscript/files.h \
    include/qscript/funcs.h \
+   include/qscript/hooks.h \
    include/qscript/ids.h \
    include/qscript/language.h \
    include/qscript/link.h \

@@ -93,7 +93,8 @@ qs_rlink_t *qs_rlink_inject_at (qs_object_t *obj, qs_resource_t *resource,
    return new;
 }
 
-qs_value_t *qs_rlink_wind (qs_rlink_t *rlink) {
+qs_value_t *qs_rlink_wind (qs_rlink_t *rlink)
+{
    return (rlink->parent ? QSV_UNDEFINED : qs_rlink_wind_from (rlink, NULL));
 }
 

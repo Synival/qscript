@@ -7,6 +7,7 @@
 #include <string.h>
 
 #include "qscript/link.h"
+#include "qscript/hooks.h"
 #include "qscript/execute.h"
 #include "qscript/parser.h"
 #include "qscript/properties.h"
@@ -89,6 +90,9 @@ int qs_object_instantiate_finish (qs_object_t *obj, qs_resource_t *rsrc)
    if ((rl = qs_rlink_inject (obj, rsrc, 0)) == NULL)
       return 0;
 
+   /* call any hooks. */
+   qs_hook_call (obj->scheme, QS_HOOK_OBJECT_NEW, obj, 1);
+
    /* return success. */
    return 1;
 }
@@ -109,6 +113,9 @@ qs_object_t *qs_object_get (qs_scheme_t *scheme, char *name)
 
 int qs_object_free (qs_object_t *object)
 {
+   /* call any hooks. */
+   qs_hook_call (object->scheme, QS_HOOK_OBJECT_FREE, object, 1);
+
    /* remove links to resources for auto-instantiated objects. */
    if (object->resource) {
       object->resource->auto_id = 0;
