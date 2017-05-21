@@ -82,10 +82,6 @@ qs_func_t *qs_scheme_get_func (qs_scheme_t *scheme, char *name)
 
 int qs_scheme_free (qs_scheme_t *scheme)
 {
-   /* free hooks. */
-   while (scheme->hook_list_front)
-      qs_hook_free (scheme->hook_list_front);
-
    /* free objects. */
    while (scheme->object_list_front)
       qs_object_free (scheme->object_list_front);
@@ -107,6 +103,10 @@ int qs_scheme_free (qs_scheme_t *scheme)
       qs_stack_free (scheme->stack_values);
    if (scheme->stack_executes)
       qs_stack_free (scheme->stack_executes);
+
+   /* free hooks. */
+   while (scheme->hook_list_front)
+      qs_hook_free (scheme->hook_list_front);
 
    /* free our own information. */
    if (scheme->funcs)
