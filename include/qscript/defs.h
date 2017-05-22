@@ -157,6 +157,7 @@ typedef enum _qs_value_link_e {
 typedef uint32_t qs_id_t;
 typedef uint32_t qs_flags_t;
 typedef uint32_t qs_hook_signal_t;
+typedef uint32_t qs_version_t;
 typedef struct _qs_id_manager_t qs_id_manager_t;
 
 /* typedefs. */

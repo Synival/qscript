@@ -73,6 +73,7 @@ qs_object_t *qs_object_new_base (qs_scheme_t *scheme, char *name)
    new->name = strdup (name);
    new->scheme = scheme;
    new->flags |= QS_OBJECT_GLOBAL;
+   new->version = 1;
 
    /* link to object list and assign id. */
    QS_LINK_BACK (scheme, new, object);

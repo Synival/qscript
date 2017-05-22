@@ -13,6 +13,7 @@ struct _qs_object_t {
    char *name;
    qs_id_t id;
    qs_flags_t flags;
+   qs_version_t version;
 
    /* rlinks and property lists. */
    qs_rlink_t *rlink_list_front, *rlink_list_back;
