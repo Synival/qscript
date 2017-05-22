@@ -185,6 +185,10 @@ typedef QS_FUNC(qs_func);
 #define QS_STACK_FUNC(x) int x (qs_stack_t *stack, void *data)
 typedef QS_STACK_FUNC(qs_stack_func);
 
+#define QS_MODIFY_FUNC(x) int x (qs_modify_t *modify, void *link, void *data, \
+   void *prev_data)
+typedef QS_MODIFY_FUNC(qs_modify_func);
+
 #define QS_HOOK_FUNC(x) int x (qs_scheme_t *scheme, qs_hook_t *hook, \
    qs_hook_signal_t signal, void *data, size_t data_size)
 typedef QS_HOOK_FUNC(qs_hook_func);

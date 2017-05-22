@@ -14,6 +14,7 @@ libqscript_la_SOURCES = \
    src/ids.c \
    src/language.c \
    src/lists.c \
+   src/modify.c \
    src/objects.c \
    src/parser.c \
    src/print.c \
@@ -42,6 +43,7 @@ otherinclude_HEADERS = \
    include/qscript/language.h \
    include/qscript/link.h \
    include/qscript/lists.h \
+   include/qscript/modify.h \
    include/qscript/objects.h \
    include/qscript/parser_types.h \
    include/qscript/print.h \

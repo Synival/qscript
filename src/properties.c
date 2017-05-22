@@ -6,12 +6,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "qscript/link.h"
+#include "qscript/modify.h"
 #include "qscript/objects.h"
 #include "qscript/parser.h"
-#include "qscript/resources.h"
 #include "qscript/rlinks.h"
-#include "qscript/stacks.h"
 #include "qscript/values.h"
 
 #include "qscript/properties.h"
@@ -92,125 +90,35 @@ qs_value_t *qs_property_value (qs_property_t *p)
 
 qs_modify_t *qs_property_push (qs_property_t *p, qs_rlink_t *rlink)
 {
-   /* create our stack when we need to. */
-   if (rlink->stack_modify == NULL) {
-      rlink->stack_modify = qs_stack_new (qs_modify_t);
-      qs_stack_data (rlink->stack_modify, rlink, NULL);
-   }
-
    /* initialize an empty modification. */
-   qs_modify_t *last = qs_stack_last (rlink->stack_modify);
-   qs_modify_t *new  = qs_stack_push (rlink->stack_modify,
-      qs_property_sf_modify);
-   memset (new, 0, sizeof (qs_modify_t));
+   qs_modify_t *new = qs_modify_push (rlink, p, &(p->last_modify),
+      sizeof (qs_value_t), qs_property_modify_pop);
 
    /* initialize the value.  make it a mutable property, with the same value
     * as the last stack value. */
-   new->value.scheme  = rlink->scheme;
-   new->value.link_id = QS_LINK_PROPERTY;
-   new->value.link    = p;
-   new->value.flags  |= QS_VALUE_MUTABLE;
-   qs_value_copy (NULL, &(new->value), p->value);
+   qs_value_t *value = new->data;
+   value->scheme  = rlink->scheme;
+   value->link_id = QS_LINK_PROPERTY;
+   value->link    = p;
+   value->flags  |= QS_VALUE_MUTABLE;
+   qs_value_copy (NULL, value, p->value);
 
    /* make sure our property is using this new value. */
-   p->value = &(new->value);
-
-   /* link to the property... */
-   new->p_prev = p->last_modify;
-   if (new->p_prev)
-      new->p_prev->p_next = new;
-   p->last_modify = new;
-   new->property = p;
-
-   /* ...link to the rlink... */
-   new->r_prev = last;
-   if (new->r_prev)
-      new->r_prev->r_next = new;
-   new->rlink = rlink;
-
-   /* ...and link to the object. */
-   new->o_prev = p->object->last_modify;
-   if (new->o_prev)
-      new->o_prev->o_next = new;
-   p->object->last_modify = new;
-   new->object = p->object;
+   p->value = value;
 
    /* return our new modification. */
    return new;
 }
 
-int qs_property_modify_cleanup (qs_modify_t *m)
+QS_MODIFY_FUNC (qs_property_modify_pop)
 {
-   /* this should never, ever happen, but potentially could if programs get
-    * crazy enough with unforeseen circumstances.  toss a big error, do nothing
-    * unsafe, and bail. */
-   if (m->p_next) {
-      p_error (NULL, "BAD ERROR: attempted to free non-last property "
-         "modification '%s' for property '%s' from '%s'@%d on '%s' (#%2d).\n",
-         m->value.val_s, m->property->name, m->rlink->resource->name,
-         m->rlink->priority, m->object->name, m->object->id);
-      raise (SIGINT);
-      return 0;
-   }
+   qs_property_t *property = link;
+   qs_value_t *value       = data;
+   qs_value_t *prev_value  = prev_data;
 
    /* make sure our property points to the proper value. */
-   if (m->p_prev) m->property->value = &(m->p_prev->value);
-   else           m->property->value = &(m->property->value_default);
-   qs_value_cleanup (&(m->value));
-
-   /* unlink from neighbors.  the rlink should already handle itself
-    * because it's using a qs_stack_t. */
-   if (m->p_prev) m->p_prev->p_next = m->p_next;
-   if (m->p_next) m->p_next->p_prev = m->p_prev;
-   else m->property->last_modify    = m->p_prev;
-   if (m->r_prev) m->r_prev->r_next = m->r_next;
-   if (m->r_next) m->r_next->r_prev = m->r_prev;
-   if (m->o_prev) m->o_prev->o_next = m->o_next;
-   if (m->o_next) m->o_next->o_prev = m->o_prev;
-   else m->object->last_modify      = m->o_prev;
-
-   /* return success. */
+   if (prev_value) property->value = prev_value;
+   else            property->value = &(property->value_default);
+   qs_value_cleanup (value);
    return 1;
-}
-
-QS_STACK_FUNC (qs_property_sf_modify)
-{
-   /* make sure we don't free values twice. */
-   qs_modify_t *m = data;
-   if (m->flags & QS_MODIFY_POPPING) {
-      p_error (NULL, "BAD ERROR: double-free detected for property "
-         "modification '%s' for property '%s' from '%s'@%d on '%s' (#%2d).\n",
-         m->value.val_s, m->property->name, m->rlink->resource->name,
-         m->rlink->priority, m->object->name, m->object->id);
-      raise (SIGINT);
-      return 0;
-   }
-   m->flags |= QS_MODIFY_POPPING;
-
-   /* if we're not the last property modification, it (should) mean the
-    * parent rlink did some further modifications. because the parent is
-    * expected to be popped anway, pop its modifications now in order to
-    * preserve stack order. */
-   qs_modify_t *last;
-   while ((last = m->p_next) != NULL) {
-      /* the unwind process should be smart enough to know what needs to
-       * be unwound, in the proper (reverse) order. by the time we're popping
-       * modifications in the stack, the appropriate rlinks should already
-       * be marked for unwinding. if that's not the case, there's a serious
-       * error - report it. */
-      if (last->rlink->flags & QS_RLINK_ON) {
-         p_error (NULL, "BAD ERROR: modifier pop required for currently-wound "
-            "'%s'@%d.  called from modification '%s' for property '%s' from "
-            "'%s'@%d on '%s' (#%2d).\n", last->rlink->resource->name,
-            last->rlink->priority, m->value.val_s, m->property->name,
-            m->rlink->resource->name, m->rlink->priority, m->object->name,
-            m->object->id);
-         raise (SIGINT);
-         return 0;
-      }
-      qs_stack_pop (last->rlink->stack_modify);
-   }
-
-   /* finally do some cleanup. */
-   return qs_property_modify_cleanup (m);
 }

@@ -143,6 +143,7 @@ int qs_file_new_directory (qs_scheme_t *scheme, char *directory, int recurse)
    }
 
    /* return the number of directories processed. */
+   closedir (d);
    return count;
 }
 
