@@ -83,7 +83,7 @@ int qs_modify_cleanup (qs_modify_t *m)
       m->func_pop (m, m->link, m->data, m->d_prev ? m->d_prev->data : NULL);
 
    /* free data allocated. */
-   if (m->data) {
+   if (m->data_size > 0) {
       free (m->data);
       m->data = NULL;
    }
