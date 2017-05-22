@@ -13,6 +13,7 @@
 #include "language.h"
 #include "link.h"
 #include "lists.h"
+#include "modify.h"
 #include "objects.h"
 #include "print.h"
 #include "properties.h"
