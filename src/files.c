@@ -175,8 +175,8 @@ qs_file_t *qs_file_new_fstream (qs_scheme_t *scheme, char *name, FILE *file)
 int qs_file_free (qs_file_t *file)
 {
    /* free associated resources. */
-   while (file->resource_list_front)
-      qs_resource_free (file->resource_list_front);
+   while (file->resource_list_back)
+      qs_resource_free (file->resource_list_back);
 
    /* clear nodes allocated. */
    if (file->node)

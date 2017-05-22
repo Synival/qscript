@@ -83,20 +83,20 @@ qs_func_t *qs_scheme_get_func (qs_scheme_t *scheme, char *name)
 int qs_scheme_free (qs_scheme_t *scheme)
 {
    /* free objects. */
-   while (scheme->object_list_front)
-      qs_object_free (scheme->object_list_front);
+   while (scheme->object_list_back)
+      qs_object_free (scheme->object_list_back);
 
    /* free resources. */
-   while (scheme->resource_list_front)
-      qs_resource_free (scheme->resource_list_front);
+   while (scheme->resource_list_back)
+      qs_resource_free (scheme->resource_list_back);
 
    /* free global variables. */
-   while (scheme->variable_list_front)
-      qs_variable_free (scheme->variable_list_front);
+   while (scheme->variable_list_back)
+      qs_variable_free (scheme->variable_list_back);
 
    /* free all files. */
-   while (scheme->file_list_front)
-      qs_file_free (scheme->file_list_front);
+   while (scheme->file_list_back)
+      qs_file_free (scheme->file_list_back);
 
    /* deallocate our heap. */
    if (scheme->stack_values)
@@ -105,8 +105,8 @@ int qs_scheme_free (qs_scheme_t *scheme)
       qs_stack_free (scheme->stack_executes);
 
    /* free hooks. */
-   while (scheme->hook_list_front)
-      qs_hook_free (scheme->hook_list_front);
+   while (scheme->hook_list_back)
+      qs_hook_free (scheme->hook_list_back);
 
    /* free our own information. */
    if (scheme->funcs)
