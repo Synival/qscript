@@ -122,3 +122,14 @@ QS_MODIFY_FUNC (qs_property_modify_pop)
    qs_value_cleanup (value);
    return 1;
 }
+
+qs_value_t *qs_pgetv (qs_object_t *obj, char *name)
+   { return qs_property_value (qs_property_get (obj, name)); }
+char *qs_pgets (qs_object_t *obj, char *name)
+   { return qs_pgetv (obj, name)->val_s; }
+int qs_pgeti (qs_object_t *obj, char *name)
+   { return qs_pgetv (obj, name)->val_i; }
+float qs_pgetf (qs_object_t *obj, char *name)
+   { return qs_pgetv (obj, name)->val_f; }
+void *qs_pgetp (qs_object_t *obj, char *name)
+   { return qs_pgetv (obj, name)->val_p; }

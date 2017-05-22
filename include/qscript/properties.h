@@ -32,4 +32,11 @@ qs_value_t *qs_property_value (qs_property_t *p);
 qs_modify_t *qs_property_push (qs_property_t *p, qs_rlink_t *rlink);
 QS_MODIFY_FUNC (qs_property_modify_pop);
 
+/* convenient property retrieval functions. */
+qs_value_t *qs_pgetv (qs_object_t *obj, char *name);
+char *qs_pgets (qs_object_t *obj, char *name);
+int qs_pgeti (qs_object_t *obj, char *name);
+float qs_pgetf (qs_object_t *obj, char *name);
+void *qs_pgetp (qs_object_t *obj, char *name);
+
 #endif
