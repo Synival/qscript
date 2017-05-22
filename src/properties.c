@@ -133,3 +133,7 @@ float qs_pgetf (qs_object_t *obj, char *name)
    { return qs_pgetv (obj, name)->val_f; }
 void *qs_pgetp (qs_object_t *obj, char *name)
    { return qs_pgetv (obj, name)->val_p; }
+qs_list_t *qs_pget_list (qs_object_t *obj, char *name) {
+   qs_value_t *value = qs_pgetv (obj, name);
+   return (value->value_id == QS_VALUE_LIST) ? value->data : NULL;
+}

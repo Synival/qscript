@@ -38,5 +38,6 @@ char *qs_pgets (qs_object_t *obj, char *name);
 int qs_pgeti (qs_object_t *obj, char *name);
 float qs_pgetf (qs_object_t *obj, char *name);
 void *qs_pgetp (qs_object_t *obj, char *name);
+qs_list_t *qs_pget_list (qs_object_t *obj, char *name);
 
 #endif
