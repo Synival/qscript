@@ -31,6 +31,9 @@ qs_stack_t *qs_stack_new_real (size_t type_size)
    return new;
 }
 
+void *qs_stack_last (qs_stack_t *stack)
+   { return qs_stack_last_n (stack, 0); }
+
 void *qs_stack_last_n (qs_stack_t *stack, int n)
 {
    if (stack->count - n - 1 < 0)
